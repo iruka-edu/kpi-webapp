@@ -38,6 +38,7 @@ export default function ReportGrid({ onSubmit, isSubmitting }: { onSubmit: () =>
 
               {/* Ô THỰC HIỆN ĐƯỢC PHÉP CHỈNH SỬA (LỖI THOÁT) */}
               <td className="border border-gray-300 p-1">
+                <input
                   type="number"
                   min="1"
                   step="1"
