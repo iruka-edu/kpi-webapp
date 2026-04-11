@@ -75,6 +75,8 @@ function AppContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
            name,
+           dept,
+           role,
            report_week: reportWeek,
            plan_week: planWeek,
            tasksToUpdate: oldTasks,

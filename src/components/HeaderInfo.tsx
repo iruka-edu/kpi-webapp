@@ -10,7 +10,7 @@ type Props = {
 export default function HeaderInfo({ name, role, dept, date }: Props) {
   return (
     <div className="mb-6 max-w-md mt-4">
-      <h1 className="text-2xl font-bold uppercase mb-4 text-black">BÁO CÁO TUẦN</h1>
+      <h1 className="text-2xl font-bold uppercase mb-4 text-black">BÁO CÁO & KẾ HOẠCH TUẦN</h1>
       <table className="w-full border-collapse border border-gray-600 text-sm">
         <tbody>
           <tr>

@@ -34,11 +34,11 @@ export default function ReportGrid({ onSubmit, isSubmitting }: { onSubmit: () =>
               <td className="border border-gray-300 p-2 text-black font-medium">{t.ghiChu}</td>
               <td className="border border-gray-300 p-2 text-center text-black font-medium">{t.donVi}</td>
               <td className="border border-gray-300 p-2 text-center font-bold text-black">{t.keHoach}</td>
-              
-               {/* Ô THỰC HIỆN ĐƯỢC PHÉP CHỈNH SỬA (LỖI THOÁT) */}
+
+              {/* Ô THỰC HIỆN ĐƯỢC PHÉP CHỈNH SỬA (LỖI THOÁT) */}
               <td className="border border-gray-300 p-1">
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   className="w-full text-center border-2 border-yellow-500 bg-yellow-50 focus:ring-2 focus:ring-yellow-600 outline-none py-1 font-bold text-black text-base"
                   value={t.thucHien !== null ? t.thucHien : ''}
                   onChange={(e) => updateThucHien(t.id, parseFloat(e.target.value))}
@@ -70,49 +70,49 @@ export default function ReportGrid({ onSubmit, isSubmitting }: { onSubmit: () =>
                 <input type="text" className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium placeholder:font-normal" value={t.ghiChu} onChange={e => updateTaskField(t.id, 'ghiChu', e.target.value)} placeholder="Ghi chú..." />
               </td>
               <td className="border border-gray-300 p-1">
-                 <input type="text" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium" value={t.donVi} onChange={e => updateTaskField(t.id, 'donVi', e.target.value)} />
+                <input type="text" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium" value={t.donVi} onChange={e => updateTaskField(t.id, 'donVi', e.target.value)} />
               </td>
               <td className="border border-gray-300 p-1">
-                 <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 font-bold text-black rounded-sm" value={t.keHoach} onChange={e => updateTaskField(t.id, 'keHoach', parseFloat(e.target.value))} />
+                <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 font-bold text-black rounded-sm" value={t.keHoach} onChange={e => updateTaskField(t.id, 'keHoach', parseFloat(e.target.value))} />
               </td>
-              
-               {/* Đóng băng ô Thực hiện ở phần KH mới */}
+
+              {/* Đóng băng ô Thực hiện ở phần KH mới */}
               <td className="border border-gray-300 p-1 bg-gray-100 text-center text-gray-700 font-medium italic text-[11px]">
-                 (Chốt vào tuần sau)
+                (Chốt vào tuần sau)
               </td>
 
               <td className="border border-gray-300 p-2 text-center bg-gray-100 text-gray-700 font-bold">-</td>
               <td className="border border-gray-300 p-1">
-                 <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-bold" value={t.trongSo} onChange={e => updateTaskField(t.id, 'trongSo', parseFloat(e.target.value))} />
+                <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-bold" value={t.trongSo} onChange={e => updateTaskField(t.id, 'trongSo', parseFloat(e.target.value))} />
               </td>
               <td className="border border-gray-300 p-2 text-center bg-gray-100 text-gray-700 font-bold">-</td>
             </tr>
           ))}
 
-           {/* Nút thêm việc */}
-           <tr>
-             <td colSpan={9} className="border border-gray-300 p-3 text-center bg-blue-50/30">
-                <button onClick={addTask} className="text-blue-600 hover:text-blue-800 font-semibold flex items-center justify-center gap-2 w-full py-1">
-                  <PlusCircle size={18} /> Điền thêm Đầu Việc mới
-                </button>
-             </td>
-           </tr>
+          {/* Nút thêm việc */}
+          <tr>
+            <td colSpan={9} className="border border-gray-300 p-3 text-center bg-blue-50/30">
+              <button onClick={addTask} className="text-blue-600 hover:text-blue-800 font-semibold flex items-center justify-center gap-2 w-full py-1">
+                <PlusCircle size={18} /> Điền thêm Đầu Việc mới
+              </button>
+            </td>
+          </tr>
         </tbody>
       </table>
 
       {/* Thanh công cụ Submit Cố định ở đáy */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)] p-4 flex justify-between items-center z-50">
-          <div className="text-lg px-8 text-black font-bold">
-            Tổng điểm KPI: <strong className="text-3xl text-green-700 ml-2">{totalScore.toFixed(2)}</strong> <span className="text-sm text-black font-bold ml-1">ĐIỂM</span>
-          </div>
-          <div className="px-8 flex gap-4">
-            <button 
-              onClick={onSubmit}
-              disabled={isSubmitting}
-              className={`font-bold py-3 px-8 rounded shadow-lg transform transition ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#1e3a5f] hover:bg-blue-800 text-white hover:scale-105 animate-pulse'}`}>
-              {isSubmitting ? '⏳ ĐANG LƯU DATA...' : '📤 GỬI BÁO CÁO & LƯU KẾ HOẠCH'}
-            </button>
-          </div>
+        <div className="text-lg px-8 text-black font-bold">
+          Tổng Điểm KPI Đạt Tuần Trước: <strong className="text-3xl text-green-700 ml-2">{totalScore.toFixed(2)}</strong> <span className="text-sm text-black font-bold ml-1">ĐIỂM</span>
+        </div>
+        <div className="px-8 flex gap-4">
+          <button
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className={`font-bold py-3 px-8 rounded shadow-lg transform transition ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#1e3a5f] hover:bg-blue-800 text-white hover:scale-105 animate-pulse'}`}>
+            {isSubmitting ? '⏳ ĐANG LƯU DATA...' : '📤 GỬI BÁO CÁO & LƯU KẾ HOẠCH'}
+          </button>
+        </div>
       </div>
 
     </div>

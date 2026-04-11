@@ -1,0 +1,279 @@
+# 🔍 AUDIT BÁO CÁO KPI WEBAPP + DISCORD BOT
+
+> Đọc code thực tế, kiểm tra từng luồng, không đoán mò.
+
+---
+
+## 1. TỔNG QUAN HỆ THỐNG
+
+Hệ thống gồm **3 tầng** phối hợp với nhau:
+
+| Tầng | Vai trò | Actor |
+|------|---------|-------|
+| **Discord Bot** (`weekly.js`) | Nhận lệnh `/weekly`, tạo link URL, gửi cho nhân viên | Nhân viên |
+| **KPI WebApp** (Next.js) | Giao diện điền báo cáo + gửi data | Nhân viên |
+| **Google Apps Script** (GAS) | Nhận data, ghi/đọc Google Sheets | Máy chủ trung gian |
+
+---
+
+## 2. SƠ ĐỒ LUỒNG TỔNG THỂ
+
+```mermaid
+sequenceDiagram
+    participant NV as Nhân viên (Discord)
+    participant BOT as Discord Bot
+    participant WEB as KPI WebApp (Vercel)
+    participant API as /api/kpi (Next.js)
+    participant GAS as Google Apps Script
+    participant GS as Google Sheets
+
+    NV->>BOT: Gõ lệnh /weekly
+    BOT->>BOT: getMemberByDiscordId(discordId)
+    Note over BOT: Nếu KO tìm thấy → dùng Discord username
+    BOT->>BOT: markWeeklySubmitted() ← ⚠️ GHI NHẬN NGAY KHI MỞ
+    BOT->>NV: Embed + Link WebApp (ephemeral)
+
+    NV->>WEB: Mở link (có query params: name, dept, role, report_week, plan_week)
+    WEB->>API: GET /api/kpi?name=...&report_week=...
+    API->>GAS: GET ...?name=...&report_week=...
+    GAS->>GS: Đọc dữ liệu tuần trước
+    GS-->>GAS: Trả về rows
+    GAS-->>API: JSON {tasks: [...]}
+    API-->>WEB: {tasks: [...]}
+    WEB->>NV: Hiển thị bảng điền (Phân vùng 1: Tuần cũ, Phân vùng 2: Kế hoạch mới)
+
+    NV->>WEB: Điền số "Thực hiện" + KH tuần tới → Bấm GỬI
+    WEB->>API: POST /api/kpi {name, report_week, plan_week, tasksToUpdate, tasksToInsert}
+    API->>GAS: POST (JSON)
+    GAS->>GS: Cập nhật cột Thực hiện + Thêm dòng KH mới
+    GAS-->>API: {success: true}
+    API-->>WEB: {success: true}
+    WEB->>NV: alert "NỘP BÁO CÁO THÀNH CÔNG"
+```
+
+---
+
+## 3. BẢNG LIỆT KÊ TOÀN BỘ FLOW
+
+| # | Tên flow | Loại | Actor | Kết quả dự kiến | Code (file:dòng) | Vấn đề? |
+|---|---|---|---|---|---|---|
+| 1 | Nhân viên có trong members.json, gõ /weekly | Happy | Nhân viên | Nhận embed + link đầy đủ tên, phòng ban | weekly.js:99-111 | ✅ OK |
+| 2 | Nhân viên KHÔNG có trong members.json | Edge | Nhân viên | Dùng Discord username, dept="Chung", role="Nhân Viên" | weekly.js:100, 108-109 | 🟡 Thiếu thông báo |
+| 3 | API GET - Có dữ liệu tuần trước | Happy | System | Load đúng tasks cũ vào Phân vùng 1 | route.ts:19-31 | ✅ OK |
+| 4 | API GET - Không có dữ liệu tuần trước | Edge | System | tasks = [] → Phân vùng 1 trống, chỉ có Phân vùng 2 | page.tsx:34-38 | 🟡 Không báo NV |
+| 5 | GOOGLE_APPS_SCRIPT_URL chưa set trên Vercel | Error | System | Trả 500, NV thấy trang trắng/lỗi | route.ts:15-17 | 🔴 UX kém |
+| 6 | Nhân viên bấm GỬI khi chưa điền Thực hiện | Edge | Nhân viên | Alert bắt điền đủ | page.tsx:62-65 | ✅ OK |
+| 7 | markWeeklySubmitted() ghi ngay khi mở link | Error | System | Ghi nhận "đã nộp" dù NV chưa điền gì | weekly.js:113-114 | 🔴 Logic sai nghiêm trọng |
+| 8 | Nhân viên mở link 2 lần (refresh trang) | Edge | Nhân viên | Load lại đúng data, không bị xóa gì | page.tsx:27-53 | ✅ OK |
+| 9 | POST thành công nhưng GAS trả về lỗi | Error | System | Alert lỗi đúng nội dung | route.ts:54-56 | ✅ OK |
+| 10 | Mạng đứt giữa chừng khi bấm GỬI | Error | Nhân viên | Alert "mất kết nối" + form vẫn còn data | page.tsx:94 | 🟡 Không lưu draft |
+| 11 | Nhân viên inactive vào gõ /weekly | Edge | Nhân viên | Bot vẫn trả link bình thường — không lọc | leaveCalc.js:48-50 | 🟡 Nên chặn |
+| 12 | Số thực hiện nhập vào > kế hoạch (vượt 100%) | Edge | Nhân viên | Tính % > 100%, datDuoc > trongSo → chấp nhận | kpiStore.ts:42-45 | 🟡 Cần giới hạn |
+| 13 | Tổng điểm tính cả task chưa có thực hiện | Edge | System | datDuoc = 0 cho task chưa điền → OK | kpiStore.ts:102-104 | ✅ OK |
+| 14 | KPI_WEBAPP_URL chưa set trong .env bot | Error | System | Fallback localhost:3000 — link sai | weekly.js:107 | 🔴 Nguy hiểm |
+
+---
+
+## 4. PHÂN TÍCH CHI TIẾT CÁC VẤN ĐỀ NGHIÊM TRỌNG
+
+---
+
+### ❌ VẤN ĐỀ #1 — NGHIÊM TRỌNG NHẤT: Ghi "đã nộp" TRƯỚC khi nhân viên điền
+
+📍 Vị trí: `weekly.js` dòng **113-114**
+
+🔍 Code hiện tại:
+```js
+// Ghi nhận đã nộp (để scheduler quét sáng thứ 2)
+markWeeklySubmitted(discordId, applicantName, weekNum, weekLabel);
+```
+
+💥 **Hậu quả thực tế:**
+- Nhân viên gõ `/weekly` → mở link → đóng trang mà chưa điền gì
+- Scheduler sáng thứ 2 thấy file `weekly-reports.json` có tên người này → báo cáo "ÔNH/ẤY ĐÃ NỘP"
+- Sếp không biết nhân viên thực ra chưa nộp gì cả
+- Data Google Sheets TRỐNG RỖNG nhưng scheduler báo đủ người
+
+🔗 Logic ảnh hưởng chéo: Scheduler.js + weekly-reports.json bị sai toàn bộ
+
+✅ **Cách sửa đúng:** Chỉ gọi `markWeeklySubmitted()` khi WebApp POST thành công. Cần thêm 1 API endpoint riêng hoặc truyền discordId vào POST body, rồi bot gọi sau khi xác nhận.
+
+---
+
+### ❌ VẤN ĐỀ #2: KPI_WEBAPP_URL fallback về localhost
+
+📍 Vị trí: `weekly.js` dòng **107**
+
+🔍 Code hiện tại:
+```js
+const baseUrl = process.env.KPI_WEBAPP_URL || 'http://localhost:3000';
+```
+
+💥 **Hậu quả:**
+- Nếu file `.env` của bot không có `KPI_WEBAPP_URL`
+- Bot vẫn chạy không báo lỗi, vẫn gửi embed cho nhân viên
+- Nhân viên click link → **Lỗi "Không thể kết nối"** vì localhost bên máy nhân viên không chạy gì cả
+- Người dùng không hiểu vì sao, nghĩ hệ thống hỏng
+
+✅ **Cách sửa:** Kiểm tra validate trước khi reply:
+```js
+if (!process.env.KPI_WEBAPP_URL) {
+  return interaction.reply({ content: '⚠️ Hệ thống chưa được cấu hình. Báo IT ngay!', ephemeral: true });
+}
+```
+
+---
+
+### ❌ VẤN ĐỀ #3: Không báo người dùng khi GOOGLE_APPS_SCRIPT_URL chưa set
+
+📍 Vị trí: `route.ts` dòng **15-17**
+
+🔍 Code hiện tại:
+```ts
+if (!GAS_URL) {
+  return NextResponse.json({ error: 'Chưa cấu hình GOOGLE_APPS_SCRIPT_URL' }, { status: 500 });
+}
+```
+
+💥 **Hậu quả:**
+- WebApp load xong → Nhân viên nhìn thấy bảng trắng tinh (không có task nào)
+- Console lỗi nhưng UI không thông báo gì
+- Nhân viên không biết là hệ thống đang hỏng hay là họ chưa có dữ liệu tuần trước
+
+✅ **Cách sửa:** Trong `page.tsx`, khi `data.tasks` trả về lỗi, hiện thông báo rõ ràng cho người dùng thay vì bảng trống.
+
+---
+
+## 5. PHÂN TÍCH UX DISCORD
+
+| Flow | Nhân viên thấy gì | Có đủ thông tin không? |
+|------|-------------------|------------------------|
+| Gõ `/weekly` thành công | Embed xanh đẹp + link | ✅ OK |
+| Nhân viên không trong hệ thống | Vẫn nhận embed, tên = Discord username | 🟡 Không biết mình "chưa được đăng ký" |
+| Click link → lỗi localhost | Trình duyệt báo "Không kết nối được" | ❌ Không hiểu gì |
+| Mở WebApp khi GAS chưa cài | Bảng trống, không có thông báo lỗi | ❌ Rất khó chịu |
+| Nộp thành công | Alert "NỘP THÀNH CÔNG" | ✅ OK |
+| Deadline đã qua nhưng vẫn gõ /weekly | Bot vẫn cho link, không cảnh báo gì | 🟡 Nên thêm cảnh báo deadline |
+
+---
+
+## 6. PHÂN TÍCH ĐẶC THÙ — CHỖ LẤY DỮ LIỆU HEADER
+
+Sếp hỏi: *"Họ tên / Báo cáo cho / Phòng / Ngày đánh giá lấy từ đâu?"*
+
+**Câu trả lời:**
+
+Toàn bộ thông tin Header được nhúng thẳng vào URL dạng **Query Params** từ Discord Bot:
+
+```
+https://kpi-webapp.vercel.app
+  ?name=Nguyễn Văn A        ← Lấy từ members.json → field "name"
+  &dept=Marketing            ← Lấy từ members.json → field "department"  
+  &role=Cán bộ              ← Lấy từ members.json → field "role"
+  &report_week=Tuần 15      ← Tự tính bằng getCurrentWeekLabel()
+  &plan_week=Tuần 16        ← = weekNum + 1
+```
+
+**WebApp** đọc các giá trị này tại `page.tsx` dòng 11-16:
+```ts
+const name = searchParams.get('name') || 'Chưa rõ';        // Fallback = "Chưa rõ"
+const dept = searchParams.get('dept') || 'Chưa rõ';        // Fallback = "Chưa rõ"
+const role = searchParams.get('role') || 'Cán bộ';         // Fallback = "Cán bộ"
+```
+
+**Ngày đánh giá** = Ngày hôm nay lấy từ `new Date()` của trình duyệt người dùng (dòng 19-20).
+
+**Vấn đề bắt nguồn:** Nếu nhân viên không có trong `members.json` → bot truyền fallback → Header hiển thị **"Chưa rõ"** — xấu và thiếu chuyên nghiệp.
+
+---
+
+## 7. VẤN ĐỀ CÔNG THỨC TÍNH ĐIỂM
+
+📍 Vị trí: `kpiStore.ts` dòng 44-45
+
+```ts
+const phanTram = (thucHien / keHoach) * 100;
+const datDuoc = (thucHien / keHoach) * trongSo;
+```
+
+🟡 **Quan sát:**
+- Hiện tại `yeuCau` (field tồn tại trong type Task) không được dùng trong tính toán
+- Công thức chỉ là `(Thực Hiện / Kế Hoạch) × Trọng Số`
+- Nếu sếp muốn công thức phức tạp hơn (ví dụ: có ngưỡng tối thiểu, có hệ số vượt KPI) → cần xác nhận lại công thức đúng
+
+---
+
+## 8. BẢNG ĐỀ XUẤT SỬA ĐỔI — PHÂN LOẠI ƯU TIÊN
+
+### 🔴 Nhóm 1 — Làm ngay (Ảnh hưởng logic cốt lõi)
+
+| # | Vấn đề | File | Dòng | Phương án sửa |
+|---|--------|------|------|---------------|
+| 1 | `markWeeklySubmitted()` ghi ngay khi mở link, chưa thực sự nộp | `weekly.js` | 113-114 | Di chuyển logic này vào WebApp: gọi 1 API riêng sau khi POST thành công |
+| 2 | `KPI_WEBAPP_URL` fallback về localhost — link hỏng | `weekly.js` | 107 | Validate env var trước, nếu thiếu → reply lỗi cho NV |
+
+**Ước tính:** ~1-2 giờ
+
+---
+
+### 🟡 Nhóm 2 — Nên sửa sớm (Ảnh hưởng UX)
+
+| # | Vấn đề | File | Dòng | Phương án sửa |
+|---|--------|------|------|---------------|
+| 3 | Không có thông báo khi WebApp không load được data | `page.tsx` | 34-38 | Thêm UI "Không tìm thấy dữ liệu tuần trước, bắt đầu báo cáo mới" |
+| 4 | Nhân viên không trong hệ thống không biết mình "chưa đăng ký" | `weekly.js` | 100 | Thêm dòng cảnh báo vào embed |
+| 5 | Nhân viên `active: false` vẫn gõ /weekly được | `weekly.js` | 99 | Kiểm tra `memData.active` trước khi trả link |
+| 6 | Không có cảnh báo deadline còn bao lâu trong embed | `weekly.js` | 116-126 | Thêm tính số giờ còn lại đến 24:00 Chủ Nhật |
+| 7 | Form mất data nếu mạng đứt khi gửi | `page.tsx` | 93-95 | Lưu tạm vào `localStorage` trước khi gửi |
+
+---
+
+### 🟢 Nhóm 3 — Backlog (Cải tiến)
+
+| # | Vấn đề | Phương án |
+|---|--------|-----------|
+| 8 | Công thức `yeuCau` chưa được áp dụng | Xác nhận với Sếp về công thức chuẩn rồi cập nhật |
+| 9 | Không có giới hạn % Hoàn thành tối đa (vd: tối đa 120%) | Thêm cap vào `calculateFields()` |
+| 10 | Phần chú thích mục tiêu/KPI chưa có hướng dẫn cho NV | Thêm tooltip hay hướng dẫn nhỏ trong UI |
+
+---
+
+## 9. HƯỚNG DẪN TEST THỦ CÔNG SAU KHI SỬA
+
+```
+TEST 1 — Nhân viên có trong hệ thống:
+  → Vào Discord, gõ /weekly
+  → Kỳ vọng: Embed hiện đúng tên, phòng ban, link mở được WebApp
+
+TEST 2 — Nhân viên không trong hệ thống:
+  → Dùng tài khoản Discord chưa đăng ký, gõ /weekly
+  → Kỳ vọng: Embed cảnh báo "Bạn chưa được đăng ký trong hệ thống"
+
+TEST 3 — Mở link, điền số, bấm GỬI:
+  → Mở link từ Discord, điền số vào cột Thực hiện, bấm GỬI
+  → Kỳ vọng: Alert xanh thành công + kiểm tra Google Sheets có cập nhật
+
+TEST 4 — Mở link nhưng KHÔNG bấm GỬI:
+  → Mở link, đóng tab lại
+  → Kỳ vọng: weekly-reports.json KHÔNG ghi nhận đã nộp (Sau khi sửa Bug #1)
+
+TEST 5 — KPI_WEBAPP_URL chưa set:
+  → Tạm xóa env var, restart bot, gõ /weekly
+  → Kỳ vọng: Bot trả lỗi rõ ràng thay vì link hỏng
+
+✅ Test PASS khi: Data trong Google Sheets khớp 100% với những gì nhân viên điền trên WebApp.
+```
+
+---
+
+## 10. TÓM TẮT MỨC ĐỘ SẴN SÀNG HỆ THỐNG
+
+| Hạng mục | Trạng thái |
+|----------|------------|
+| Luồng Happy Path (NV có trong hệ thống, điền và gửi) | ✅ Sẵn sàng |
+| UX của WebApp (màu sắc, layout) | ✅ Đã cải thiện hôm nay |
+| Logic ghi nhận nộp báo cáo | 🔴 Sai - cần sửa ngay |
+| Backup/fallback khi env var thiếu | 🔴 Thiếu - cần sửa ngay |
+| Handle nhân viên chưa đăng ký | 🟡 Có nhưng UX kém |
+| Tính toán điểm KPI | 🟡 Đúng nhưng chưa xác nhận công thức |
+| Auto-deploy CI/CD (Github → Vercel) | ✅ Đã setup hôm nay |
