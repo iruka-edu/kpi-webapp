@@ -29,32 +29,32 @@ export default function ReportGrid({ onSubmit, isSubmitting }: { onSubmit: () =>
           {/* Phân Vùng 1: Kế hoạch tuần trước vắt sang */}
           {tasks.filter(t => t.isNhiemVuCu).map((t, idx) => (
             <tr key={t.id} className="bg-blue-50/30 hover:bg-blue-50 transition-colors">
-              <td className="border border-gray-300 p-2 text-center">{idx + 1}</td>
-              <td className="border border-gray-300 p-2 text-gray-700">{t.noiDung}</td>
-              <td className="border border-gray-300 p-2 text-gray-700">{t.ghiChu}</td>
-              <td className="border border-gray-300 p-2 text-center text-gray-700">{t.donVi}</td>
-              <td className="border border-gray-300 p-2 text-center font-semibold">{t.keHoach}</td>
+              <td className="border border-gray-300 p-2 text-center text-black font-medium">{idx + 1}</td>
+              <td className="border border-gray-300 p-2 text-black font-medium">{t.noiDung}</td>
+              <td className="border border-gray-300 p-2 text-black font-medium">{t.ghiChu}</td>
+              <td className="border border-gray-300 p-2 text-center text-black font-medium">{t.donVi}</td>
+              <td className="border border-gray-300 p-2 text-center font-bold text-black">{t.keHoach}</td>
               
                {/* Ô THỰC HIỆN ĐƯỢC PHÉP CHỈNH SỬA (LỖI THOÁT) */}
               <td className="border border-gray-300 p-1">
                 <input 
                   type="number" 
-                  className="w-full text-center border-2 border-yellow-400 bg-yellow-50 focus:ring-2 focus:ring-yellow-600 outline-none py-1 font-bold text-black"
+                  className="w-full text-center border-2 border-yellow-500 bg-yellow-50 focus:ring-2 focus:ring-yellow-600 outline-none py-1 font-bold text-black text-base"
                   value={t.thucHien !== null ? t.thucHien : ''}
                   onChange={(e) => updateThucHien(t.id, parseFloat(e.target.value))}
                   placeholder="?"
                 />
               </td>
 
-              <td className="border border-gray-300 p-2 text-center font-bold text-green-600">{t.phanTram > 0 ? t.phanTram + '%' : '-'}</td>
-              <td className="border border-gray-300 p-2 text-center text-gray-600">{t.trongSo}</td>
+              <td className="border border-gray-300 p-2 text-center font-bold text-green-700">{t.phanTram > 0 ? t.phanTram + '%' : '-'}</td>
+              <td className="border border-gray-300 p-2 text-center text-black font-bold">{t.trongSo}</td>
               <td className="border border-gray-300 p-2 text-center font-bold text-green-700">{t.datDuoc > 0 ? t.datDuoc : '-'}</td>
             </tr>
           ))}
 
           {/* Dòng cách ly phân vùng */}
           <tr>
-            <td colSpan={9} className="bg-gray-200 text-center font-bold p-3 text-gray-600 uppercase text-xs">
+            <td colSpan={9} className="bg-gray-200 text-center font-bold p-3 text-black uppercase text-xs border border-gray-300">
               ↓ Kế Hoạch Đề Xuất Cho Tuần Tới ↓
             </td>
           </tr>
@@ -62,30 +62,30 @@ export default function ReportGrid({ onSubmit, isSubmitting }: { onSubmit: () =>
           {/* Phân Vùng 2: Lập kế hoạch mới */}
           {tasks.filter(t => !t.isNhiemVuCu).map((t, idx) => (
             <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-              <td className="border border-gray-300 p-2 text-center text-sm">✨</td>
+              <td className="border border-gray-300 p-2 text-center text-sm text-black">✨</td>
               <td className="border border-gray-300 p-1">
-                <input type="text" className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm" value={t.noiDung} onChange={e => updateTaskField(t.id, 'noiDung', e.target.value)} placeholder="Tên công việc..." />
+                <input type="text" className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium placeholder:font-normal" value={t.noiDung} onChange={e => updateTaskField(t.id, 'noiDung', e.target.value)} placeholder="Tên công việc..." />
               </td>
               <td className="border border-gray-300 p-1">
-                <input type="text" className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm" value={t.ghiChu} onChange={e => updateTaskField(t.id, 'ghiChu', e.target.value)} />
+                <input type="text" className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium placeholder:font-normal" value={t.ghiChu} onChange={e => updateTaskField(t.id, 'ghiChu', e.target.value)} placeholder="Ghi chú..." />
               </td>
               <td className="border border-gray-300 p-1">
-                 <input type="text" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm" value={t.donVi} onChange={e => updateTaskField(t.id, 'donVi', e.target.value)} />
+                 <input type="text" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium" value={t.donVi} onChange={e => updateTaskField(t.id, 'donVi', e.target.value)} />
               </td>
               <td className="border border-gray-300 p-1">
-                 <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 font-semibold rounded-sm" value={t.keHoach} onChange={e => updateTaskField(t.id, 'keHoach', parseFloat(e.target.value))} />
+                 <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 font-bold text-black rounded-sm" value={t.keHoach} onChange={e => updateTaskField(t.id, 'keHoach', parseFloat(e.target.value))} />
               </td>
               
                {/* Đóng băng ô Thực hiện ở phần KH mới */}
-              <td className="border border-gray-300 p-1 bg-gray-100 text-center text-gray-400 italic text-[11px]">
+              <td className="border border-gray-300 p-1 bg-gray-100 text-center text-gray-700 font-medium italic text-[11px]">
                  (Chốt vào tuần sau)
               </td>
 
-              <td className="border border-gray-300 p-2 text-center bg-gray-100 text-gray-400">-</td>
+              <td className="border border-gray-300 p-2 text-center bg-gray-100 text-gray-700 font-bold">-</td>
               <td className="border border-gray-300 p-1">
-                 <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm" value={t.trongSo} onChange={e => updateTaskField(t.id, 'trongSo', parseFloat(e.target.value))} />
+                 <input type="number" className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-bold" value={t.trongSo} onChange={e => updateTaskField(t.id, 'trongSo', parseFloat(e.target.value))} />
               </td>
-              <td className="border border-gray-300 p-2 text-center bg-gray-100 text-gray-400">-</td>
+              <td className="border border-gray-300 p-2 text-center bg-gray-100 text-gray-700 font-bold">-</td>
             </tr>
           ))}
 
