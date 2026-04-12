@@ -401,6 +401,7 @@ function AppContent() {
           reportWeek={reportWeek}
           planWeek={planWeek}
           invalidTaskIds={invalidTaskIds}
+          isFirstTime={isFirstTime}
         />
       </div>
     </div>

@@ -18,23 +18,12 @@ export type Task = {
 
 type KpiStore = {
   tasks: Task[];
-  
-  // Khởi tạo data ban đầu (sẽ gọi từ API)
   initTasks: (tasks: Task[]) => void;
-  
-  // Cập nhật Thực hiện cho nhiệm vụ cũ (Phân vùng 1)
   updateThucHien: (id: string, value: number) => void;
-  
-  // Thêm Nhiệm vụ mới (Phân vùng 2)
   addTask: () => void;
-  
-  // Cập nhật text cho nhiệm vụ mới
+  addOldTask: () => void; // Thêm dòng mới ở Phân vùng 1 (dành cho lần đầu tự điền)
   updateTaskField: <K extends keyof Task>(id: string, field: K, value: Task[K]) => void;
-  
-  // Xóa nhiệm vụ mới
   removeTask: (id: string) => void;
-  
-  // Tính tổng
   getTotalScore: () => number;
 };
 
@@ -82,6 +71,21 @@ export const useKpiStore = create<KpiStore>((set, get) => ({
         keHoach: 1, thucHien: null, trongSo: 1, yeuCau: 1,
         isNhiemVuCu: false,
         phanTram: 0, datDuoc: 0
+      }
+    ]
+  })),
+
+  // Thêm dòng báo cáo tuần cũ (lần đầu NV tự điền từ Excel sang)
+  // isNhiemVuCu=true → submit sẽ ghi vào cột O = 'Báo cáo thực hiện'
+  addOldTask: () => set((state) => ({
+    tasks: [
+      ...state.tasks,
+      {
+        id: 'old_' + Date.now(),
+        noiDung: '', ghiChu: '', donVi: '',
+        keHoach: 1, thucHien: null, trongSo: 1, yeuCau: 1,
+        isNhiemVuCu: true,
+        phanTram: 0, datDuoc: 0,
       }
     ]
   })),
