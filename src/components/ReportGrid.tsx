@@ -81,11 +81,9 @@ function TableHeader() {
  * Banner tiêu đề nằm BÊN TRÊN mỗi bảng (không phải dòng trong tbody nữa)
  * Hiển thị: Icon | Label | Tuần X | Khoảng ngày
  */
-function SectionBanner({ icon, label, weekStr, dateRange, hint, colorClass }: {
+function SectionBanner({ icon, label, hint, colorClass }: {
   icon: string;
   label: string;
-  weekStr: string;
-  dateRange: string;
   hint: string;
   colorClass: string;
 }) {
@@ -93,12 +91,7 @@ function SectionBanner({ icon, label, weekStr, dateRange, hint, colorClass }: {
     <div className={`flex flex-wrap items-center gap-2 px-4 py-3 rounded-t-lg border border-b-0 border-gray-300 ${colorClass}`}>
       <span className="text-lg">{icon}</span>
       <span className="font-bold uppercase tracking-wide text-sm">{label}</span>
-      <span className="font-black text-sm">{weekStr}</span>
-      {dateRange && (
-        <span className="bg-white/50 text-xs font-bold px-2 py-0.5 rounded-full border border-white/60">
-          📅 {dateRange}
-        </span>
-      )}
+      <div className="flex-1" /> {/* Đẩy hint về bên phải hoặc tạo khoảng trống */}
       <span className="text-xs opacity-75 ml-auto italic">{hint}</span>
     </div>
   );
@@ -136,9 +129,7 @@ export default function ReportGrid({
         {/* Banner tiêu đề bảng 1 */}
         <SectionBanner
           icon="📋"
-          label="Báo cáo"
-          weekStr={reportWeek}
-          dateRange={reportDateRange}
+          label="Báo Cáo Tuần Trước"
           hint={isFirstTime ? "Lần đầu: Tự điền kết quả từ Excel của bạn" : "Điền số vào cột Thực hiện để chốt kết quả"}
           colorClass="bg-[#1e3a5f]/10 text-[#1e3a5f]"
         />
@@ -303,9 +294,7 @@ export default function ReportGrid({
         {/* Banner tiêu đề bảng 2 */}
         <SectionBanner
           icon="🗓️"
-          label="Kế hoạch"
-          weekStr={planWeek}
-          dateRange={planDateRange}
+          label="Kế Hoạch Tuần Này"
           hint="Đặt mục tiêu cho tuần tới — Điền đủ các cột"
           colorClass="bg-gray-200 text-black"
         />
