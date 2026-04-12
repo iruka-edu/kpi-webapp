@@ -156,14 +156,26 @@ function SuccessScreen({ name, reportWeek, totalScore }: { name: string; reportW
   );
 }
 
+// ── Helper tính ISO Week chuẩn ────────────────────────────────
+function getISOWeek(date: Date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 // ── Helper tự tính tuần nếu không có param ───────────────────────
 function getAutoWeeks() {
   const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-  const week1 = new Date(d.getFullYear(), 0, 4);
-  const planWeekNum = 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-  const reportWeekNum = planWeekNum > 1 ? planWeekNum - 1 : 52;
+  const vnDay = d.getDay(); // 0=CN, 1=T2... (Local time)
+  const currentWeek = getISOWeek(d);
+  
+  // Logic Pivot: Thứ 7 (6) và CN (0) báo cáo tuần hiện tại. Thứ 2 trở đi báo cáo tuần cũ.
+  const isWeekend = (vnDay === 6 || vnDay === 0);
+  const reportWeekNum = isWeekend ? currentWeek : currentWeek - 1;
+  const planWeekNum = reportWeekNum + 1;
+
   return {
     report: `Tuần ${reportWeekNum}`,
     plan: `Tuần ${planWeekNum}`
