@@ -359,6 +359,12 @@ export default function ReportGrid({
                     —
                   </div>
                 </td>
+                {/* % Hoàn Thành (Bảng 2: Tuần sau mới tính) */}
+                <td className="border border-gray-300 p-1">
+                  <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">
+                    —
+                  </div>
+                </td>
                 <td className="border border-gray-300 p-1">
                   <select
                     className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-bold bg-white"
