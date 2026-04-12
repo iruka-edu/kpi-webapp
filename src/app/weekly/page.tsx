@@ -308,31 +308,37 @@ function AppContent() {
     // === VALIDATE TOÀN DIỆN: Quét tất cả trường bắt buộc ===
     const invalidIds: string[] = [];
 
-    // Bảng 1 (oldTasks):
-    // - Lần đầu (isFirstTime): bắt buộc noiDung, donVi, keHoach, trongSo, thucHien
-    // - Lần sau (có data cũ): chỉ bắt buộc thucHien
+    // Bảng 1 (oldTasks): Bảng báo cáo tuần trước
+    // Nếu có dòng nào thì bắt buộc phải điền đủ: nội dung, đơn vị, kế hoạch, trọng số, thực hiện
     oldTasks.forEach(t => {
-      let rowInvalid = false;
-      if (isFirstTime) {
-        if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || t.trongSo === '') {
-          rowInvalid = true;
-        }
+      const isMissing = 
+        !t.noiDung.trim() || 
+        !t.donVi.trim() || 
+        t.keHoach === '' || 
+        t.trongSo === '' || 
+        t.thucHien === null || isNaN(t.thucHien as number);
+      
+      if (isMissing) {
+        invalidIds.push(t.id);
       }
-      // Thực hiện bắt buộc trong mọi trường hợp (kể cả lần sau)
-      if (t.thucHien === null || isNaN(t.thucHien as number)) {
-        rowInvalid = true;
-      }
-      if (rowInvalid) invalidIds.push(t.id);
     });
 
-    // Bảng 2 (newTasks): bắt buộc ít nhất 1 đầu việc và điền đủ noiDung, donVi, keHoach, trongSo
+    // Bảng 2 (newTasks): Bảng kế hoạch tuần tới
+    // 1. Bắt buộc phải có ít nhất 1 đầu việc
     if (newTasks.length === 0) {
       setToast({ msg: '⚠️ Vui lòng thêm ít nhất một đầu việc kế hoạch cho tuần tới!', type: 'error' });
       return;
     }
 
+    // 2. Từng dòng phải điền đủ: nội dung, đơn vị, kế hoạch, trọng số
     newTasks.forEach(t => {
-      if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || t.trongSo === '') {
+      const isMissing = 
+        !t.noiDung.trim() || 
+        !t.donVi.trim() || 
+        t.keHoach === '' || 
+        t.trongSo === '';
+        
+      if (isMissing) {
         invalidIds.push(t.id);
       }
     });

@@ -247,8 +247,8 @@ export default function ReportGrid({
                         }`}
                       value={t.thucHien !== null ? t.thucHien : ''}
                       onChange={e => {
-                        const val = parseFloat(e.target.value);
-                        updateThucHien(t.id, isNaN(val) ? 0 : val);
+                        const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                        updateThucHien(t.id, val);
                       }}
                       placeholder={isInvalid ? '⚠️' : '?'}
                     />
