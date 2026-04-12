@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import HeaderInfo from '@/components/HeaderInfo';
 import ReportGrid from '@/components/ReportGrid';
 import { useKpiStore } from '@/store/kpiStore';
+import { useDraftSave, restoreDraft, clearDraft } from '@/hooks/useDraftSave';
 
 function AppContent() {
   const searchParams = useSearchParams();
@@ -23,7 +24,10 @@ function AppContent() {
   const { initTasks, addTask, tasks } = useKpiStore();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [noData, setNoData] = useState(false); // true = không có dữ liệu tuần trước
+  const [noData, setNoData] = useState(false);
+
+  // Auto-save draft vào localStorage mỗi 2s khi NV điền form (chống mất mạng)
+  useDraftSave(name, reportWeek);
 
   // 1. FETCH DATA TỪ API
   useEffect(() => {
@@ -55,12 +59,29 @@ function AppContent() {
         setNoData(true);
       } finally {
         setLoading(false);
-        // Sau khi load xong, nhét vào 1 dòng trống nếu Phân vùng 2 chưa có đầu việc nào
+        // Sau khi load API: kiểm tra localStorage xem có draft cũ không
         setTimeout(() => {
-          if(useKpiStore.getState().tasks.filter(t => !t.isNhiemVuCu).length === 0) {
-             addTask();
+          const draft = restoreDraft(name, reportWeek);
+          const currentTaskCount = useKpiStore.getState().tasks.filter(t => !t.isNhiemVuCu).length;
+          // Chỉ hỏi khôi phục nếu draft có phần kế hoạch mới (isNhiemVuCu=false) và mới hơn 30 giây
+          const draftNewTasks = draft?.tasks.filter(t => !t.isNhiemVuCu && t.noiDung.trim() !== '') || [];
+          if (draft && draftNewTasks.length > 0 && Date.now() - draft.savedAt < 48 * 3600 * 1000) {
+            const minutesAgo = Math.round((Date.now() - draft.savedAt) / 60000);
+            const confirm = window.confirm(
+              `💾 Phát hiện bản nháp được lưu cách đây ${minutesAgo} phút (${draftNewTasks.length} đầu việc đã điền).\n\nBạn muốn khôi phục không?`
+            );
+            if (confirm) {
+              // Ghép: giữ nhiệm vụ cũ từ server + phần kế hoạch mới từ draft
+              const serverOldTasks = useKpiStore.getState().tasks.filter(t => t.isNhiemVuCu);
+              initTasks([...serverOldTasks, ...draftNewTasks]);
+            } else {
+              clearDraft(name, reportWeek); // NV từ chối khôi phục → xóa draft
+            }
+          } else {
+            // Không có draft, thêm 1 dòng trống mới cho phần kế hoạch
+            if(currentTaskCount === 0) addTask();
           }
-        }, 100);
+        }, 200);
       }
     }
     loadData();
@@ -107,6 +128,7 @@ function AppContent() {
 
       if (resp.ok) {
         alert("✅ NỘP BÁO CÁO THÀNH CÔNG! Dữ liệu đã phi thẳng vào Google Sheets.");
+        clearDraft(name, reportWeek); // Xóa draft sau khi nộp thành công
         // Gửi xong thì văng ra cảnh báo an toàn tránh ấn 2 lần / Xóa trắng
       } else {
         const err = await resp.json();
