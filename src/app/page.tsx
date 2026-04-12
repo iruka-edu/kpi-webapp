@@ -130,26 +130,6 @@ function ApiErrorScreen({ message }: { message: string }) {
   );
 }
 
-// ── Màn hình lần đầu dùng (F1) ───────────────────────────────────
-function FirstTimeScreen({ name, planWeek }: { name: string; planWeek: string }) {
-  return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-6">
-      <div className="flex items-start gap-4">
-        <div className="text-4xl">👋</div>
-        <div>
-          <h3 className="text-lg font-bold text-[#1e3a5f] mb-1">
-            Chào mừng {name} đến với IruKa KPI!
-          </h3>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            Đây là <strong>lần đầu tiên</strong> bạn dùng hệ thống, hoặc chưa có dữ liệu tuần trước.
-            <br />Phần trên (Tuần trước) sẽ có dữ liệu từ tuần sau. 
-            <br /><strong>Bây giờ bạn chỉ cần điền kế hoạch cho {planWeek} bên dưới!</strong>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Màn hình SUCCESS sau khi nộp (F9) ────────────────────────────
 function SuccessScreen({ name, reportWeek, totalScore }: { name: string; reportWeek: string; totalScore: number }) {
@@ -390,9 +370,6 @@ function AppContent() {
           name={name} role={role} dept={dept} date={dateStr}
           reportWeek={reportWeek} planWeek={planWeek} isLate={isLate}
         />
-
-        {/* F1: Banner lần đầu */}
-        {isFirstTime && <FirstTimeScreen name={name} planWeek={planWeek} />}
 
         {/* Khối 2: Lưới báo cáo */}
         <ReportGrid
