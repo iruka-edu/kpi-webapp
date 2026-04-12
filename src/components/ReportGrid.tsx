@@ -62,19 +62,20 @@ function TableHeader() {
   return (
     <thead className="bg-[#1e3a5f] text-white">
       <tr>
-        <th className="border border-gray-300 p-2 text-center w-8">STT</th>
-        <th className="border border-gray-300 p-2 text-left min-w-[200px]">Nội dung công việc</th>
-        <th className="border border-gray-300 p-2 text-left min-w-[150px]">Ghi chú tiến độ</th>
-        <th className="border border-gray-300 p-2 text-center w-20">Đơn vị</th>
-        <th className="border border-gray-300 p-2 text-center w-20">Số lượng (KH)</th>
-        <th className="border border-gray-300 p-2 text-center w-20 bg-yellow-600">Thực hiện</th>
-        <th className="border border-gray-300 p-2 text-center w-24">% HT</th>
-        <th className="border border-gray-300 p-2 text-center w-20">Trọng số</th>
-        <th className="border border-gray-300 p-2 text-center w-24">Đạt được</th>
-        <th className="border border-gray-300 p-2 text-center w-10">Xóa</th>
+        <th className="border border-gray-300 p-2 text-center w-12 whitespace-nowrap">STT</th>
+        <th className="border border-gray-300 p-2 text-left min-w-[400px] whitespace-nowrap">Nội dung công việc</th>
+        <th className="border border-gray-300 p-2 text-left min-w-[250px] whitespace-nowrap">Ghi chú tiến độ</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[100px] whitespace-nowrap">Đơn vị</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[120px] whitespace-nowrap">Số lượng (KH)</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[120px] bg-yellow-600 whitespace-nowrap italic">Thực hiện</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[100px] whitespace-nowrap">% HT</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[100px] whitespace-nowrap">Trọng số</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[100px] whitespace-nowrap">Đạt được</th>
+        <th className="border border-gray-300 p-2 text-center w-10 whitespace-nowrap">Xóa</th>
       </tr>
     </thead>
   );
+}
 }
 
 /**
