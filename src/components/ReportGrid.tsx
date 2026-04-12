@@ -65,12 +65,12 @@ function TableHeader() {
         <th className="border border-gray-300 p-2 text-center w-12 whitespace-nowrap">STT</th>
         <th className="border border-gray-300 p-2 text-left min-w-[400px] whitespace-nowrap">Nội dung công việc</th>
         <th className="border border-gray-300 p-2 text-left min-w-[250px] whitespace-nowrap">Ghi chú tiến độ</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[100px] whitespace-nowrap">Đơn vị</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[70px] whitespace-nowrap">Đơn vị</th>
         <th className="border border-gray-300 p-2 text-center min-w-[120px] whitespace-nowrap">Số lượng (KH)</th>
         <th className="border border-gray-300 p-2 text-center min-w-[120px] bg-yellow-600 whitespace-nowrap italic">Thực hiện</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[140px] whitespace-nowrap">% Hoàn Thành</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[100px] whitespace-nowrap">Trọng số</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[100px] whitespace-nowrap">Đạt được</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[115px] whitespace-nowrap text-[13px]">% Hoàn Thành</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[85px] whitespace-nowrap text-[13px]">Trọng số</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[85px] whitespace-nowrap text-[13px]">Đạt được</th>
         <th className="border border-gray-300 p-2 text-center w-10 whitespace-nowrap">Xóa</th>
       </tr>
     </thead>
@@ -88,7 +88,7 @@ function SectionBanner({ icon, label, hint, colorClass }: {
   colorClass: string;
 }) {
   return (
-    <div className={`flex flex-wrap items-center gap-2 px-4 py-3 rounded-t-lg border border-b-0 border-gray-300 ${colorClass}`}>
+    <div className={`w-full flex flex-wrap items-center gap-2 px-4 py-3 rounded-t-lg border border-b-0 border-gray-300 ${colorClass}`}>
       <span className="text-lg">{icon}</span>
       <span className="font-bold uppercase tracking-wide text-sm">{label}</span>
       <div className="flex-1" /> {/* Đẩy hint về bên phải hoặc tạo khoảng trống */}
