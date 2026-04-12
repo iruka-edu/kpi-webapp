@@ -305,13 +305,40 @@ function AppContent() {
     const oldTasks = currentTasks.filter(t => t.isNhiemVuCu);
     const newTasks = currentTasks.filter(t => !t.isNhiemVuCu && t.noiDung.trim() !== '');
 
-    // Validate F8: Highlight ô thiếu
-    const missingIds = oldTasks
-      .filter(t => t.thucHien === null || isNaN(t.thucHien as number))
-      .map(t => t.id);
-    if (missingIds.length > 0) {
-      setInvalidTaskIds(missingIds);
-      setToast({ msg: `⚠️ Còn ${missingIds.length} ô "Thực hiện" chưa điền! Vui lòng chốt đủ số trước.`, type: 'error' });
+    // === VALIDATE TOÀN DIỆN: Quét tất cả trường bắt buộc ===
+    const invalidIds: string[] = [];
+
+    // Bảng 1 (oldTasks):
+    // - Lần đầu (isFirstTime): bắt buộc noiDung, donVi, keHoach, trongSo, thucHien
+    // - Lần sau (có data cũ): chỉ bắt buộc thucHien
+    oldTasks.forEach(t => {
+      let rowInvalid = false;
+      if (isFirstTime) {
+        if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || !t.keHoach || t.trongSo === '' || !t.trongSo) {
+          rowInvalid = true;
+        }
+      }
+      // Thực hiện bắt buộc trong mọi trường hợp (kể cả lần sau)
+      if (t.thucHien === null || isNaN(t.thucHien as number)) {
+        rowInvalid = true;
+      }
+      if (rowInvalid) invalidIds.push(t.id);
+    });
+
+    // Bảng 2 (newTasks): bắt buộc noiDung, donVi, keHoach, trongSo
+    newTasks.forEach(t => {
+      if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || !t.keHoach || t.trongSo === '' || !t.trongSo) {
+        invalidIds.push(t.id);
+      }
+    });
+
+    if (invalidIds.length > 0) {
+      setInvalidTaskIds(invalidIds);
+      const missingThucHien = oldTasks.filter(t => t.thucHien === null || isNaN(t.thucHien as number)).length;
+      let msg = `⚠️ Còn ${invalidIds.length} dòng chưa điền đầy đủ!`;
+      if (missingThucHien > 0) msg += ` Bao gồm ${missingThucHien} ô "Thực hiện" chưa chốt.`;
+      msg += ' Các ô đỏ bên trên là những chỗ còn thiếu — vui lòng điền đủ trước khi nộp.';
+      setToast({ msg, type: 'error' });
       return;
     }
     setInvalidTaskIds([]);

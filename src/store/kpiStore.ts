@@ -5,9 +5,9 @@ export type Task = {
   noiDung: string;
   ghiChu: string;
   donVi: string;
-  keHoach: number;
+  keHoach: number | '';   // Rỗng = chưa điền, buộc NH phải tự tay nhập số
   thucHien: number | null;
-  trongSo: number;
+  trongSo: number | '';   // Rỗng = chưa điền, buộc NV tự chọn
   yeuCau: number;
   isNhiemVuCu: boolean; // Nếu = true => Khóa các cột, mờ đi, chỉ cho sửa Thực hiện
   
@@ -27,13 +27,12 @@ type KpiStore = {
   getTotalScore: () => number;
 };
 
-function calculateFields(thucHien: number | null, keHoach: number, trongSo: number, yeuCau: number) {
-  if (thucHien === null || isNaN(thucHien) || !keHoach) {
+function calculateFields(thucHien: number | null, keHoach: number | '', trongSo: number | '', yeuCau: number) {
+  // Guard: chưa nhập số hoặc số không hợp lệ thì trả về 0
+  if (thucHien === null || isNaN(thucHien) || !keHoach || !trongSo) {
     return { phanTram: 0, datDuoc: 0 };
   }
   const phanTram = (thucHien / keHoach) * 100;
-  // Công thức Excel: (Thực hiện / Kế hoạch) * Trọng số * (Yêu cầu / 100 ?)
-  // Mặc định: Đạt được = (% Hoàn Thành / 100) * Trọng số. Yêu cầu nếu có thể là hệ số. Mình giả định (Thực hiện / Kế hoạch) * Trọng số.
   const datDuoc = (thucHien / keHoach) * trongSo;
   
   return { phanTram: parseFloat(phanTram.toFixed(1)), datDuoc: parseFloat(datDuoc.toFixed(2)) };
@@ -68,7 +67,10 @@ export const useKpiStore = create<KpiStore>((set, get) => ({
       {
         id: 'new_' + Date.now(),
         noiDung: '', ghiChu: '', donVi: '',
-        keHoach: 1, thucHien: null, trongSo: 1, yeuCau: 1,
+        keHoach: '', // Rỗng buộc NV tự điền
+        thucHien: null,
+        trongSo: '', // Rỗng buộc NV tự chọn
+        yeuCau: 1,
         isNhiemVuCu: false,
         phanTram: 0, datDuoc: 0
       }
@@ -83,7 +85,10 @@ export const useKpiStore = create<KpiStore>((set, get) => ({
       {
         id: 'old_' + Date.now(),
         noiDung: '', ghiChu: '', donVi: '',
-        keHoach: 1, thucHien: null, trongSo: 1, yeuCau: 1,
+        keHoach: '', // Rỗng buộc NV tự điền
+        thucHien: null,
+        trongSo: '', // Rỗng buộc NV tự chọn
+        yeuCau: 1,
         isNhiemVuCu: true,
         phanTram: 0, datDuoc: 0,
       }

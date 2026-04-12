@@ -63,13 +63,23 @@ function TableHeader() {
     <thead className="bg-[#1e3a5f] text-white">
       <tr>
         <th className="border border-gray-300 p-2 text-center w-12 whitespace-nowrap">STT</th>
-        <th className="border border-gray-300 p-2 text-left min-w-[400px] whitespace-nowrap">Nội dung công việc</th>
+        <th className="border border-gray-300 p-2 text-left min-w-[400px] whitespace-nowrap">
+          Nội dung công việc <span className="text-red-400">*</span>
+        </th>
         <th className="border border-gray-300 p-2 text-left min-w-[250px] whitespace-nowrap">Ghi chú tiến độ</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[70px] whitespace-nowrap">Đơn vị</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[120px] whitespace-nowrap">Số lượng (KH)</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[120px] bg-yellow-600 whitespace-nowrap italic">Thực hiện</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[70px] whitespace-nowrap">
+          Đơn vị <span className="text-red-400">*</span>
+        </th>
+        <th className="border border-gray-300 p-2 text-center min-w-[120px] whitespace-nowrap">
+          Số lượng (KH) <span className="text-red-400">*</span>
+        </th>
+        <th className="border border-gray-300 p-2 text-center min-w-[120px] bg-yellow-600 whitespace-nowrap italic">
+          Thực hiện <span className="text-red-300">*</span>
+        </th>
         <th className="border border-gray-300 p-2 text-center min-w-[115px] whitespace-nowrap text-[13px]">% Hoàn Thành</th>
-        <th className="border border-gray-300 p-2 text-center min-w-[85px] whitespace-nowrap text-[13px]">Trọng số</th>
+        <th className="border border-gray-300 p-2 text-center min-w-[85px] whitespace-nowrap text-[13px]">
+          Trọng số <span className="text-red-400">*</span>
+        </th>
         <th className="border border-gray-300 p-2 text-center min-w-[85px] whitespace-nowrap text-[13px]">Đạt được</th>
         <th className="border border-gray-300 p-2 text-center w-10 whitespace-nowrap">Xóa</th>
       </tr>
@@ -156,7 +166,11 @@ export default function ReportGrid({
                   <td className="border border-gray-300 p-1">
                     {isFirstTime ? (
                       <textarea
-                        className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium min-h-[60px] bg-white resize-y"
+                        className={`w-full border-2 p-2 outline-none rounded-sm text-black font-medium min-h-[60px] bg-white resize-y transition
+                          ${isInvalid && !t.noiDung.trim()
+                            ? 'border-red-500 bg-red-50 animate-pulse'
+                            : 'border-gray-300 focus:border-blue-500'
+                          }`}
                         value={t.noiDung}
                         onChange={e => updateTaskField(t.id, 'noiDung', e.target.value)}
                         placeholder="Tên đầu việc tuần trước..."
@@ -185,7 +199,11 @@ export default function ReportGrid({
                     {isFirstTime ? (
                       <input
                         type="text"
-                        className="w-full text-center border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium bg-white"
+                        className={`w-full text-center border-2 p-2 outline-none rounded-sm text-black font-medium bg-white transition
+                          ${isInvalid && !t.donVi.trim()
+                            ? 'border-red-500 bg-red-50 animate-pulse'
+                            : 'border-gray-300 focus:border-blue-500'
+                          }`}
                         value={t.donVi}
                         onChange={e => updateTaskField(t.id, 'donVi', e.target.value)}
                         placeholder="game"
@@ -200,12 +218,17 @@ export default function ReportGrid({
                     {isFirstTime ? (
                       <input
                         type="number" min="1" step="1"
-                        className="w-full text-center border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm font-bold text-black bg-white"
-                        value={t.keHoach}
+                        className={`w-full text-center border-2 p-2 outline-none rounded-sm font-bold text-black bg-white transition
+                          ${isInvalid && (t.keHoach === '' || !t.keHoach)
+                            ? 'border-red-500 bg-red-50 animate-pulse'
+                            : 'border-gray-300 focus:border-blue-500'
+                          }`}
+                        value={t.keHoach === '' ? '' : t.keHoach}
                         onChange={e => {
                           const val = parseInt(e.target.value);
-                          updateTaskField(t.id, 'keHoach', isNaN(val) ? 1 : Math.max(1, val));
+                          updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(1, val));
                         }}
+                        placeholder="VD: 5"
                       />
                     ) : (
                       <div className="p-2 text-center font-bold text-black">{t.keHoach}</div>
@@ -242,10 +265,15 @@ export default function ReportGrid({
                   <td className="border border-gray-300 p-1">
                     {isFirstTime ? (
                       <select
-                        className="w-full text-center border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm font-bold text-black bg-white"
+                        className={`w-full text-center border-2 p-2 outline-none rounded-sm font-bold text-black bg-white transition
+                          ${isInvalid && t.trongSo === ''
+                            ? 'border-red-500 bg-red-50'
+                            : 'border-gray-300 focus:border-blue-500'
+                          }`}
                         value={t.trongSo}
-                        onChange={e => updateTaskField(t.id, 'trongSo', parseInt(e.target.value))}
+                        onChange={e => updateTaskField(t.id, 'trongSo', e.target.value === '' ? '' : parseInt(e.target.value))}
                       >
+                        <option value="" disabled>-- chọn --</option>
                         <option value={1}>1</option>
                         <option value={2}>2</option>
                         <option value={3}>3</option>
@@ -315,12 +343,18 @@ export default function ReportGrid({
         <table className="w-full border-collapse border border-gray-300 text-sm">
           <TableHeader />
           <tbody>
-            {newTasks.map((t, idx) => (
+            {newTasks.map((t, idx) => {
+              const isInvalidNew = invalidTaskIds.includes(t.id);
+              return (
               <tr key={t.id} className="hover:bg-gray-50 transition-colors">
                 <td className="border border-gray-300 p-2 text-center text-sm font-bold text-black">{idx + 1}</td>
                 <td className="border border-gray-300 p-1">
                   <textarea
-                    className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium placeholder:font-normal min-h-[60px] resize-y"
+                    className={`w-full border-2 p-2 outline-none rounded-sm text-black font-medium placeholder:font-normal min-h-[60px] resize-y transition
+                      ${isInvalidNew && !t.noiDung.trim()
+                        ? 'border-red-500 bg-red-50 animate-pulse'
+                        : 'border-gray-300 focus:border-blue-500'
+                      }`}
                     value={t.noiDung}
                     onChange={e => updateTaskField(t.id, 'noiDung', e.target.value)}
                     placeholder="Tên đầu việc tuần tới..."
@@ -337,7 +371,11 @@ export default function ReportGrid({
                 <td className="border border-gray-300 p-1">
                   <input
                     type="text"
-                    className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium"
+                    className={`w-full border-2 text-center p-2 outline-none rounded-sm text-black font-medium transition
+                      ${isInvalidNew && !t.donVi.trim()
+                        ? 'border-red-500 bg-red-50 animate-pulse'
+                        : 'border-gray-300 focus:border-blue-500'
+                      }`}
                     value={t.donVi}
                     onChange={e => updateTaskField(t.id, 'donVi', e.target.value)}
                     placeholder="game"
@@ -346,12 +384,17 @@ export default function ReportGrid({
                 <td className="border border-gray-300 p-1">
                   <input
                     type="number" min="1" step="1"
-                    className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 font-bold text-black rounded-sm"
-                    value={t.keHoach}
+                    className={`w-full border-2 text-center p-2 outline-none font-bold text-black rounded-sm transition
+                      ${isInvalidNew && (t.keHoach === '' || !t.keHoach)
+                        ? 'border-red-500 bg-red-50 animate-pulse'
+                        : 'border-gray-300 focus:border-blue-500'
+                      }`}
+                    value={t.keHoach === '' ? '' : t.keHoach}
                     onChange={e => {
                       const val = parseInt(e.target.value);
-                      updateTaskField(t.id, 'keHoach', isNaN(val) ? 1 : Math.max(1, val));
+                      updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(1, val));
                     }}
+                    placeholder="VD: 5"
                   />
                 </td>
                 {/* Ô Thực hiện (Bảng 2: Tuần sau mới chốt) */}
@@ -368,10 +411,15 @@ export default function ReportGrid({
                 </td>
                 <td className="border border-gray-300 p-1">
                   <select
-                    className="w-full border border-gray-300 text-center p-2 outline-none focus:border-blue-500 rounded-sm text-black font-bold bg-white"
+                    className={`w-full border-2 text-center p-2 outline-none rounded-sm font-bold text-black bg-white transition
+                      ${isInvalidNew && t.trongSo === ''
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-300 focus:border-blue-500'
+                      }`}
                     value={t.trongSo}
-                    onChange={e => updateTaskField(t.id, 'trongSo', parseInt(e.target.value))}
+                    onChange={e => updateTaskField(t.id, 'trongSo', e.target.value === '' ? '' : parseInt(e.target.value))}
                   >
+                    <option value="" disabled>-- chọn --</option>
                     <option value={1}>1</option>
                     <option value={2}>2</option>
                     <option value={3}>3</option>
@@ -392,7 +440,8 @@ export default function ReportGrid({
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
 
             {/* Nút thêm đầu việc bảng 2 */}
             <tr>
