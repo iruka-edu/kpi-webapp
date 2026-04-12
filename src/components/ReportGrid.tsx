@@ -218,7 +218,7 @@ export default function ReportGrid({
                   <td className="border border-gray-300 p-1">
                     {isFirstTime ? (
                       <input
-                        type="number" min="1" step="1"
+                        type="number" min="0" step="1"
                         className={`w-full text-center border-2 p-2 outline-none rounded-sm font-bold text-black bg-white transition
                           ${isInvalid && (t.keHoach === '' || !t.keHoach)
                             ? 'border-red-500 bg-red-50 animate-pulse'
@@ -227,7 +227,7 @@ export default function ReportGrid({
                         value={t.keHoach === '' ? '' : t.keHoach}
                         onChange={e => {
                           const val = parseInt(e.target.value);
-                          updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(1, val));
+                          updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(0, val));
                         }}
                         placeholder="VD: 5"
                       />
@@ -384,7 +384,7 @@ export default function ReportGrid({
                 </td>
                 <td className="border border-gray-300 p-1">
                   <input
-                    type="number" min="1" step="1"
+                    type="number" min="0" step="1"
                     className={`w-full border-2 text-center p-2 outline-none font-bold text-black rounded-sm transition
                       ${isInvalidNew && (t.keHoach === '' || !t.keHoach)
                         ? 'border-red-500 bg-red-50 animate-pulse'
@@ -393,7 +393,7 @@ export default function ReportGrid({
                     value={t.keHoach === '' ? '' : t.keHoach}
                     onChange={e => {
                       const val = parseInt(e.target.value);
-                      updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(1, val));
+                      updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(0, val));
                     }}
                     placeholder="VD: 5"
                   />

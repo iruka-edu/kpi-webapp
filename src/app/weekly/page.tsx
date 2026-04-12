@@ -314,7 +314,7 @@ function AppContent() {
     oldTasks.forEach(t => {
       let rowInvalid = false;
       if (isFirstTime) {
-        if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || !t.keHoach || t.trongSo === '' || !t.trongSo) {
+        if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || t.trongSo === '') {
           rowInvalid = true;
         }
       }
@@ -327,7 +327,7 @@ function AppContent() {
 
     // Bảng 2 (newTasks): bắt buộc noiDung, donVi, keHoach, trongSo
     newTasks.forEach(t => {
-      if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || !t.keHoach || t.trongSo === '' || !t.trongSo) {
+      if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || t.trongSo === '') {
         invalidIds.push(t.id);
       }
     });
