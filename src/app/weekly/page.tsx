@@ -325,7 +325,12 @@ function AppContent() {
       if (rowInvalid) invalidIds.push(t.id);
     });
 
-    // Bảng 2 (newTasks): bắt buộc noiDung, donVi, keHoach, trongSo
+    // Bảng 2 (newTasks): bắt buộc ít nhất 1 đầu việc và điền đủ noiDung, donVi, keHoach, trongSo
+    if (newTasks.length === 0) {
+      setToast({ msg: '⚠️ Vui lòng thêm ít nhất một đầu việc kế hoạch cho tuần tới!', type: 'error' });
+      return;
+    }
+
     newTasks.forEach(t => {
       if (!t.noiDung.trim() || !t.donVi.trim() || t.keHoach === '' || t.trongSo === '') {
         invalidIds.push(t.id);
