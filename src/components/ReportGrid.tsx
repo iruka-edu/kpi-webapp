@@ -356,8 +356,8 @@ export default function ReportGrid({
                 </td>
                 {/* Ô Thực hiện (Bảng 2: Tuần sau mới chốt) */}
                 <td className="border border-gray-300 p-1">
-                  <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-500 italic text-[11px] font-medium leading-tight">
-                    Tuần sau<br />chốt
+                  <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-500 italic text-[11px] font-medium leading-tight whitespace-nowrap">
+                    Tuần sau chốt
                   </div>
                 </td>
                 {/* % Hoàn Thành (Bảng 2: Tuần sau mới tính) */}
