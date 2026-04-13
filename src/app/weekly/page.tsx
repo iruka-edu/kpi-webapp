@@ -445,27 +445,6 @@ function AppContent() {
       )}
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Hướng dẫn sử dụng báo cáo (Scope 4) */}
-        <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-6 mb-8 flex flex-col md:flex-row gap-5 items-start shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          </div>
-          <div className="space-y-2">
-            <h3 className="font-black text-slate-800 text-xl tracking-tight">Hướng dẫn Báo Cáo Tuần</h3>
-            <p className="text-slate-600 text-base leading-relaxed max-w-4xl">
-              Báo cáo này giúp CEO và Quản lý theo dõi tiến độ, đánh giá hiệu quả để <strong className="text-blue-700">tính KPI, thưởng/phạt và duyệt lương</strong>.<br/>
-              Bạn có tối đa đến <strong className="text-rose-600">24:00 Chủ Nhật hàng tuần</strong> để nộp. Hãy cập nhật <code className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-amber-700 mx-1 shadow-sm">Thực hiện</code> của các đầu việc tuần trước, và lên danh sách <code className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-green-700 mx-1 shadow-sm">Kế hoạch</code> cho tuần tới.
-            </p>
-            <div className="pt-3 flex items-center gap-3">
-              <span className="text-xs text-slate-500 font-bold uppercase tracking-widest hidden sm:inline-block">Lệnh lấy Form:</span>
-              <code className="bg-slate-800 text-green-400 px-3 py-1.5 rounded-lg text-sm font-mono shadow-md inline-flex items-center gap-1.5">
-                <span className="text-slate-400 select-none">/</span>weekly
-              </code>
-            </div>
-          </div>
-        </div>
-
         {/* Khối 1: Header thông tin NV */}
         <HeaderInfo
           name={name} role={role} dept={dept} date={dateStr}
