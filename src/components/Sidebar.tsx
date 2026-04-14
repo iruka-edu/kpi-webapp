@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, FileSpreadsheet, FileBarChart, BookOpen, Settings, HelpCircle } from "lucide-react";
 
@@ -26,8 +27,8 @@ export default function Sidebar() {
         {/* Khối 1: Logo & Tên Cổng thông tin */}
         <div className="h-[72px] flex items-center px-[4px] border-b border-slate-800/80 shrink-0 w-[260px]">
           <div className="w-[42px] shrink-0 flex items-center justify-center">
-             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-blue-500/20">
-               I
+             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 p-[6px]">
+               <Image src="/logo-iruka.svg" alt="IruKa" width={28} height={28} style={{ objectFit: "contain", filter: "brightness(0) invert(1)" }} priority />
              </div>
           </div>
           {/* Chữ sẽ mờ đi khi thu gọn, chỉ xoè ra khi hover */}

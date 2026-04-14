@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// ─── Font Inter — giống hệt mockup ───────────────────────────────────────────
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// ─── JetBrains Mono — dùng cho code/cmd label như mockup ─────────────────────
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  weight: ["500", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,15 +31,15 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="vi"
+      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-screen bg-[#f8fafc] flex font-sans">
-        {/* Sidebar tĩnh bên trái (Fixed 1 chỗ, không ảnh hưởng cuộn trang) */}
+        {/* Sidebar tĩnh bên trái */}
         <Sidebar />
-        
+
         {/* Main Content Area (padding 28px 32px như mockup) */}
-        <main className="flex-1 text-slate-800 min-h-screen" style={{padding: "28px 32px 60px"}}>
+        <main className="flex-1 text-slate-800 min-h-screen" style={{ padding: "28px 32px 60px" }}>
           {children}
         </main>
       </body>
