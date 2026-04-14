@@ -122,7 +122,7 @@ function CardInner({ card }: { card: CmdCard }) {
         {/* cmd-name: JetBrains Mono 14px/700, bg #f1f5f9, border #e2e8f0 */}
         <code style={{
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "14px",
+          fontSize: "16px",
           fontWeight: 700,
           background: cmdStyle.bg,
           color: cmdStyle.color,
@@ -134,31 +134,31 @@ function CardInner({ card }: { card: CmdCard }) {
         </code>
         {/* cmd-badges: badge 10px/700 */}
         <div className="flex items-center" style={{ gap: "5px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.3px", background: deptStyle.bg, color: deptStyle.color }}>
+          <span style={{ fontSize: "12px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.3px", background: deptStyle.bg, color: deptStyle.color }}>
             {card.badgeDept}
           </span>
           {card.badgeDeadline && (
-            <span style={{ fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px", background: "#fee2e2", color: "#991b1b" }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px", background: "#fee2e2", color: "#991b1b" }}>
               {card.badgeDeadline}
             </span>
           )}
         </div>
       </div>
 
-      {/* cmd-title: 14px/700 */}
-      <p style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>{card.title}</p>
+      {/* cmd-title: 16px/700 */}
+      <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>{card.title}</p>
 
-      {/* cmd-desc: 12.5px */}
-      <p style={{ fontSize: "12.5px", color: "#64748b", lineHeight: 1.5, marginBottom: "12px" }}>{card.desc}</p>
+      {/* cmd-desc: 14px */}
+      <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.5, marginBottom: "12px" }}>{card.desc}</p>
 
-      {/* cmd-steps: 12px */}
+      {/* cmd-steps: 14px */}
       <div className="flex flex-col mb-4" style={{ gap: "5px" }}>
         {card.steps.map((s, i) => (
-          <div key={i} className="flex items-start" style={{ gap: "8px", fontSize: "12px", color: "#374151" }}>
+          <div key={i} className="flex items-start" style={{ gap: "8px", fontSize: "14px", color: "#374151" }}>
             {/* cmd-step-num: 18x18, navy bg */}
             <span
               className="shrink-0 flex items-center justify-center rounded-full"
-              style={{ width: "18px", height: "18px", background: "#1e3a5f", color: "#fff", fontSize: "10px", fontWeight: 800, marginTop: "1px" }}
+              style={{ width: "20px", height: "20px", background: "#1e3a5f", color: "#fff", fontSize: "11px", fontWeight: 800, marginTop: "1px" }}
             >
               {i + 1}
             </span>
@@ -167,17 +167,17 @@ function CardInner({ card }: { card: CmdCard }) {
         ))}
       </div>
 
-      {/* cmd-warning: 11px/600 */}
+      {/* cmd-warning: 13px/600 */}
       {card.warning && (
-        <div className="flex items-center mt-auto" style={{ gap: "6px", ...WARN_STYLE, borderRadius: "8px", padding: "7px 10px", fontSize: "11px", fontWeight: 600, minHeight: "48px" }}>
+        <div className="flex items-center mt-auto" style={{ gap: "6px", ...WARN_STYLE, borderRadius: "8px", padding: "7px 10px", fontSize: "13px", fontWeight: 600, minHeight: "48px" }}>
           {card.warning}
         </div>
       )}
-      {/* cmd-tip: 11px/600 */}
+      {/* cmd-tip: 13px/600 */}
       {card.tip && (
-        <div className="flex items-center mt-auto" style={{ gap: "6px", ...TIP_STYLE, borderRadius: "8px", padding: "7px 10px", fontSize: "11px", fontWeight: 600, minHeight: "48px" }}>
-          {card.tip}
-        </div>
+        <div className="flex items-center mt-auto" style={{ gap: "6px", ...TIP_STYLE, borderRadius: "8px", padding: "7px 10px", fontSize: "13px", fontWeight: 600, minHeight: "48px" }}
+          dangerouslySetInnerHTML={{ __html: card.tip }}
+        />
       )}
     </>
   );

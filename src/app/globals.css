@@ -13,6 +13,10 @@
 
   --background: #f8fafc;
   --foreground: #1e293b;
+
+  /* Bắt buộc sáng trên mọi thiết bị
+     dù macOS / iOS đang Dark Mode */
+  color-scheme: light only;
 }
 
 /* ─── Tailwind CSS variables (Inter + JetBrains Mono) ──────────────────────── */

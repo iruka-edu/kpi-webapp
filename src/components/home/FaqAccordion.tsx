@@ -86,7 +86,7 @@ export default function FaqAccordion() {
             className="w-full flex items-center justify-between text-left transition-colors"
             style={{
               padding: "14px 18px",
-              fontSize: "14px",
+              fontSize: "16px",
               fontWeight: 600,
               color: "#1e293b",
               background: "transparent",
@@ -108,7 +108,7 @@ export default function FaqAccordion() {
           {/* faq-a: 13px / 1.6 */}
           {open === i && (
             <div
-              style={{ padding: "0 18px 14px", fontSize: "13px", color: "#64748b", lineHeight: 1.6 }}
+              style={{ padding: "0 18px 14px", fontSize: "15px", color: "#64748b", lineHeight: 1.6 }}
               dangerouslySetInnerHTML={{ __html: faq.a }}
             />
           )}

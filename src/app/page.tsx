@@ -79,14 +79,14 @@ export default function HomePage() {
           <Image src="/logo-iruka.svg" alt="" width={100} height={100} priority />
         </div>
 
-        {/* hero-title: 26px / 900 */}
-        <h1 className="text-white font-black mb-5" style={{ fontSize: "26px", fontWeight: 900, letterSpacing: "-0.5px" }}>
+        {/* hero-title: 30px / 900 */}
+        <h1 className="text-white font-black mb-5" style={{ fontSize: "30px", fontWeight: 900, letterSpacing: "-0.5px" }}>
           Cổng Thông Tin Nội Bộ IruKa
         </h1>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* dept-label: 13px / 600 */}
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>
+          {/* dept-label: 15px / 600 */}
+          <span style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>
             👤 Tôi thuộc bộ phận:
           </span>
           {/* dept-select: 14px / 700 */}
@@ -98,7 +98,7 @@ export default function HomePage() {
               background: "rgba(255,255,255,0.15)",
               border: "1.5px solid rgba(255,255,255,0.3)",
               color: "#fff",
-              fontSize: "14px",
+              fontSize: "16px",
               fontWeight: 700,
               padding: "8px 14px",
               borderRadius: "10px",
@@ -120,7 +120,7 @@ export default function HomePage() {
                 background: "rgba(16,185,129,0.25)",
                 border: "1px solid rgba(16,185,129,0.4)",
                 color: "#6ee7b7",
-                fontSize: "12px",
+                fontSize: "13px",
                 fontWeight: 700,
                 padding: "5px 12px",
                 borderRadius: "20px",
@@ -141,8 +141,8 @@ export default function HomePage() {
           tc-row: 12px  tc-warning: 11.5px/600
       ══════════════════════════════════════ */}
       <div className="mb-7">
-        {/* section-title: 16px / 800 */}
-        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
+        {/* section-title: 19px / 800 */}
+        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "19px", fontWeight: 800, color: "#0f172a" }}>
           <span style={{ fontSize: "18px" }}>📅</span> Lịch Báo Cáo &amp; Deadline
         </h2>
 
@@ -157,17 +157,17 @@ export default function HomePage() {
             {/* tc-header */}
             <div className="flex items-center justify-between mb-2.5 mt-1">
               <div className="flex items-center justify-center rounded-xl" style={{ width: "38px", height: "38px", background: "#fef3c7", fontSize: "18px" }}>📬</div>
-              {/* tc-badge: 10px/800 */}
-              <span style={{ fontSize: "10px", fontWeight: 800, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px", background: "#fef3c7", color: "#92400e" }}>Hàng Ngày</span>
+              {/* tc-badge: 12px/800 */}
+              <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px", background: "#fef3c7", color: "#92400e" }}>Hàng Ngày</span>
             </div>
-            {/* tc-name: 15px/800 */}
-            <p style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", marginBottom: "2px" }}>Báo Cáo Ngày</p>
-            {/* tc-cmd: 12px/700 monospace */}
-            <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "12px", fontWeight: 700, color: "#64748b", marginBottom: "10px", display: "block" }}>/daily</code>
-            {/* tc-deadline-label: 10px/700 */}
-            <p style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px" }}>Deadline nộp</p>
-            {/* tc-deadline-val: 20px/900 */}
-            <p style={{ fontSize: "20px", fontWeight: 900, color: "#d97706", margin: "2px 0 8px" }}>Trước 09:00</p>
+            {/* tc-name: 17px/800 */}
+            <p style={{ fontSize: "17px", fontWeight: 800, color: "#0f172a", marginBottom: "2px" }}>Báo Cáo Ngày</p>
+            {/* tc-cmd: 14px/700 monospace */}
+            <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "14px", fontWeight: 700, color: "#64748b", marginBottom: "10px", display: "block" }}>/daily</code>
+            {/* tc-deadline-label: 12px/700 */}
+            <p style={{ fontSize: "12px", textTransform: "uppercase", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px" }}>Deadline nộp</p>
+            {/* tc-deadline-val: 24px/900 */}
+            <p style={{ fontSize: "24px", fontWeight: 900, color: "#d97706", margin: "2px 0 8px" }}>Trước 09:00</p>
             {/* tc-rows: 12px */}
             <div className="flex flex-col mb-4" style={{ gap: "5px", marginTop: "8px" }}>
               {[
@@ -176,14 +176,14 @@ export default function HomePage() {
                 <>Phiên chiều <b>14:00</b> — tag ai chưa nộp</>,
                 <>Sửa được đến <b>10:00</b> — sau đó khóa</>,
               ].map((row, i) => (
-                <div key={i} className="flex items-start" style={{ gap: "7px", fontSize: "12px", color: "#475569" }}>
+                <div key={i} className="flex items-start" style={{ gap: "7px", fontSize: "14px", color: "#475569" }}>
                   <span className="shrink-0 rounded-full" style={{ width: "5px", height: "5px", background: "#f59e0b", marginTop: "5px" }} />
                   <span>{row}</span>
                 </div>
               ))}
             </div>
-            {/* tc-warning: 11.5px/600 */}
-            <div className="flex items-center mt-auto" style={{ gap: "6px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "8px", padding: "8px 10px", fontSize: "11.5px", color: "#9a3412", fontWeight: 600, minHeight: "52px" }}>
+            {/* tc-warning: 13px/600 */}
+            <div className="flex items-center mt-auto" style={{ gap: "6px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "8px", padding: "8px 10px", fontSize: "13px", color: "#9a3412", fontWeight: 600, minHeight: "52px" }}>
               ⚠️ Nộp trễ sau <b>9h30</b>: Bot báo cáo lên CEO.
             </div>
           </div>
@@ -197,25 +197,25 @@ export default function HomePage() {
             <div className="absolute top-0 left-0 right-0" style={{ height: "4px", background: "linear-gradient(90deg, #ef4444, #f87171)", borderRadius: "16px 16px 0 0" }} />
             <div className="flex items-center justify-between mb-2.5 mt-1">
               <div className="flex items-center justify-center rounded-xl" style={{ width: "38px", height: "38px", background: "#fee2e2", fontSize: "18px" }}>📊</div>
-              <span style={{ fontSize: "10px", fontWeight: 800, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px", background: "#fee2e2", color: "#991b1b" }}>Hàng Tuần</span>
+              <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px", background: "#fee2e2", color: "#991b1b" }}>Hàng Tuần</span>
             </div>
-            <p style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", marginBottom: "2px" }}>Báo Cáo KPI Tuần</p>
-            <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "12px", fontWeight: 700, color: "#64748b", marginBottom: "10px", display: "block" }}>/weekly</code>
-            <p style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px" }}>Deadline nộp</p>
-            <p style={{ fontSize: "20px", fontWeight: 900, color: "#dc2626", margin: "2px 0 8px" }}>24:00 Chủ Nhật</p>
+            <p style={{ fontSize: "17px", fontWeight: 800, color: "#0f172a", marginBottom: "2px" }}>Báo Cáo KPI Tuần</p>
+            <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "14px", fontWeight: 700, color: "#64748b", marginBottom: "10px", display: "block" }}>/weekly</code>
+            <p style={{ fontSize: "12px", textTransform: "uppercase", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px" }}>Deadline nộp</p>
+            <p style={{ fontSize: "24px", fontWeight: 900, color: "#dc2626", margin: "2px 0 8px" }}>24:00 Chủ Nhật</p>
             <div className="flex flex-col mb-4" style={{ gap: "5px", marginTop: "8px" }}>
               {[
                 <>Bot DM nhắc lúc <b>20:00 Chủ Nhật</b> (còn 4 tiếng)</>,
                 <>Bot tổng hợp <b>9:05 Thứ Hai</b> → gửi CEO</>,
                 <>Bot DM xác nhận ngay khi bạn submit</>,
               ].map((row, i) => (
-                <div key={i} className="flex items-start" style={{ gap: "7px", fontSize: "12px", color: "#475569" }}>
+                <div key={i} className="flex items-start" style={{ gap: "7px", fontSize: "14px", color: "#475569" }}>
                   <span className="shrink-0 rounded-full" style={{ width: "5px", height: "5px", background: "#ef4444", marginTop: "5px" }} />
                   <span>{row}</span>
                 </div>
               ))}
             </div>
-            <div className="flex items-center mt-auto" style={{ gap: "6px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "8px", padding: "8px 10px", fontSize: "11.5px", color: "#9a3412", fontWeight: 600, minHeight: "52px" }}>
+            <div className="flex items-center mt-auto" style={{ gap: "6px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "8px", padding: "8px 10px", fontSize: "13px", color: "#9a3412", fontWeight: 600, minHeight: "52px" }}>
               ⚠️ Nộp trễ: Phạt <b>50k</b>. Áp dụng: <b>HR · Content · Design · QC</b>
             </div>
           </a>
@@ -229,25 +229,25 @@ export default function HomePage() {
             <div className="absolute top-0 left-0 right-0" style={{ height: "4px", background: "linear-gradient(90deg, #8b5cf6, #a78bfa)", borderRadius: "16px 16px 0 0" }} />
             <div className="flex items-center justify-between mb-2.5 mt-1">
               <div className="flex items-center justify-center rounded-xl" style={{ width: "38px", height: "38px", background: "#ede9fe", fontSize: "18px" }}>📋</div>
-              <span style={{ fontSize: "10px", fontWeight: 800, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px", background: "#ede9fe", color: "#5b21b6" }}>Hàng Tháng</span>
+              <span style={{ fontSize: "12px", fontWeight: 800, padding: "3px 8px", borderRadius: "20px", textTransform: "uppercase", letterSpacing: "0.5px", background: "#ede9fe", color: "#5b21b6" }}>Hàng Tháng</span>
             </div>
-            <p style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", marginBottom: "2px" }}>Báo Cáo &amp; KH Tháng</p>
-            <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "12px", fontWeight: 700, color: "#64748b", marginBottom: "10px", display: "block" }}>/monthly</code>
-            <p style={{ fontSize: "10px", textTransform: "uppercase", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px" }}>Deadline nộp</p>
-            <p style={{ fontSize: "20px", fontWeight: 900, color: "#7c3aed", margin: "2px 0 8px" }}>24:00 ngày Mùng 4</p>
+            <p style={{ fontSize: "17px", fontWeight: 800, color: "#0f172a", marginBottom: "2px" }}>Báo Cáo &amp; KH Tháng</p>
+            <code style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "14px", fontWeight: 700, color: "#64748b", marginBottom: "10px", display: "block" }}>/monthly</code>
+            <p style={{ fontSize: "12px", textTransform: "uppercase", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.5px" }}>Deadline nộp</p>
+            <p style={{ fontSize: "24px", fontWeight: 900, color: "#7c3aed", margin: "2px 0 8px" }}>24:00 ngày Mùng 4</p>
             <div className="flex flex-col mb-4" style={{ gap: "5px", marginTop: "8px" }}>
               {[
                 <>Bot DM nhắc ngày <b>mùng 1</b> hàng tháng</>,
                 <>Bot chốt danh sách lúc <b>9:00 mùng 5</b></>,
                 <>Danh sách trễ gửi thẳng về <b>CEO</b></>,
               ].map((row, i) => (
-                <div key={i} className="flex items-start" style={{ gap: "7px", fontSize: "12px", color: "#475569" }}>
+                <div key={i} className="flex items-start" style={{ gap: "7px", fontSize: "14px", color: "#475569" }}>
                   <span className="shrink-0 rounded-full" style={{ width: "5px", height: "5px", background: "#8b5cf6", marginTop: "5px" }} />
                   <span>{row}</span>
                 </div>
               ))}
             </div>
-            <div className="flex items-center mt-auto" style={{ gap: "6px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "8px", padding: "8px 10px", fontSize: "11.5px", color: "#9a3412", fontWeight: 600, minHeight: "52px" }}>
+            <div className="flex items-center mt-auto" style={{ gap: "6px", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "8px", padding: "8px 10px", fontSize: "13px", color: "#9a3412", fontWeight: 600, minHeight: "52px" }}>
               ⚠️ Nộp trễ: Phạt <b>100k</b>. Không áp dụng: <b>CEO, HĐQT/Mentor</b>
             </div>
           </a>
@@ -260,8 +260,8 @@ export default function HomePage() {
           tab-btn: 13px/600
       ══════════════════════════════════════ */}
       <div className="mb-7">
-        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
-          <span style={{ fontSize: "18px" }}>🤖</span> Lệnh Discord Bot Của Bạn
+        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "19px", fontWeight: 800, color: "#0f172a" }}>
+          <span style={{ fontSize: "20px" }}>🤖</span> Lệnh Discord Bot Của Bạn
         </h2>
 
         {/* tabs-wrap: pill bar, tab-btn: 13px/600 */}
@@ -275,9 +275,9 @@ export default function HomePage() {
               onClick={() => setActiveTab(tab.key)}
               className="cursor-pointer border-none transition-all duration-150"
               style={{
-                fontSize: "13px",
+                fontSize: "15px",
                 fontWeight: 600,
-                padding: "7px 16px",
+                padding: "8px 18px",
                 borderRadius: "8px",
                 color: activeTab === tab.key
                   ? (tab.isHr ? "#fff" : "#1e3a5f")
@@ -308,8 +308,8 @@ export default function HomePage() {
           rule-text: 13px/600  rule-sub: 11.5px
       ══════════════════════════════════════ */}
       <div className="mb-7">
-        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
-          <span style={{ fontSize: "18px" }}>📜</span> Nội Quy Cần Nhớ
+        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "19px", fontWeight: 800, color: "#0f172a" }}>
+          <span style={{ fontSize: "20px" }}>📜</span> Nội Quy Cần Nhớ
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {RULES.map((r, i) => (
@@ -325,14 +325,14 @@ export default function HomePage() {
               }}
             >
               <div className={`shrink-0 flex items-center justify-center rounded-xl ${RULE_COLOR[r.color]}`}
-                style={{ width: "36px", height: "36px", borderRadius: "9px", fontSize: "17px" }}>
+                style={{ width: "38px", height: "38px", borderRadius: "9px", fontSize: "19px" }}>
                 {r.icon}
               </div>
               <div>
-                {/* rule-text: 13px/600 */}
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b", lineHeight: 1.4 }}>{r.text}</p>
-                {/* rule-sub: 11.5px */}
-                <p style={{ fontSize: "11.5px", color: "#64748b", marginTop: "2px", fontWeight: 400 }}>{r.sub}</p>
+                {/* rule-text: 15px/600 */}
+                <p style={{ fontSize: "16px", fontWeight: 600, color: "#1e293b", lineHeight: 1.4 }}>{r.text}</p>
+                {/* rule-sub: 13px */}
+                <p style={{ fontSize: "13px", color: "#64748b", marginTop: "2px", fontWeight: 400 }}>{r.sub}</p>
               </div>
             </div>
           ))}
@@ -344,8 +344,8 @@ export default function HomePage() {
           faq-q: 14px/600  faq-a: 13px
       ══════════════════════════════════════ */}
       <div>
-        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
-          <span style={{ fontSize: "18px" }}>❓</span> Câu Hỏi Thường Gặp
+        <h2 className="flex items-center gap-2 mb-4" style={{ fontSize: "19px", fontWeight: 800, color: "#0f172a" }}>
+          <span style={{ fontSize: "20px" }}>❓</span> Câu Hỏi Thường Gặp
         </h2>
         <FaqAccordion />
       </div>

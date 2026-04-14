@@ -12,7 +12,7 @@ const BAR: Record<string, string> = {
 
 const CMD_STYLE: React.CSSProperties = {
   fontFamily: "'JetBrains Mono', monospace",
-  fontSize: "14px",
+  fontSize: "16px",
   fontWeight: 700,
   background: "#f1f5f9",
   color: "#1e3a5f",
@@ -23,12 +23,12 @@ const CMD_STYLE: React.CSSProperties = {
 
 const WARN_STYLE: React.CSSProperties = {
   background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412",
-  borderRadius: "8px", padding: "7px 10px", fontSize: "11px", fontWeight: 600,
+  borderRadius: "8px", padding: "7px 10px", fontSize: "13px", fontWeight: 600,
   minHeight: "48px", display: "flex", alignItems: "center", gap: "6px", marginTop: "auto",
 };
 const TIP_STYLE: React.CSSProperties = {
   background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534",
-  borderRadius: "8px", padding: "7px 10px", fontSize: "11px", fontWeight: 600,
+  borderRadius: "8px", padding: "7px 10px", fontSize: "13px", fontWeight: 600,
   minHeight: "48px", display: "flex", alignItems: "center", gap: "6px", marginTop: "auto",
 };
 
@@ -111,21 +111,21 @@ function Card({ d }: { d: CardData }) {
         <div className="flex items-center justify-between mb-3" style={{ flexWrap: "wrap", gap: "6px" }}>
           <code style={CMD_STYLE}>{d.cmd}</code>
           <div className="flex items-center" style={{ gap: "5px" }}>
-            <span style={{ fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px", background: "#dcfce7", color: "#166534", textTransform: "uppercase", letterSpacing: "0.3px" }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px", background: "#dcfce7", color: "#166534", textTransform: "uppercase", letterSpacing: "0.3px" }}>
               {d.badgeDept}
             </span>
           </div>
         </div>
-        {/* cmd-title: 14px/700 */}
-        <p style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>{d.title}</p>
-        {/* cmd-desc: 12.5px */}
-        <p style={{ fontSize: "12.5px", color: "#64748b", lineHeight: 1.5, marginBottom: "12px" }}>{d.desc}</p>
-        {/* cmd-steps: 12px, step-num navy */}
+        {/* cmd-title: 16px/700 */}
+        <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>{d.title}</p>
+        {/* cmd-desc: 14px */}
+        <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.5, marginBottom: "12px" }}>{d.desc}</p>
+        {/* cmd-steps: 14px, step-num navy */}
         <div className="flex flex-col mb-4" style={{ gap: "5px" }}>
           {d.steps.map((s, i) => (
-            <div key={i} className="flex items-start" style={{ gap: "8px", fontSize: "12px", color: "#374151" }}>
+            <div key={i} className="flex items-start" style={{ gap: "8px", fontSize: "14px", color: "#374151" }}>
               <span className="shrink-0 flex items-center justify-center rounded-full"
-                style={{ width: "18px", height: "18px", background: "#1e3a5f", color: "#fff", fontSize: "10px", fontWeight: 800, marginTop: "1px" }}>
+                style={{ width: "20px", height: "20px", background: "#1e3a5f", color: "#fff", fontSize: "11px", fontWeight: 800, marginTop: "1px" }}>
                 {i + 1}
               </span>
               <span dangerouslySetInnerHTML={{ __html: s }} />
