@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IruKa Staff Portal — Mockup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1e3a5f;
+      --navy-light: #2a4f82;
+      --navy-dim: #f0f4f9;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --green: #10b981;
+      --blue: #3b82f6;
+      --sidebar-w: 220px;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      min-height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .sidebar-logo-text { color: #fff; font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+    .sidebar-logo-sub { color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+    .sidebar-nav { padding: 16px 12px; flex: 1; }
+    .nav-section-label {
+      color: rgba(255,255,255,0.3);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: rgba(255,255,255,0.6);
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .nav-item.active { background: rgba(59,130,246,0.2); color: #93c5fd; font-weight: 700; }
+    .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+    .sidebar-footer {
+      padding: 14px 12px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 28px 32px 60px;
+      max-width: calc(100% - var(--sidebar-w));
+    }
+
+    /* ── KV1: HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #2563eb 60%, #0ea5e9 100%);
+      border-radius: 20px;
+      padding: 28px 32px;
+      color: #fff;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '🐬';
+      position: absolute;
+      right: 32px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 80px;
+      opacity: 0.12;
+    }
+    .hero-date { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .hero-title { font-size: 26px; font-weight: 900; margin-bottom: 4px; letter-spacing: -0.5px; }
+    .hero-sub { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 20px; }
+    .dept-selector-wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .dept-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); white-space: nowrap; }
+    .dept-select {
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 36px 8px 14px;
+      border-radius: 10px;
+      appearance: none;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: all 0.2s;
+      min-width: 180px;
+    }
+    .dept-select:focus { outline: none; border-color: rgba(255,255,255,0.6); }
+    .dept-select option { background: var(--navy); color: #fff; }
+    .dept-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(16,185,129,0.25); border: 1px solid rgba(16,185,129,0.4);
+      color: #6ee7b7; font-size: 12px; font-weight: 700;
+      padding: 5px 12px; border-radius: 20px;
+    }
+    .dept-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+
+    /* ── KV2: TIMELINE ── */
+    .section-title {
+      font-size: 16px; font-weight: 800; color: #0f172a;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title span { font-size: 18px; }
+    .timeline-wrap {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .timeline-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .timeline-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); }
+    .timeline-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      border-radius: 16px 16px 0 0;
+    }
+    .tc-amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .tc-red::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .tc-purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+    .tc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .tc-icon-wrap {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .tc-icon-wrap.amber { background: #fef3c7; }
+    .tc-icon-wrap.red { background: #fee2e2; }
+    .tc-icon-wrap.purple { background: #ede9fe; }
+    .tc-badge {
+      font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .tc-badge.amber { background: #fef3c7; color: #92400e; }
+    .tc-badge.red { background: #fee2e2; color: #991b1b; }
+    .tc-badge.purple { background: #ede9fe; color: #5b21b6; }
+    .tc-name { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+    .tc-cmd { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #64748b; font-weight: 700; margin-bottom: 10px; }
+    .tc-deadline-label { font-size: 10px; text-transform: uppercase; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px; }
+    .tc-deadline-val { font-size: 20px; font-weight: 900; margin: 2px 0 8px; }
+    .tc-deadline-val.amber { color: #d97706; }
+    .tc-deadline-val.red { color: #dc2626; }
+    .tc-deadline-val.purple { color: #7c3aed; }
+    .tc-rows { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .tc-row { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: #475569; }
+    .tc-row .bul { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .tc-row .bul.amber { background: #f59e0b; }
+    .tc-row .bul.red { background: #ef4444; }
+    .tc-row .bul.purple { background: #8b5cf6; }
+    .tc-warning {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff7ed; border: 1px solid #fed7aa;
+      border-radius: 8px; padding: 8px 10px;
+      font-size: 11.5px; color: #9a3412; font-weight: 600;
+      margin-top: 10px;
+    }
+
+    /* ── KV3: COMMANDS ── */
+    .commands-section { margin-bottom: 28px; }
+    .dept-info-banner {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+      font-size: 13px; color: #1d4ed8; font-weight: 600;
+    }
+    .tabs-wrap {
+      display: flex; gap: 6px;
+      margin-bottom: 16px;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--navy);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .commands-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .cmd-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1.5px solid #e2e8f0;
+      padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .cmd-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); border-color: var(--blue); }
+    .cmd-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      border-radius: 14px 0 0 14px;
+    }
+    .cmd-card.amber::before { background: var(--amber); }
+    .cmd-card.blue::before { background: var(--blue); }
+    .cmd-card.purple::before { background: var(--purple); }
+    .cmd-card.red::before { background: var(--red); }
+    .cmd-card.green::before { background: var(--green); }
+    .cmd-card.navy::before { background: var(--navy); }
+    .cmd-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .cmd-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; font-weight: 700;
+      background: #f1f5f9;
+      color: var(--navy);
+      padding: 4px 10px; border-radius: 7px;
+      border: 1px solid #e2e8f0;
+    }
+    .cmd-badges { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+    .badge {
+      font-size: 10px; font-weight: 700;
+      padding: 3px 8px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .badge-dept { background: #dbeafe; color: #1e40af; }
+    .badge-ceo { background: #fef3c7; color: #92400e; }
+    .badge-all { background: #dcfce7; color: #166534; }
+    .badge-deadline { background: #fee2e2; color: #991b1b; }
+    .cmd-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .cmd-desc { font-size: 12.5px; color: #64748b; line-height: 1.5; margin-bottom: 12px; }
+    .cmd-steps { display: flex; flex-direction: column; gap: 5px; }
+    .cmd-step {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 12px; color: #374151;
+    }
+    .cmd-step-num {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--navy); color: #fff;
+      font-size: 10px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .cmd-warning {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff7ed; border: 1px solid #fed7aa;
+      border-radius: 8px; padding: 7px 10px;
+      font-size: 11px; color: #9a3412; font-weight: 600;
+      margin-top: 10px;
+    }
+    .cmd-tip {
+      display: flex; align-items: center; gap: 6px;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 8px; padding: 7px 10px;
+      font-size: 11px; color: #166534; font-weight: 600;
+      margin-top: 10px;
+    }
+
+    /* ── KV4: NỘI QUY NHANH ── */
+    .rules-section { margin-bottom: 28px; }
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .rule-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      padding: 14px 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      transition: all 0.15s;
+    }
+    .rule-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+    .rule-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .rule-icon.blue { background: #eff6ff; }
+    .rule-icon.green { background: #f0fdf4; }
+    .rule-icon.red { background: #fef2f2; }
+    .rule-icon.yellow { background: #fefce8; }
+    .rule-icon.purple { background: #f5f3ff; }
+    .rule-icon.orange { background: #fff7ed; }
+    .rule-text { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.4; }
+    .rule-sub { font-size: 11.5px; color: #64748b; margin-top: 2px; font-weight: 400; }
+    .rules-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--navy); color: #fff;
+      font-size: 13px; font-weight: 700;
+      padding: 10px 20px; border-radius: 10px;
+      cursor: pointer; border: none;
+      transition: all 0.2s;
+    }
+    .rules-cta:hover { background: var(--navy-light); transform: translateY(-1px); }
+
+    /* ── KV5: FAQ ── */
+    .faq-section { margin-bottom: 20px; }
+    .faq-list { display: flex; flex-direction: column; gap: 8px; }
+    .faq-item {
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.15s;
+    }
+    .faq-q {
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer;
+      font-size: 14px; font-weight: 600; color: #1e293b;
+      user-select: none;
+    }
+    .faq-q:hover { background: #f8fafc; }
+    .faq-q .arrow { font-size: 12px; transition: transform 0.2s; color: #94a3b8; }
+    .faq-a {
+      padding: 0 18px 14px;
+      font-size: 13px; color: #64748b; line-height: 1.6;
+      display: none;
+    }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .arrow { transform: rotate(180deg); }
+    .faq-item.open { border-color: #bfdbfe; }
+
+    /* Hidden tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🐬</div>
+      <div>
+        <div class="sidebar-logo-text">IruKa</div>
+        <div class="sidebar-logo-sub">Staff Portal</div>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-label">Menu chính</div>
+      <a class="nav-item active" href="#">
+        <span class="icon">🏠</span> Trang chủ
+      </a>
+      <a class="nav-item" href="#">
+        <span class="icon">📋</span> Báo cáo KPI tuần
+      </a>
+      <a class="nav-item" href="#">
+        <span class="icon">📊</span> Báo cáo tháng
+      </a>
+      <a class="nav-item" href="#">
+        <span class="icon">📜</span> Nội quy công ty
+      </a>
+
+      <div class="nav-section-label" style="margin-top:20px;">Hệ thống</div>
+      <a class="nav-item" href="#">
+        <span class="icon">📈</span> Dashboard KPI
+      </a>
+      <a class="nav-item" href="#">
+        <span class="icon">⚙️</span> Cài đặt
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="nav-item" style="color:rgba(255,255,255,0.4); font-size:11px; padding: 6px 12px;">
+        🤖 IruKa Bot v5 · Đang hoạt động
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <main class="main">
+
+    <!-- KV1: HERO BANNER -->
+    <div class="hero">
+      <div class="hero-date">Thứ Hai, 14 Tháng 4, 2026</div>
+      <div class="hero-title">Cổng Thông Tin Nội Bộ IruKa 🐬</div>
+      <div class="hero-sub">Chào mừng đến với hệ thống quản lý nội bộ. Chọn bộ phận để xem lệnh phù hợp với bạn.</div>
+      <div class="dept-selector-wrap">
+        <span class="dept-label">👤 Tôi thuộc bộ phận:</span>
+        <select class="dept-select" id="deptSelect" onchange="onDeptChange(this.value)">
+          <option value="">-- Chọn bộ phận --</option>
+          <option value="dev">💻 Dev</option>
+          <option value="design">🎨 Design</option>
+          <option value="content">✍️ Content</option>
+          <option value="hr">👥 HR</option>
+          <option value="qc">🔍 QC</option>
+          <option value="edu">📚 Edu</option>
+          <option value="tester">🧪 Tester</option>
+          <option value="hdqt">🏛️ HĐQT / Mentor</option>
+        </select>
+        <div class="dept-badge" id="deptBadge" style="display:none">
+          <span class="dot"></span>
+          <span id="deptBadgeText">Đã lưu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- KV2: LỊCH BÁO CÁO & DEADLINE -->
+    <div class="section-title"><span>📅</span> Lịch Báo Cáo & Deadline</div>
+    <div class="timeline-wrap">
+
+      <div class="timeline-card tc-amber">
+        <div class="tc-header">
+          <div class="tc-icon-wrap amber">📬</div>
+          <span class="tc-badge amber">Hàng Ngày</span>
+        </div>
+        <div class="tc-name">Báo Cáo Ngày</div>
+        <div class="tc-cmd">/daily</div>
+        <div class="tc-deadline-label">Deadline nộp</div>
+        <div class="tc-deadline-val amber">Trước 09:00</div>
+        <div class="tc-rows">
+          <div class="tc-row"><span class="bul amber"></span><span>Bot nhắc lần 2 lúc <b>9:20</b> nếu chưa nộp</span></div>
+          <div class="tc-row"><span class="bul amber"></span><span>Bot tổng hợp gửi CEO lúc <b>9:30</b></span></div>
+          <div class="tc-row"><span class="bul amber"></span><span>Có thể sửa báo cáo trước <b>10:00</b></span></div>
+        </div>
+        <div class="tc-warning">⚠️ Nộp trễ: bị phạt đóng quỹ <b>50,000đ</b></div>
+      </div>
+
+      <div class="timeline-card tc-red">
+        <div class="tc-header">
+          <div class="tc-icon-wrap red">📊</div>
+          <span class="tc-badge red">Hàng Tuần</span>
+        </div>
+        <div class="tc-name">Báo Cáo KPI Tuần</div>
+        <div class="tc-cmd">/weekly</div>
+        <div class="tc-deadline-label">Deadline nộp</div>
+        <div class="tc-deadline-val red">24:00 Chủ Nhật</div>
+        <div class="tc-rows">
+          <div class="tc-row"><span class="bul red"></span><span>Bot nhắc nhở qua Discord DM trước deadline</span></div>
+          <div class="tc-row"><span class="bul red"></span><span>Bot quét danh sách nộp lúc <b>9:05 Thứ Hai</b></span></div>
+          <div class="tc-row"><span class="bul red"></span><span>Nộp muộn được ghi nhận báo CEO</span></div>
+        </div>
+        <div class="tc-warning">⚠️ Không áp dụng cho: <b>Dev, CEO, HĐQT</b></div>
+      </div>
+
+      <div class="timeline-card tc-purple">
+        <div class="tc-header">
+          <div class="tc-icon-wrap purple">📋</div>
+          <span class="tc-badge purple">Hàng Tháng</span>
+        </div>
+        <div class="tc-name">Báo Cáo & KH Tháng</div>
+        <div class="tc-cmd">/monthly</div>
+        <div class="tc-deadline-label">Deadline nộp</div>
+        <div class="tc-deadline-val purple">24:00 ngày Mùng 5</div>
+        <div class="tc-rows">
+          <div class="tc-row"><span class="bul purple"></span><span>Bot DM nhắc nhở ngày <b>mùng 1</b> hàng tháng</span></div>
+          <div class="tc-row"><span class="bul purple"></span><span>Bot chốt danh sách lúc <b>9:00 ngày mùng 5</b></span></div>
+          <div class="tc-row"><span class="bul purple"></span><span>Danh sách trễ được gửi thẳng về CEO</span></div>
+        </div>
+        <div class="tc-warning">⚠️ Không áp dụng cho: <b>CEO, HĐQT/Mentor</b></div>
+      </div>
+
+    </div>
+
+    <!-- KV3: LỆNH DISCORD -->
+    <div class="commands-section">
+      <div class="section-title"><span>🤖</span> Lệnh Discord Bot Của Bạn</div>
+
+      <div class="dept-info-banner" id="deptInfoBanner">
+        ℹ️ Chọn bộ phận ở trên để lọc đúng các lệnh bạn được sử dụng. Đang hiển thị tất cả lệnh.
+      </div>
+
+      <div class="tabs-wrap">
+        <button class="tab-btn active" onclick="switchTab('bao-cao', this)">📊 Lệnh Báo Cáo</button>
+        <button class="tab-btn" onclick="switchTab('xin-phep', this)">📅 Xin Phép & Điều Chỉnh</button>
+        <button class="tab-btn" onclick="switchTab('trao-doi', this)">💬 Giao Tiếp Với Sếp</button>
+      </div>
+
+      <!-- Tab 1: Báo cáo -->
+      <div id="tab-bao-cao" class="tab-content active">
+        <div class="commands-grid">
+
+          <div class="cmd-card amber">
+            <div class="cmd-header">
+              <span class="cmd-name">/daily</span>
+              <div class="cmd-badges">
+                <span class="badge badge-dept">Dev · Design · Content · QC · Edu · Tester</span>
+                <span class="badge badge-deadline">⏰ Trước 9:00</span>
+              </div>
+            </div>
+            <div class="cmd-title">Báo cáo hàng ngày</div>
+            <div class="cmd-desc">Gửi mỗi sáng đi làm, báo cáo kế hoạch hôm nay & kết quả hôm qua.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Mở Discord → Tìm Bot IruKa → Vào DM</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Gõ <b>/daily</b> → Bot mở form 3 mục</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">3</span><span>Điền: Kế hoạch hôm nay · Kết quả hôm qua · Blocker</span></div>
+            </div>
+            <div class="cmd-warning">⚠️ Không ghi chung chung như "đang làm" — phải có tên việc + số lượng!</div>
+          </div>
+
+          <div class="cmd-card red">
+            <div class="cmd-header">
+              <span class="cmd-name">/weekly</span>
+              <div class="cmd-badges">
+                <span class="badge badge-dept">HR · Design · Content · QC · Edu · Tester</span>
+                <span class="badge badge-deadline">⏰ CN 24:00</span>
+              </div>
+            </div>
+            <div class="cmd-title">Form báo cáo KPI tuần</div>
+            <div class="cmd-desc">Điền vào cuối tuần để báo cáo kết quả tuần cũ và kế hoạch tuần tới.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Trong DM Bot → Gõ <b>/weekly</b></span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot gửi link form cá nhân bảo mật</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">3</span><span>Điền đầy đủ 2 bảng: BC tuần cũ + KH tuần mới</span></div>
+            </div>
+            <div class="cmd-tip">✅ Dev không dùng lệnh này (Dev báo cáo theo /monthly)</div>
+          </div>
+
+          <div class="cmd-card purple">
+            <div class="cmd-header">
+              <span class="cmd-name">/monthly</span>
+              <div class="cmd-badges">
+                <span class="badge badge-dept">HR · Dev · Design · Content · QC · Edu · Tester</span>
+                <span class="badge badge-deadline">⏰ Mùng 5</span>
+              </div>
+            </div>
+            <div class="cmd-title">Báo cáo & kế hoạch tháng</div>
+            <div class="cmd-desc">Điền vào đầu tháng để tổng kết tháng cũ và lên kế hoạch tháng mới.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Ngày mùng 1 Bot sẽ tự DM nhắc bạn</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Gõ <b>/monthly</b> → Bot gửi link Google Sheets</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">3</span><span>Điền: Đầu việc · Số lượng · Deadline · Độ ưu tiên</span></div>
+            </div>
+            <div class="cmd-warning">⚠️ Nộp trước ngày mùng 5 — trễ sẽ được báo về CEO</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tab 2: Xin phép -->
+      <div id="tab-xin-phep" class="tab-content">
+        <div class="commands-grid">
+
+          <div class="cmd-card green">
+            <div class="cmd-header">
+              <span class="cmd-name">/leave</span>
+              <div class="cmd-badges">
+                <span class="badge badge-all">Tất cả NV</span>
+              </div>
+            </div>
+            <div class="cmd-title">Xin nghỉ phép</div>
+            <div class="cmd-desc">Tạo đơn xin nghỉ phép có lương, không lương hoặc nghỉ bù. CEO duyệt ngay trên Discord.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Gõ <b>/leave</b> → Điền ngày nghỉ + loại nghỉ + lý do</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot gửi đơn lên CEO để duyệt</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">3</span><span>Bot DM kết quả duyệt/từ chối về cho bạn</span></div>
+            </div>
+            <div class="cmd-warning">⚠️ Phải xin trước ít nhất 1 ngày làm việc — xin cùng ngày không được chấp nhận!</div>
+          </div>
+
+          <div class="cmd-card blue">
+            <div class="cmd-header">
+              <span class="cmd-name">/late</span>
+              <div class="cmd-badges">
+                <span class="badge badge-all">Tất cả NV</span>
+              </div>
+            </div>
+            <div class="cmd-title">Xin đi muộn</div>
+            <div class="cmd-desc">Báo đi muộn trước khi đến. Điền giờ đến + lý do cụ thể.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Gõ <b>/late</b> → Điền giờ đến và lý do</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot chuyển thông tin lên CEO</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">3</span><span>Bot xác nhận đã ghi nhận cho bạn</span></div>
+            </div>
+            <div class="cmd-tip">✅ Phải báo trước khi đến muộn, không báo sau</div>
+          </div>
+
+          <div class="cmd-card navy">
+            <div class="cmd-header">
+              <span class="cmd-name">/early</span>
+              <div class="cmd-badges">
+                <span class="badge badge-all">Tất cả NV</span>
+              </div>
+            </div>
+            <div class="cmd-title">Xin về sớm</div>
+            <div class="cmd-desc">Báo về sớm và lý do. Điền giờ dự kiến về.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Gõ <b>/early</b> → Điền giờ về và lý do</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot chuyển thông tin lên CEO</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">3</span><span>Bot xác nhận đã ghi nhận cho bạn</span></div>
+            </div>
+            <div class="cmd-tip">✅ Báo trước khi về, không báo sau khi đã về rồi</div>
+          </div>
+
+          <div class="cmd-card green">
+            <div class="cmd-header">
+              <span class="cmd-name">/mystatus</span>
+              <div class="cmd-badges">
+                <span class="badge badge-all">Tất cả NV</span>
+              </div>
+            </div>
+            <div class="cmd-title">Xem trạng thái đơn của tôi</div>
+            <div class="cmd-desc">Kiểm tra tất cả đơn xin phép đang chờ duyệt hoặc đã được xử lý.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Gõ <b>/mystatus</b> trong DM Bot</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot hiện danh sách đơn + trạng thái (Chờ/Duyệt/Từ chối)</span></div>
+            </div>
+            <div class="cmd-tip">✅ Dùng khi muốn kiểm tra đơn đã được CEO duyệt chưa</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tab 3: Giao tiếp -->
+      <div id="tab-trao-doi" class="tab-content">
+        <div class="commands-grid">
+
+          <div class="cmd-card blue">
+            <div class="cmd-header">
+              <span class="cmd-name">/question</span>
+              <div class="cmd-badges">
+                <span class="badge badge-all">Tất cả NV</span>
+              </div>
+            </div>
+            <div class="cmd-title">Hỏi hoặc đề xuất lên sếp</div>
+            <div class="cmd-desc">Gửi câu hỏi hoặc đề xuất đến CEO. Bot sẽ chuyển tiếp và nhắc sếp phản hồi.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Gõ <b>/question</b> → Nhập nội dung câu hỏi</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot forward ngay cho CEO</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">3</span><span>CEO phản hồi → Bot DM câu trả lời về bạn</span></div>
+            </div>
+            <div class="cmd-tip">✅ Nếu sau 30 phút CEO chưa reply, Bot sẽ tự nhắc CEO giúp bạn</div>
+          </div>
+
+          <div class="cmd-card red">
+            <div class="cmd-header">
+              <span class="cmd-name">/urgent</span>
+              <div class="cmd-badges">
+                <span class="badge badge-all">Tất cả NV</span>
+              </div>
+            </div>
+            <div class="cmd-title">Báo việc khẩn cấp</div>
+            <div class="cmd-desc">Dùng khi có sự cố nghiêm trọng cần CEO xử lý ngay lập tức.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Gõ <b>/urgent</b> → Mô tả tình huống</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot ping CEO <b>ngay lập tức</b> với độ ưu tiên cao</span></div>
+            </div>
+            <div class="cmd-warning">⚠️ Chỉ dùng khi thực sự khẩn cấp — lỗi nghiêm trọng, sự cố kỹ thuật...</div>
+          </div>
+
+          <div class="cmd-card green">
+            <div class="cmd-header">
+              <span class="cmd-name">/help</span>
+              <div class="cmd-badges">
+                <span class="badge badge-all">Tất cả NV</span>
+              </div>
+            </div>
+            <div class="cmd-title">Xem danh sách lệnh</div>
+            <div class="cmd-desc">Hiển thị tất cả lệnh bạn được phép dùng kèm mô tả ngắn trực tiếp trong Discord.</div>
+            <div class="cmd-steps">
+              <div class="cmd-step"><span class="cmd-step-num">1</span><span>Gõ <b>/help</b> trong DM Bot</span></div>
+              <div class="cmd-step"><span class="cmd-step-num">2</span><span>Bot liệt kê tất cả lệnh của bạn</span></div>
+            </div>
+            <div class="cmd-tip">✅ Dùng khi quên lệnh — Bot sẽ nhắc đúng lệnh bạn có quyền dùng</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- KV4: NỘI QUY NHANH -->
+    <div class="rules-section">
+      <div class="section-title"><span>📜</span> Nội Quy Cần Nhớ</div>
+      <div class="rules-grid">
+
+        <div class="rule-card">
+          <div class="rule-icon blue">⏰</div>
+          <div>
+            <div class="rule-text">Báo cáo ngày đúng giờ</div>
+            <div class="rule-sub">Nộp trước 9:00 sáng — trễ bị phạt 50,000đ</div>
+          </div>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-icon green">🏖️</div>
+          <div>
+            <div class="rule-text">Xin phép trước ít nhất 1 ngày</div>
+            <div class="rule-sub">Xin ngày hôm đó sẽ không được chấp nhận tự động</div>
+          </div>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-icon purple">📋</div>
+          <div>
+            <div class="rule-text">Kế hoạch tháng nộp trước mùng 5</div>
+            <div class="rule-sub">Bot chốt lúc 9:00 sáng mùng 5, trễ báo CEO</div>
+          </div>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-icon red">❌</div>
+          <div>
+            <div class="rule-text">Không ghi chung chung "đang làm"</div>
+            <div class="rule-sub">Mỗi đầu việc cần: tên cụ thể + số lượng + trạng thái</div>
+          </div>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-icon yellow">📲</div>
+          <div>
+            <div class="rule-text">Phản hồi Bot trong 30 phút</div>
+            <div class="rule-sub">Sau 3 tiếng không phản hồi → Bot báo leo thang CEO</div>
+          </div>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-icon orange">🚨</div>
+          <div>
+            <div class="rule-text">/urgent chỉ dùng khi thực sự khẩn</div>
+            <div class="rule-sub">Sự cố kỹ thuật, lỗi nghiêm trọng — không lạm dụng</div>
+          </div>
+        </div>
+
+      </div>
+      <button class="rules-cta">📜 Xem đầy đủ Nội Quy Công Ty →</button>
+    </div>
+
+    <!-- KV5: FAQ -->
+    <div class="faq-section">
+      <div class="section-title"><span>❓</span> Câu Hỏi Thường Gặp</div>
+      <div class="faq-list">
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q">
+            Bot không phản hồi thì phải làm sao?
+            <span class="arrow">▼</span>
+          </div>
+          <div class="faq-a">Hãy nhắn Admin hoặc IT để kiểm tra. Bạn cũng có thể thử gõ lại lệnh sau 1-2 phút. Nếu sau 5 phút vẫn không có phản hồi, nhắn trực tiếp vào nhóm kỹ thuật.</div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q">
+            Gửi sai thông tin trong form rồi — sửa thế nào?
+            <span class="arrow">▼</span>
+          </div>
+          <div class="faq-a">Nhắn thẳng vào DM với Bot: <b>"Em vừa gửi sai thông tin, đây là thông tin đúng: [...]"</b> — Bot sẽ chuyển lại cho CEO biết. Với báo cáo ngày (/daily), có thể sửa trước 10:00 sáng cùng ngày.</div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q">
+            Xem trạng thái đơn xin phép của mình ở đâu?
+            <span class="arrow">▼</span>
+          </div>
+          <div class="faq-a">Gõ <b>/mystatus</b> trong DM với Bot. Bot sẽ hiện danh sách tất cả đơn đang chờ duyệt hoặc đã được xử lý (Duyệt/Từ chối) kèm lý do.</div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q">
+            Sếp có biết tôi đã đọc tin nhắn chưa?
+            <span class="arrow">▼</span>
+          </div>
+          <div class="faq-a">Bot ghi nhận khi bạn <b>phản hồi</b> tin nhắn. Nếu sau 30 phút bạn không trả lời, Bot sẽ nhắc bạn lần 2. Sau 3 tiếng không phản hồi sẽ leo thang báo CEO. Vì vậy hãy phản hồi sớm nhất có thể.</div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ── Dữ liệu phân quyền theo bộ phận ──
+    const deptData = {
+      dev:     { label: '💻 Dev', commands: ['daily', 'monthly'], badge: 'Bộ phận Dev' },
+      design:  { label: '🎨 Design', commands: ['daily', 'weekly', 'monthly'], badge: 'Bộ phận Design' },
+      content: { label: '✍️ Content', commands: ['daily', 'weekly', 'monthly'], badge: 'Bộ phận Content' },
+      hr:      { label: '👥 HR', commands: ['weekly', 'monthly'], badge: 'Bộ phận HR' },
+      qc:      { label: '🔍 QC', commands: ['daily', 'weekly', 'monthly'], badge: 'Bộ phận QC' },
+      edu:     { label: '📚 Edu', commands: ['daily', 'weekly', 'monthly'], badge: 'Bộ phận Edu' },
+      tester:  { label: '🧪 Tester', commands: ['daily', 'weekly', 'monthly'], badge: 'Bộ phận Tester' },
+      hdqt:    { label: '🏛️ HĐQT', commands: [], badge: 'HĐQT / Mentor' },
+    };
+
+    function onDeptChange(val) {
+      const badge = document.getElementById('deptBadge');
+      const badgeText = document.getElementById('deptBadgeText');
+      const banner = document.getElementById('deptInfoBanner');
+
+      if (!val) {
+        badge.style.display = 'none';
+        banner.innerHTML = 'ℹ️ Chọn bộ phận ở trên để lọc đúng các lệnh bạn được sử dụng. Đang hiển thị tất cả lệnh.';
+        return;
+      }
+
+      const dept = deptData[val];
+      badge.style.display = 'inline-flex';
+      badgeText.textContent = dept.badge + ' đã lưu';
+
+      if (dept.commands.length === 0) {
+        banner.innerHTML = `🏛️ <b>${dept.badge}</b> không tham gia báo cáo Bot. Các lệnh tiện ích vẫn khả dụng.`;
+      } else {
+        const cmdStr = dept.commands.map(c => `<b>/${c}</b>`).join(', ');
+        banner.innerHTML = `✅ <b>${dept.badge}</b> sử dụng lệnh báo cáo: ${cmdStr}. Các lệnh xin phép và tiện ích luôn khả dụng.`;
+      }
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function toggleFaq(el) {
+      el.classList.toggle('open');
+    }
+  </script>
+</body>
+</html>
