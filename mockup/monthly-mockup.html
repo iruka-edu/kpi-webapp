@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mockup — Báo Cáo KPI Tháng | IruKa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1e3a5f;
+      --navy-light: rgba(30,58,95,0.08);
+      --amber: #d97706;
+      --green: #16a34a;
+      --red: #dc2626;
+      --gray-border: #d1d5db;
+      --gray-bg: #f9fafb;
+      --white: #ffffff;
+      color-scheme: light;
+    }
+    html, body { background: #fff; color: #111; font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    /* ── PAGE WRAPPER ─────────────────────────────── */
+    .page { max-width: 1600px; margin: 0 auto; padding: 0 20px 120px; }
+
+    /* ── STICKY HEADER ────────────────────────────── */
+    .sticky-header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      padding: 14px 0;
+      margin-bottom: 28px;
+      border-radius: 0 0 10px 10px;
+    }
+    .sticky-header-inner {
+      display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+    }
+    .sticky-header h1 {
+      font-size: 26px; font-weight: 900; text-transform: uppercase;
+      color: var(--navy); letter-spacing: 0.04em;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+    .badge {
+      padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .badge-navy { background: var(--navy); color: #fff; box-shadow: 0 2px 8px rgba(30,58,95,0.25); }
+    .badge-blue  { background: #eff6ff; color: #1d4ed8; border: 2px solid #bfdbfe; }
+    .badge-orange{ background: #fff7ed; color: #c2410c; border: 2px solid #fed7aa; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.65} }
+
+    /* ── INFO TABLE ──────────────────────────────── */
+    .info-table { border-collapse: collapse; font-size: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-radius: 8px; overflow: hidden; margin-bottom: 28px; }
+    .info-table td { border: 1px solid var(--gray-border); padding: 9px 16px; }
+    .info-table .label { background: #f3f4f6; font-weight: 700; color: #374151; width: 140px; }
+    .info-table .value { color: var(--navy); font-weight: 800; min-width: 200px; font-size: 15px; }
+
+    /* ── SECTION BANNER ─────────────────────────── */
+    .section-banner {
+      width: 100%; display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; border: 1px solid var(--gray-border); border-bottom: none;
+      border-radius: 8px 8px 0 0; font-size: 14px;
+    }
+    .banner-icon { font-size: 18px; }
+    .banner-label { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13px; }
+    .banner-spacer { flex: 1; }
+    .banner-hint { font-size: 12px; opacity: 0.7; font-style: italic; }
+    .banner-navy { background: rgba(30,58,95,0.08); color: var(--navy); }
+    .banner-gray  { background: #e9eaec; color: #111; }
+
+    /* ── KPI TABLE ───────────────────────────────── */
+    .kpi-table { width: 100%; border-collapse: collapse; border: 1px solid var(--gray-border); font-size: 13px; }
+    .kpi-table th {
+      background: var(--navy); color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 10px 8px; text-align: center; white-space: nowrap; font-weight: 700; font-size: 13px;
+    }
+    .kpi-table th.col-content { text-align: left; min-width: 380px; }
+    .kpi-table th.col-note    { text-align: left; min-width: 220px; }
+    .kpi-table th.col-unit    { min-width: 70px; }
+    .kpi-table th.col-qty     { min-width: 110px; }
+    .kpi-table th.col-actual  { min-width: 110px; background: #92400e; }
+    .kpi-table th.col-pct     { min-width: 100px; }
+    .kpi-table th.col-weight  { min-width: 80px; }
+    .kpi-table th.col-score   { min-width: 80px; }
+    .kpi-table th.col-del     { width: 44px; }
+    .req { color: #fca5a5; }
+
+    .kpi-table td {
+      border: 1px solid var(--gray-border); padding: 6px;
+      vertical-align: middle;
+    }
+    .row-old { background: rgba(239,246,255,0.35); }
+    .row-old:hover { background: rgba(239,246,255,0.7); }
+    .row-new:hover { background: #f9fafb; }
+
+    /* Cell types */
+    .cell-stt  { text-align: center; font-weight: 600; color: #111; padding: 8px; }
+    .cell-ro   { padding: 8px; color: #111; font-weight: 600; }
+    .cell-ro-center { padding: 8px; text-align: center; font-weight: 700; color: #111; }
+    .cell-pct  { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 3px; padding: 8px; text-align: center; font-weight: 700; color: var(--green); }
+    .cell-score{ background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 3px; padding: 8px; text-align: center; font-weight: 700; color: var(--green); }
+    .cell-dash { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 3px; padding: 8px; text-align: center; color: #9ca3af; font-weight: 700; }
+    .cell-pending { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 3px; padding: 8px; text-align: center; color: #9ca3af; font-size: 11px; font-style: italic; white-space: nowrap; }
+
+    /* Inputs */
+    textarea, input[type=text], input[type=number], select {
+      font-family: 'Inter', sans-serif; font-size: 13px;
+      border: 2px solid var(--gray-border); border-radius: 4px;
+      padding: 7px 8px; outline: none; color: #111; font-weight: 600;
+      width: 100%; background: #fff;
+      transition: border-color 0.15s;
+    }
+    textarea { resize: vertical; min-height: 58px; }
+    textarea:focus, input:focus, select:focus { border-color: #3b82f6; }
+    input[type=number].actual-input {
+      background: #fefce8; border-color: #d97706;
+      font-weight: 700; text-align: center; font-size: 14px;
+    }
+    input[type=number].actual-input:focus { border-color: #92400e; box-shadow: 0 0 0 3px rgba(217,119,6,0.25); }
+
+    /* Add row btn */
+    .add-row-td { border: 1px dashed #93c5fd; background: rgba(239,246,255,0.25); padding: 10px; text-align: center; }
+    .add-row-btn { color: var(--navy); font-weight: 700; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
+    .add-row-btn:hover { color: #1d4ed8; }
+    .add-row-td.gray { border-color: #d1d5db; background: rgba(249,250,251,0.4); }
+    .add-row-btn.gray-btn { color: #2563eb; }
+
+    /* Delete btn */
+    .del-btn { background: none; border: none; cursor: pointer; color: #f87171; padding: 6px; line-height: 1; font-size: 16px; }
+    .del-btn:hover { color: #b91c1c; }
+
+    /* ── TABLE WRAPPER ───────────────────── */
+    .table-section { width: 100%; margin-bottom: 32px; overflow-x: auto; }
+
+    /* ── SUMMARY ROW ───────────────────────────── */
+    .summary-row td { background: rgba(30,58,95,0.06); font-weight: 700; }
+    .summary-label { font-weight: 800; color: var(--navy); font-size: 13px; padding: 8px; }
+    .summary-pct   { color: var(--green); font-weight: 900; font-size: 15px; text-align: center; padding: 8px; }
+
+    /* ── ACHIEVEMENTS SECTION ─────────────────── */
+    .achieve-section {
+      border: 1px solid var(--gray-border); border-radius: 8px;
+      overflow: hidden; margin-bottom: 32px;
+    }
+    .achieve-header {
+      background: #fffbeb; border-bottom: 1px solid #fde68a;
+      padding: 12px 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .achieve-header span { font-weight: 800; font-size: 13px; color: #92400e; text-transform: uppercase; letter-spacing: 0.04em; }
+    .achieve-body { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #fff; }
+    @media(max-width:640px){ .achieve-body { grid-template-columns: 1fr; } }
+    .achieve-field label { display: block; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+    .achieve-field textarea { min-height: 80px; }
+    .achieve-field.full-width { grid-column: 1 / -1; }
+
+    /* ── SELF-RATING SECTION ──────────────────── */
+    .rating-section {
+      border: 1px solid #c7d2fe; border-radius: 8px;
+      overflow: hidden; margin-bottom: 32px;
+    }
+    .rating-header {
+      background: #eef2ff; border-bottom: 1px solid #c7d2fe;
+      padding: 12px 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .rating-header span { font-weight: 800; font-size: 13px; color: #3730a3; text-transform: uppercase; letter-spacing: 0.04em; }
+    .rating-body { padding: 20px; background: #fff; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .rating-stars { display: flex; gap: 8px; }
+    .star-btn {
+      font-size: 30px; cursor: pointer; background: none; border: none;
+      opacity: 0.3; transition: all 0.15s; transform-origin: center;
+    }
+    .star-btn.active { opacity: 1; transform: scale(1.15); }
+    .star-btn:hover { opacity: 0.85; transform: scale(1.1); }
+    .rating-label { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .rating-desc { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+    /* ── FIXED BOTTOM BAR ─────────────────────── */
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 2px solid var(--navy);
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.1);
+      padding: 14px 24px;
+      display: flex; justify-content: flex-end; align-items: center;
+      z-index: 100;
+    }
+    .bottom-bar-inner { display: flex; align-items: center; gap: 24px; }
+    .score-display { text-align: right; }
+    .score-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+    .score-value { display: flex; align-items: baseline; gap: 4px; justify-content: flex-end; }
+    .score-week  { font-size: 15px; font-weight: 700; color: #374151; text-transform: uppercase; }
+    .score-pct   { font-size: 30px; font-weight: 900; color: var(--green); }
+    .score-kh    { font-size: 13px; font-weight: 900; color: var(--green); }
+
+    .submit-btn {
+      position: relative; font-weight: 900; padding: 13px 52px; border-radius: 12px;
+      color: #fff; font-size: 16px; white-space: nowrap; border: none; cursor: pointer;
+      background: linear-gradient(135deg, #3b82f6 0%, var(--navy) 100%);
+      box-shadow: 0 10px 28px rgba(59,130,246,0.5);
+      border-bottom: 5px solid #1e3a5f;
+      border-top: 1px solid rgba(255,255,255,0.3);
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+    .submit-btn:hover { transform: scale(1.04); box-shadow: 0 14px 36px rgba(59,130,246,0.7); }
+    .submit-btn:active { transform: scale(0.97); }
+    .glow {
+      position: absolute; inset: -4px; border-radius: 14px;
+      background: #60a5fa; filter: blur(12px); opacity: 0.4;
+      z-index: -1; animation: pulse 2s infinite;
+    }
+
+    /* ── HELPER ANNOTATION (mockup only) ───────── */
+    .mockup-note {
+      background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px;
+      padding: 10px 14px; font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 24px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+
+    /* ── DIFF so với Weekly ─────────────────────── */
+    /* 1. Cột Thực hiện = vàng nhạt, cho điền tháng trước */
+    /* 2. Kế hoạch tháng tới = bảng 2 */
+    /* 3. Thêm block "Thành tựu & Khó khăn" */
+    /* 4. Thêm block "Tự đánh giá" (stars) */
+    /* 5. Header badge = "Tháng X" thay "Tuần X" */
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     STICKY HEADER
+══════════════════════════════════════════════ -->
+<div class="sticky-header">
+  <div class="sticky-header-inner">
+    <h1>Báo Cáo &amp; Kế Hoạch Tháng</h1>
+    <div class="badge-row">
+      <span class="badge badge-navy">📋 BC: Tháng 3 (01/03 – 31/03)</span>
+      <span class="badge badge-blue">🗓️ KH: Tháng 4 (01/04 – 30/04)</span>
+      <!-- Uncomment để hiện badge nộp muộn -->
+      <!-- <span class="badge badge-orange">⏰ Nộp muộn</span> -->
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ── MOCKUP NOTE ──────────────────────────── -->
+  <div class="mockup-note">
+    📐 <span><strong>MOCKUP — Báo Cáo Tháng.</strong> File này dùng để review trước khi implement vào Next.js. Các tương tác chỉ mang tính minh hoạ.</span>
+  </div>
+
+  <!-- ── INFO TABLE ──────────────────────────── -->
+  <table class="info-table">
+    <tbody>
+      <tr>
+        <td class="label">Họ tên</td>
+        <td class="value">Nguyễn Văn A</td>
+      </tr>
+      <tr>
+        <td class="label">Báo cáo cho</td>
+        <td class="value">CEO</td>
+      </tr>
+      <tr>
+        <td class="label">Phòng ban</td>
+        <td class="value">Content</td>
+      </tr>
+      <tr>
+        <td class="label">Ngày đánh giá</td>
+        <td class="value">14/04/2026</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════
+       BẢNG 1 — BÁO CÁO THÁNG TRƯỚC
+  ══════════════════════════════════════════ -->
+  <div class="table-section">
+    <div class="section-banner banner-navy">
+      <span class="banner-icon">📋</span>
+      <span class="banner-label">Báo Cáo Tháng 3 — Kết Quả Thực Đạt</span>
+      <span class="banner-spacer"></span>
+      <span class="banner-hint">Điền số vào cột Thực hiện để chốt kết quả</span>
+    </div>
+
+    <table class="kpi-table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th class="col-content">Nội dung công việc <span class="req">*</span></th>
+          <th class="col-note">Ghi chú tiến độ</th>
+          <th class="col-unit">Đơn vị <span class="req">*</span></th>
+          <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
+          <th class="col-actual">Thực hiện <span class="req">*</span></th>
+          <th class="col-pct">% Hoàn Thành</th>
+          <th class="col-weight">Trọng số <span class="req">*</span></th>
+          <th class="col-score">Đạt được</th>
+          <th class="col-del">Xóa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dòng mẫu 1: server-loaded, chỉ được nhập Thực hiện -->
+        <tr class="row-old">
+          <td class="cell-stt">1</td>
+          <td><div class="cell-ro">Viết bài blog hàng tháng cho IruKa Edu</div></td>
+          <td><div class="cell-ro">4 bài đã publish, 1 bài pending review</div></td>
+          <td><div class="cell-ro-center">Bài</div></td>
+          <td><div class="cell-ro-center">5</div></td>
+          <td>
+            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="4" />
+          </td>
+          <td><div class="cell-pct">80%</div></td>
+          <td><div class="cell-ro-center">3</div></td>
+          <td><div class="cell-score">2.4</div></td>
+          <td><button class="del-btn" title="Không thể xóa task từ server">—</button></td>
+        </tr>
+
+        <!-- Dòng mẫu 2 -->
+        <tr class="row-old">
+          <td class="cell-stt">2</td>
+          <td><div class="cell-ro">Tạo video ngắn TikTok cho kênh IruKa</div></td>
+          <td><div class="cell-ro">8/10 video hoàn thành, 2 chưa edit</div></td>
+          <td><div class="cell-ro-center">Video</div></td>
+          <td><div class="cell-ro-center">10</div></td>
+          <td>
+            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="8" />
+          </td>
+          <td><div class="cell-pct">80%</div></td>
+          <td><div class="cell-ro-center">2</div></td>
+          <td><div class="cell-score">1.6</div></td>
+          <td><button class="del-btn">—</button></td>
+        </tr>
+
+        <!-- Dòng mẫu 3 -->
+        <tr class="row-old">
+          <td class="cell-stt">3</td>
+          <td><div class="cell-ro">Thiết kế banner quảng cáo sự kiện tháng 3</div></td>
+          <td><div class="cell-ro">Hoàn thành đúng hạn, khách hàng satisfied</div></td>
+          <td><div class="cell-ro-center">Banner</div></td>
+          <td><div class="cell-ro-center">4</div></td>
+          <td>
+            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="4" />
+          </td>
+          <td><div class="cell-pct">100%</div></td>
+          <td><div class="cell-ro-center">1</div></td>
+          <td><div class="cell-score">1</div></td>
+          <td><button class="del-btn">—</button></td>
+        </tr>
+
+        <!-- Dòng trống (lần đầu) -->
+        <tr class="row-old">
+          <td class="cell-stt">4</td>
+          <td>
+            <textarea placeholder="Tên đầu việc tháng trước..."></textarea>
+          </td>
+          <td>
+            <textarea placeholder="Ghi chú tiến độ..."></textarea>
+          </td>
+          <td><input type="text" placeholder="game" style="text-align:center" /></td>
+          <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700" /></td>
+          <td>
+            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" />
+          </td>
+          <td><div class="cell-dash">—</div></td>
+          <td>
+            <select>
+              <option value="" disabled selected>-- chọn --</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </td>
+          <td><div class="cell-dash">—</div></td>
+          <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
+        </tr>
+
+        <!-- Nút thêm dòng -->
+        <tr>
+          <td colspan="10" class="add-row-td">
+            <button class="add-row-btn" onclick="addOldRow()">
+              ＋ Thêm đầu việc tháng trước
+            </button>
+          </td>
+        </tr>
+
+        <!-- Summary row -->
+        <tr class="summary-row">
+          <td colspan="6" class="summary-label">📊 Tổng kết Tháng 3</td>
+          <td class="summary-pct" colspan="2">Tổng trọng số: <strong>6</strong></td>
+          <td class="summary-pct" colspan="2">Đạt: <strong>5.0 / 6</strong> → <span style="color:#16a34a;font-size:16px">83.3% KH</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       BẢNG 2 — KẾ HOẠCH THÁNG TỚI
+  ══════════════════════════════════════════ -->
+  <div class="table-section">
+    <div class="section-banner banner-gray">
+      <span class="banner-icon">🗓️</span>
+      <span class="banner-label">Kế Hoạch Tháng 4 — Mục Tiêu Sắp Tới</span>
+      <span class="banner-spacer"></span>
+      <span class="banner-hint">Đặt mục tiêu cho tháng tới — Điền đủ các cột</span>
+    </div>
+
+    <table class="kpi-table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th class="col-content">Nội dung công việc <span class="req">*</span></th>
+          <th class="col-note">Ghi chú / Mục tiêu cụ thể</th>
+          <th class="col-unit">Đơn vị <span class="req">*</span></th>
+          <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
+          <th class="col-actual" style="background:#6b7280">Thực hiện</th>
+          <th class="col-pct">% Hoàn Thành</th>
+          <th class="col-weight">Trọng số <span class="req">*</span></th>
+          <th class="col-score">Đạt được</th>
+          <th class="col-del">Xóa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dòng kế hoạch 1 -->
+        <tr class="row-new">
+          <td class="cell-stt">1</td>
+          <td>
+            <textarea placeholder="Tên đầu việc tháng tới...">Viết bài blog cho IruKa Edu – tháng 4</textarea>
+          </td>
+          <td>
+            <textarea placeholder="Mô tả chi tiết...">Ít nhất 5 bài, ưu tiên chủ đề giáo dục STEM</textarea>
+          </td>
+          <td><input type="text" value="Bài" style="text-align:center" /></td>
+          <td><input type="number" value="5" style="text-align:center;font-weight:700" /></td>
+          <td><div class="cell-pending">Tháng sau chốt</div></td>
+          <td><div class="cell-dash">—</div></td>
+          <td>
+            <select>
+              <option value="3" selected>3</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </td>
+          <td><div class="cell-dash">—</div></td>
+          <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
+        </tr>
+
+        <!-- Dòng kế hoạch trống -->
+        <tr class="row-new">
+          <td class="cell-stt">2</td>
+          <td>
+            <textarea placeholder="Tên đầu việc tháng tới..."></textarea>
+          </td>
+          <td>
+            <textarea placeholder="Mô tả chi tiết..."></textarea>
+          </td>
+          <td><input type="text" placeholder="game" style="text-align:center" /></td>
+          <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700" /></td>
+          <td><div class="cell-pending">Tháng sau chốt</div></td>
+          <td><div class="cell-dash">—</div></td>
+          <td>
+            <select>
+              <option value="" disabled selected>-- chọn --</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </td>
+          <td><div class="cell-dash">—</div></td>
+          <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
+        </tr>
+
+        <!-- Nút thêm dòng bảng 2 -->
+        <tr>
+          <td colspan="10" class="add-row-td gray">
+            <button class="add-row-btn gray-btn" onclick="addNewRow()">
+              ＋ Thêm đầu việc mới
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       BLOCK 3 — THÀNH TỰU & KHÓ KHĂN
+       (Điểm khác biệt so với Báo cáo Tuần)
+  ══════════════════════════════════════════ -->
+  <div class="achieve-section">
+    <div class="achieve-header">
+      <span class="banner-icon">🏆</span>
+      <span>Thành tựu nổi bật &amp; Khó khăn trong tháng</span>
+    </div>
+    <div class="achieve-body">
+      <div class="achieve-field">
+        <label>⭐ Thành tựu / Kết quả nổi bật</label>
+        <textarea placeholder="VD: Hoàn thành chiến dịch marketing tháng 3, đạt 120% KPI lượt xem...">Hoàn thành toàn bộ bộ banner tháng 3 trước deadline 2 ngày. Bài blog về STEM đạt 4.2k lượt đọc, cao nhất từ trước đến nay.</textarea>
+      </div>
+      <div class="achieve-field">
+        <label>⛔ Khó khăn / Vướng mắc gặp phải</label>
+        <textarea placeholder="VD: Thiếu tài nguyên hình ảnh, cần hỗ trợ từ Design...">Video TikTok 2 clip bị trễ do chờ approval content từ phía khách hàng (>3 ngày). Đề xuất rút ngắn quy trình duyệt xuống 1 ngày.</textarea>
+      </div>
+      <div class="achieve-field">
+        <label>💡 Đề xuất cải tiến / Cần hỗ trợ gì?</label>
+        <textarea placeholder="VD: Đề nghị trang bị thêm công cụ...">Cần thêm account Canva Pro để sản xuất nhanh hơn. Đề xuất họp kickoff tháng 4 sớm hơn (giữa tháng 3) để có nhiều thời gian chuẩn bị.</textarea>
+      </div>
+      <div class="achieve-field">
+        <label>🎯 Mục tiêu ưu tiên tháng tới</label>
+        <textarea placeholder="Mục tiêu quan trọng nhất bạn muốn đạt được tháng tới...">Ra mắt series blog 5 bài về STEM, đạt 10k lượt đọc tổng cộng. Hoàn thiện 10 video TikTok đúng hạn.</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       BLOCK 4 — TỰ ĐÁNH GIÁ
+       (Điểm khác biệt so với Báo cáo Tuần)
+  ══════════════════════════════════════════ -->
+  <div class="rating-section">
+    <div class="rating-header">
+      <span class="banner-icon">🌟</span>
+      <span>Tự đánh giá mức độ hoàn thành tháng</span>
+    </div>
+    <div class="rating-body">
+      <div>
+        <div class="rating-label">Bạn tự chấm điểm tháng này:</div>
+        <div class="rating-desc" style="color:#6b7280;font-size:12px;margin-top:2px">1 = Chưa đạt · 2 = Đạt · 3 = Tốt · 4 = Rất tốt · 5 = Xuất sắc</div>
+      </div>
+      <div class="rating-stars" id="stars">
+        <button class="star-btn active" onclick="setStar(1)">⭐</button>
+        <button class="star-btn active" onclick="setStar(2)">⭐</button>
+        <button class="star-btn active" onclick="setStar(3)">⭐</button>
+        <button class="star-btn active" onclick="setStar(4)">⭐</button>
+        <button class="star-btn" onclick="setStar(5)">⭐</button>
+      </div>
+      <div>
+        <div class="rating-label" id="star-label">4 / 5 — Rất tốt</div>
+        <div class="rating-desc">CEO sẽ xem xét và phản hồi sau khi duyệt</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- ══════════════════════════════════════════
+     FIXED BOTTOM BAR
+══════════════════════════════════════════ -->
+<div class="bottom-bar">
+  <div class="bottom-bar-inner">
+    <div class="score-display">
+      <div class="score-label">Kết quả hoàn thành</div>
+      <div class="score-value">
+        <span class="score-week">Tháng 3 Đạt</span>
+        <span class="score-pct">83.3%</span>
+        <span class="score-kh">KH</span>
+      </div>
+    </div>
+    <button class="submit-btn">
+      <span class="glow"></span>
+      <span style="position:relative;z-index:1;display:flex;align-items:center;gap:8px">
+        📤 NỘP BÁO CÁO
+      </span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCRIPTS (demo interactions)
+══════════════════════════════════════════ -->
+<script>
+  // ── Star rating ────────────────────────
+  const starLabels = ['', '1 / 5 — Chưa đạt', '2 / 5 — Đạt', '3 / 5 — Tốt', '4 / 5 — Rất tốt', '5 / 5 — Xuất sắc'];
+  let currentStar = 4;
+
+  function setStar(n) {
+    currentStar = n;
+    const btns = document.querySelectorAll('.star-btn');
+    btns.forEach((b, i) => b.classList.toggle('active', i < n));
+    document.getElementById('star-label').textContent = starLabels[n];
+  }
+
+  // ── Add row to Table 1 (old) ──────────
+  function addOldRow() {
+    const tbody = document.querySelector('.kpi-table tbody');
+    const addRow = tbody.querySelector('.add-row-td').parentElement;
+    const idx = tbody.querySelectorAll('tr.row-old').length + 1;
+    const tr = document.createElement('tr');
+    tr.className = 'row-old';
+    tr.innerHTML = `
+      <td class="cell-stt">${idx}</td>
+      <td><textarea placeholder="Tên đầu việc tháng trước..."></textarea></td>
+      <td><textarea placeholder="Ghi chú..."></textarea></td>
+      <td><input type="text" placeholder="game" style="text-align:center"/></td>
+      <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700"/></td>
+      <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?"/></td>
+      <td><div class="cell-dash">—</div></td>
+      <td>
+        <select>
+          <option value="" disabled selected>-- chọn --</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </td>
+      <td><div class="cell-dash">—</div></td>
+      <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
+    `;
+    tbody.insertBefore(tr, addRow);
+  }
+
+  // ── Add row to Table 2 (new) ──────────
+  function addNewRow() {
+    const tables = document.querySelectorAll('.kpi-table');
+    const tbody = tables[1].querySelector('tbody');
+    const addRow = tbody.querySelector('.add-row-td').parentElement;
+    const idx = tbody.querySelectorAll('tr.row-new').length + 1;
+    const tr = document.createElement('tr');
+    tr.className = 'row-new';
+    tr.innerHTML = `
+      <td class="cell-stt">${idx}</td>
+      <td><textarea placeholder="Tên đầu việc tháng tới..."></textarea></td>
+      <td><textarea placeholder="Mô tả chi tiết..."></textarea></td>
+      <td><input type="text" placeholder="game" style="text-align:center"/></td>
+      <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700"/></td>
+      <td><div class="cell-pending">Tháng sau chốt</div></td>
+      <td><div class="cell-dash">—</div></td>
+      <td>
+        <select>
+          <option value="" disabled selected>-- chọn --</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </td>
+      <td><div class="cell-dash">—</div></td>
+      <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
+    `;
+    tbody.insertBefore(tr, addRow);
+  }
+
+  // ── Submit demo ──────────────────────
+  document.querySelector('.submit-btn').addEventListener('click', () => {
+    alert('✅ [MOCKUP] Nộp báo cáo tháng thành công!\n\nTrong production: Dữ liệu sẽ được ghi vào Google Sheets và Bot sẽ thông báo CEO.');
+  });
+</script>
+</body>
+</html>

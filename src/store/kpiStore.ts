@@ -16,15 +16,27 @@ export type Task = {
   datDuoc: number;
 };
 
+export type MonthlyReportData = {
+  achievements: string;
+  difficulties: string;
+  proposals: string;
+  priorities: string;
+  rating: number; // 1-5
+};
+
 type KpiStore = {
   tasks: Task[];
+  monthlyData: MonthlyReportData;
   initTasks: (tasks: Task[]) => void;
+  initMonthlyData: (data: Partial<MonthlyReportData>) => void;
   updateThucHien: (id: string, value: number | null) => void;
   addTask: () => void;
   addOldTask: () => void; // Thêm dòng mới ở Phân vùng 1 (dành cho lần đầu tự điền)
   updateTaskField: <K extends keyof Task>(id: string, field: K, value: Task[K]) => void;
+  updateMonthlyField: <K extends keyof MonthlyReportData>(field: K, value: MonthlyReportData[K]) => void;
   removeTask: (id: string) => void;
   getTotalScore: () => number;
+  resetStore: () => void;
 };
 
 function calculateFields(thucHien: number | null, keHoach: number | '', trongSo: number | '', yeuCau: number) {
@@ -40,6 +52,13 @@ function calculateFields(thucHien: number | null, keHoach: number | '', trongSo:
 
 export const useKpiStore = create<KpiStore>((set, get) => ({
   tasks: [],
+  monthlyData: {
+    achievements: '',
+    difficulties: '',
+    proposals: '',
+    priorities: '',
+    rating: 4, // Mặc định 4 sao
+  },
 
   initTasks: (serverTasks) => {
     // Chạy qua 1 lượt tính số luôn
@@ -49,6 +68,10 @@ export const useKpiStore = create<KpiStore>((set, get) => ({
     });
     set({ tasks: mapped });
   },
+
+  initMonthlyData: (data) => set((state) => ({
+    monthlyData: { ...state.monthlyData, ...data }
+  })),
 
   updateThucHien: (id, value) => set((state) => {
     const newTasks = state.tasks.map(t => {
@@ -111,11 +134,26 @@ export const useKpiStore = create<KpiStore>((set, get) => ({
     return { tasks: newTasks };
   }),
 
+  updateMonthlyField: (field, value) => set((state) => ({
+    monthlyData: { ...state.monthlyData, [field]: value }
+  })),
+
   removeTask: (id) => set((state) => ({
     tasks: state.tasks.filter(t => t.id !== id)
   })),
 
   getTotalScore: () => {
     return get().tasks.reduce((sum, t) => sum + t.datDuoc, 0);
-  }
+  },
+
+  resetStore: () => set({
+    tasks: [],
+    monthlyData: {
+      achievements: '',
+      difficulties: '',
+      proposals: '',
+      priorities: '',
+      rating: 4,
+    }
+  })
 }));

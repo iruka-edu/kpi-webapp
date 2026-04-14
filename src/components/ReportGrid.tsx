@@ -50,7 +50,7 @@ function getWeekDateRange(weekLabel: string): string {
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
 
-  const fmt = (d: Date) => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  const fmt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   return `${fmt(monday)} - ${fmt(sunday)}`;
 }
 
@@ -118,8 +118,8 @@ export default function ReportGrid({
   // ── Tính toán số liệu tổng hợp (% KH gia quyền) ──────────
   // Guard: trongSo có thể là '' (chưa điền) → tạm tính = 0
   const totalWeight = oldTasks.reduce((sum, t) => sum + (t.trongSo === '' ? 0 : t.trongSo), 0);
-  const percentage  = totalWeight > 0 ? (totalScore / totalWeight) * 100 : 0;
-  
+  const percentage = totalWeight > 0 ? (totalScore / totalWeight) * 100 : 0;
+
   // Tách số tuần từ "Tuần 15" -> "15"
   const weekNumMatch = reportWeek.match(/\d+/);
   const weekNum = weekNumMatch ? weekNumMatch[0] : '';
@@ -130,12 +130,12 @@ export default function ReportGrid({
     if (isFirstTime && oldTasks.length === 0) {
       addOldTask();
     }
-  // Chỉ chạy đúng 1 lần khi render đầu tiên
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Chỉ chạy đúng 1 lần khi render đầu tiên
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFirstTime]);
 
   const reportDateRange = getWeekDateRange(reportWeek);
-  const planDateRange   = getWeekDateRange(planWeek);
+  const planDateRange = getWeekDateRange(planWeek);
 
   return (
     <div className="w-full overflow-x-auto pb-24 flex flex-col gap-8">
@@ -347,100 +347,100 @@ export default function ReportGrid({
             {newTasks.map((t, idx) => {
               const isInvalidNew = invalidTaskIds.includes(t.id);
               return (
-              <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                <td className="border border-gray-300 p-2 text-center text-sm font-bold text-black">{idx + 1}</td>
-                <td className="border border-gray-300 p-1">
-                  <textarea
-                    className={`w-full border-2 p-2 outline-none rounded-sm text-black font-medium placeholder:font-normal min-h-[60px] resize-y transition
+                <tr key={t.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="border border-gray-300 p-2 text-center text-sm font-bold text-black">{idx + 1}</td>
+                  <td className="border border-gray-300 p-1">
+                    <textarea
+                      className={`w-full border-2 p-2 outline-none rounded-sm text-black font-medium placeholder:font-normal min-h-[60px] resize-y transition
                       ${isInvalidNew && !t.noiDung.trim()
-                        ? 'border-red-500 bg-red-50 animate-pulse'
-                        : 'border-gray-300 focus:border-blue-500'
-                      }`}
-                    value={t.noiDung}
-                    onChange={e => updateTaskField(t.id, 'noiDung', e.target.value)}
-                    placeholder="Tên đầu việc tuần tới..."
-                  />
-                </td>
-                <td className="border border-gray-300 p-1">
-                  <textarea
-                    className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium placeholder:font-normal min-h-[60px] resize-y"
-                    value={t.ghiChu}
-                    onChange={e => updateTaskField(t.id, 'ghiChu', e.target.value)}
-                    placeholder="Mô tả cụ thể..."
-                  />
-                </td>
-                <td className="border border-gray-300 p-1">
-                  <input
-                    type="text"
-                    className={`w-full border-2 text-center p-2 outline-none rounded-sm text-black font-medium transition
+                          ? 'border-red-500 bg-red-50 animate-pulse'
+                          : 'border-gray-300 focus:border-blue-500'
+                        }`}
+                      value={t.noiDung}
+                      onChange={e => updateTaskField(t.id, 'noiDung', e.target.value)}
+                      placeholder="Tên đầu việc tuần tới..."
+                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <textarea
+                      className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium placeholder:font-normal min-h-[60px] resize-y"
+                      value={t.ghiChu}
+                      onChange={e => updateTaskField(t.id, 'ghiChu', e.target.value)}
+                      placeholder="Mô tả cụ thể..."
+                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <input
+                      type="text"
+                      className={`w-full border-2 text-center p-2 outline-none rounded-sm text-black font-medium transition
                       ${isInvalidNew && !t.donVi.trim()
-                        ? 'border-red-500 bg-red-50 animate-pulse'
-                        : 'border-gray-300 focus:border-blue-500'
-                      }`}
-                    value={t.donVi}
-                    onChange={e => updateTaskField(t.id, 'donVi', e.target.value)}
-                    placeholder="game"
-                  />
-                </td>
-                <td className="border border-gray-300 p-1">
-                  <input
-                    type="number" min="0" step="1"
-                    className={`w-full border-2 text-center p-2 outline-none font-bold text-black rounded-sm transition
+                          ? 'border-red-500 bg-red-50 animate-pulse'
+                          : 'border-gray-300 focus:border-blue-500'
+                        }`}
+                      value={t.donVi}
+                      onChange={e => updateTaskField(t.id, 'donVi', e.target.value)}
+                      placeholder="game"
+                    />
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <input
+                      type="number" min="0" step="1"
+                      className={`w-full border-2 text-center p-2 outline-none font-bold text-black rounded-sm transition
                       ${isInvalidNew && (t.keHoach === '' || !t.keHoach)
-                        ? 'border-red-500 bg-red-50 animate-pulse'
-                        : 'border-gray-300 focus:border-blue-500'
-                      }`}
-                    value={t.keHoach === '' ? '' : t.keHoach}
-                    onChange={e => {
-                      const val = parseInt(e.target.value);
-                      updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(0, val));
-                    }}
-                    placeholder="VD: 5"
-                  />
-                </td>
-                {/* Ô Thực hiện (Bảng 2: Tuần sau mới chốt) */}
-                <td className="border border-gray-300 p-1">
-                  <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-500 italic text-[11px] font-medium leading-tight whitespace-nowrap">
-                    Tuần sau chốt
-                  </div>
-                </td>
-                {/* % Hoàn Thành (Bảng 2: Tuần sau mới tính) */}
-                <td className="border border-gray-300 p-1">
-                  <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">
-                    —
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-1">
-                  <select
-                    className={`w-full border-2 text-center p-2 outline-none rounded-sm font-bold text-black bg-white transition
+                          ? 'border-red-500 bg-red-50 animate-pulse'
+                          : 'border-gray-300 focus:border-blue-500'
+                        }`}
+                      value={t.keHoach === '' ? '' : t.keHoach}
+                      onChange={e => {
+                        const val = parseInt(e.target.value);
+                        updateTaskField(t.id, 'keHoach', isNaN(val) ? '' : Math.max(0, val));
+                      }}
+                      placeholder="VD: 5"
+                    />
+                  </td>
+                  {/* Ô Thực hiện (Bảng 2: Tuần sau mới chốt) */}
+                  <td className="border border-gray-300 p-1">
+                    <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-500 italic text-[11px] font-medium leading-tight whitespace-nowrap">
+                      Tuần sau chốt
+                    </div>
+                  </td>
+                  {/* % Hoàn Thành (Bảng 2: Tuần sau mới tính) */}
+                  <td className="border border-gray-300 p-1">
+                    <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">
+                      —
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <select
+                      className={`w-full border-2 text-center p-2 outline-none rounded-sm font-bold text-black bg-white transition
                       ${isInvalidNew && t.trongSo === ''
-                        ? 'border-red-500 bg-red-50'
-                        : 'border-gray-300 focus:border-blue-500'
-                      }`}
-                    value={t.trongSo}
-                    onChange={e => updateTaskField(t.id, 'trongSo', e.target.value === '' ? '' : parseInt(e.target.value))}
-                  >
-                    <option value="" disabled>-- chọn --</option>
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                  </select>
-                </td>
-                <td className="border border-gray-300 p-1">
-                  <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">
-                    —
-                  </div>
-                </td>
-                <td className="border border-gray-300 p-1 text-center">
-                  <button
-                    onClick={() => removeTask(t.id)}
-                    className="text-red-400 hover:text-red-700 p-2 transition-colors"
-                    title="Xóa đầu việc này"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-300 focus:border-blue-500'
+                        }`}
+                      value={t.trongSo}
+                      onChange={e => updateTaskField(t.id, 'trongSo', e.target.value === '' ? '' : parseInt(e.target.value))}
+                    >
+                      <option value="" disabled>-- chọn --</option>
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
+                    </select>
+                  </td>
+                  <td className="border border-gray-300 p-1">
+                    <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">
+                      —
+                    </div>
+                  </td>
+                  <td className="border border-gray-300 p-1 text-center">
+                    <button
+                      onClick={() => removeTask(t.id)}
+                      className="text-red-400 hover:text-red-700 p-2 transition-colors"
+                      title="Xóa đầu việc này"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
               );
             })}
 
@@ -470,7 +470,7 @@ export default function ReportGrid({
               <span className="text-sm font-black text-green-700 ml-0.5">KH</span>
             </div>
           </div>
-          
+
           <button
             onClick={onSubmit}
             disabled={isSubmitting}

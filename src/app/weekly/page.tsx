@@ -38,8 +38,8 @@ type ScreenState =
 function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error' | 'info'; onClose: () => void }) {
   const colors = {
     success: 'bg-green-600 text-white',
-    error:   'bg-red-600 text-white',
-    info:    'bg-blue-600 text-white',
+    error: 'bg-red-600 text-white',
+    info: 'bg-blue-600 text-white',
   };
   useEffect(() => {
     const t = setTimeout(onClose, 4000);
@@ -81,7 +81,7 @@ function SkeletonLoader({ name }: { name: string }) {
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-4" />
         <div className="h-32 w-80 bg-gray-100 rounded-lg animate-pulse mb-6" />
         <div className="space-y-3">
-          {[1,2,3,4].map(i => <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" style={{opacity: 1 - i * 0.15}} />)}
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" style={{ opacity: 1 - i * 0.15 }} />)}
         </div>
         <p className="text-center text-sm text-gray-400 mt-4 animate-pulse">
           {name !== 'Chưa rõ' ? `Đang tải dữ liệu của ${name}...` : 'Đang tải...'}
@@ -146,7 +146,7 @@ function SuccessScreen({ name, reportWeek, totalPercent }: { name: string; repor
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
           <p className="text-gray-600 text-sm mb-1">Người nộp: <strong className="text-[#1e3a5f]">{name}</strong></p>
           <p className="text-gray-600 text-sm mb-4">Mục tiêu: <strong className="text-[#1e3a5f]">{reportWeek}</strong></p>
-          
+
           <div className="flex flex-col items-center justify-center py-2">
             <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Kết quả thực đạt</div>
             <div className="flex items-baseline gap-1">
@@ -180,7 +180,7 @@ function getAutoWeeks() {
   const d = new Date();
   const vnDay = d.getDay(); // 0=CN, 1=T2... (Local time)
   const currentWeek = getISOWeek(d);
-  
+
   // Logic Pivot: Thứ 7 (6) và CN (0) báo cáo tuần hiện tại. Thứ 2 trở đi báo cáo tuần cũ.
   const isWeekend = (vnDay === 6 || vnDay === 0);
   const reportWeekNum = isWeekend ? currentWeek : currentWeek - 1;
@@ -197,27 +197,27 @@ function getAutoWeeks() {
 // ════════════════════════════════════════════════════════════════
 function AppContent() {
   const searchParams = useSearchParams();
-  const name       = searchParams.get('name') || 'Bạn chưa có Tên';
-  const dept       = searchParams.get('dept') || 'Chưa rõ';
-  const role       = searchParams.get('role') || 'Cán bộ';
-  
-  const autoWeeks  = getAutoWeeks();
+  const name = searchParams.get('name') || 'Bạn chưa có Tên';
+  const dept = searchParams.get('dept') || 'Chưa rõ';
+  const role = searchParams.get('role') || 'Cán bộ';
+
+  const autoWeeks = getAutoWeeks();
   const reportWeek = searchParams.get('report_week') || autoWeeks.report;
-  const planWeek   = searchParams.get('plan_week') || autoWeeks.plan;
-  const reportTo   = searchParams.get('report_to') || 'CEO';
-  const isLate     = searchParams.get('is_late') === 'true';
+  const planWeek = searchParams.get('plan_week') || autoWeeks.plan;
+  const reportTo = searchParams.get('report_to') || 'CEO';
+  const isLate = searchParams.get('is_late') === 'true';
 
   const today = new Date();
   const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
 
   const { initTasks, addTask, tasks, getTotalScore } = useKpiStore();
-  const [screen, setScreen]       = useState<ScreenState>('loading');
-  const [errorMsg, setErrorMsg]   = useState('');
+  const [screen, setScreen] = useState<ScreenState>('loading');
+  const [errorMsg, setErrorMsg] = useState('');
   const [isFirstTime, setIsFirstTime] = useState(false);
-  const [submitting, setSubmitting]   = useState(false);
-  const [toast, setToast]             = useState<{ msg: string; type: 'success'|'error'|'info' } | null>(null);
-  const [modal, setModal]             = useState<{ show: boolean; onOk: () => void } | null>(null);
-  const [finalScore, setFinalScore]   = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [modal, setModal] = useState<{ show: boolean; onOk: () => void } | null>(null);
+  const [finalScore, setFinalScore] = useState(0);
   // Ô nào đang lỗi validate
   const [invalidTaskIds, setInvalidTaskIds] = useState<string[]>([]);
 
@@ -311,13 +311,13 @@ function AppContent() {
     // Bảng 1 (oldTasks): Bảng báo cáo tuần trước
     // Nếu có dòng nào thì bắt buộc phải điền đủ: nội dung, đơn vị, kế hoạch, trọng số, thực hiện
     oldTasks.forEach(t => {
-      const isMissing = 
-        !t.noiDung.trim() || 
-        !t.donVi.trim() || 
-        t.keHoach === '' || 
-        t.trongSo === '' || 
+      const isMissing =
+        !t.noiDung.trim() ||
+        !t.donVi.trim() ||
+        t.keHoach === '' ||
+        t.trongSo === '' ||
         t.thucHien === null || isNaN(t.thucHien as number);
-      
+
       if (isMissing) {
         invalidIds.push(t.id);
       }
@@ -332,12 +332,12 @@ function AppContent() {
 
     // 2. Từng dòng phải điền đủ: nội dung, đơn vị, kế hoạch, trọng số
     newTasks.forEach(t => {
-      const isMissing = 
-        !t.noiDung.trim() || 
-        !t.donVi.trim() || 
-        t.keHoach === '' || 
+      const isMissing =
+        !t.noiDung.trim() ||
+        !t.donVi.trim() ||
+        t.keHoach === '' ||
         t.trongSo === '';
-        
+
       if (isMissing) {
         invalidIds.push(t.id);
       }
@@ -380,7 +380,7 @@ function AppContent() {
             const totalScore = getTotalScore();
             const totalWeight = oldTasks.reduce((sum, t) => sum + (t.trongSo === '' ? 0 : t.trongSo), 0);
             const finalPercent = totalWeight > 0 ? (totalScore / totalWeight) * 100 : 0;
-            
+
             setFinalScore(finalPercent);
             clearDraft(name, reportWeek);
             setScreen('success');
