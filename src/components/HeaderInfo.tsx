@@ -51,7 +51,7 @@ export default function HeaderInfo({ name, role, dept, date, reportWeek, planWee
   return (
     <div className="mb-8 mt-2">
       {/* KHỐI TIÊU ĐỀ - DÍNH (STICKY) Ở TRÊN CÙNG */}
-      <div className="sticky top-0 z-50 -mx-4 px-4 py-4 mb-8 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
+      <div className="sticky top-0 z-50 py-4 mb-8 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all rounded-b-lg">
         <div className="flex flex-col items-center justify-center gap-3 text-center">
           <h1 className="text-2xl sm:text-3xl font-black uppercase text-[#1e3a5f] tracking-wide">
             BÁO CÁO &amp; KẾ HOẠCH TUẦN
@@ -74,8 +74,8 @@ export default function HeaderInfo({ name, role, dept, date, reportWeek, planWee
         </div>
       </div>
 
-      {/* Bảng thông tin NV - Nằm dưới header dính */}
-      <div className="flex justify-start">
+      {/* Bảng thông tin NV - Nằm dưới header dính, căn trái bằng với các khối bảng bên dưới */}
+      <div className="block">
         <table className="border-collapse border border-gray-300 text-sm shadow-sm rounded-lg overflow-hidden bg-white max-w-full overflow-x-auto">
           <tbody>
             <tr>

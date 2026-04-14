@@ -144,7 +144,7 @@ export default function ReportGrid({
           BẢNG 1: BÁO CÁO TUẦN TRƯỚC
           Banner tiêu đề nằm ngay bên trên bảng
       ══════════════════════════════════════════════════════ */}
-      <div className="inline-block min-w-full align-top">
+      <div className="w-full">
         {/* Banner tiêu đề bảng 1 */}
         <SectionBanner
           icon="📋"
@@ -331,7 +331,7 @@ export default function ReportGrid({
           BẢNG 2: KẾ HOẠCH TUẦN NÀY
           Banner tiêu đề nằm ngay bên trên bảng
       ══════════════════════════════════════════════════════ */}
-      <div className="inline-block min-w-full align-top">
+      <div className="w-full">
         {/* Banner tiêu đề bảng 2 */}
         <SectionBanner
           icon="🗓️"
