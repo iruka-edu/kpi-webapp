@@ -61,9 +61,10 @@ export default function MonthlyHeaderInfo({ name, role, dept, date, reportMonth,
         </div>
       </div>
 
-      {/* Bảng thông tin NV */}
-      <div className="block">
-        <table className="border-collapse border border-gray-300 text-sm shadow-sm rounded-lg overflow-hidden bg-white max-w-full overflow-x-auto">
+      {/* Bảng thông tin NV + Hướng dẫn */}
+      <div className="flex flex-wrap items-stretch gap-5 mb-8">
+        {/* Bảng thông tin */}
+        <table className="border-collapse border border-gray-300 text-sm shadow-sm rounded-lg overflow-hidden bg-white flex-shrink-0">
           <tbody>
             <tr>
               <td className="border border-gray-300 px-4 py-2 font-bold bg-gray-50 w-36 text-gray-500 uppercase tracking-wider text-[11px]">Họ tên</td>
@@ -83,49 +84,40 @@ export default function MonthlyHeaderInfo({ name, role, dept, date, reportMonth,
             </tr>
           </tbody>
         </table>
-      </div>
-      {/* Guide Box 3 cột — Hướng dẫn làm báo cáo tháng */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Bước 1 */}
-        <div className="rounded-xl border-2 border-blue-200 bg-blue-50/60 p-4 flex flex-col gap-2">
-          <div className="flex items-center gap-2 font-black text-blue-900 text-[13px]">
-            <span className="text-lg">📋</span>
-            <span>Báo cáo tháng trước</span>
-          </div>
-          <p className="text-[12px] text-blue-700 leading-relaxed font-medium">
-            Xem lại từng đầu việc tháng trước và điền số <strong>đã thực hiện thực tế</strong> vào ô màu vàng. Không điền = bỏ qua = 0 điểm.
-          </p>
-          <div className="mt-auto text-[11px] text-blue-400 font-semibold uppercase tracking-wide">
-            📋 Bảng 1 — Báo cáo {reportMonth}
-          </div>
-        </div>
 
-        {/* Bước 2 */}
-        <div className="rounded-xl border-2 border-amber-200 bg-amber-50/60 p-4 flex flex-col gap-2">
-          <div className="flex items-center gap-2 font-black text-amber-900 text-[13px]">
-            <span className="text-lg">🗓️</span>
-            <span>Kế hoạch tháng tới</span>
+        {/* Hướng dẫn làm báo cáo tháng */}
+        <div className="flex-1 min-w-[320px] bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm flex flex-col">
+          <div className="bg-[#1e3a5f]/5 border-b border-gray-200 px-3 py-1.5 flex items-center gap-1.5 shrink-0">
+            <span className="text-sm">📌</span>
+            <span className="font-extrabold uppercase tracking-wide text-[#1e3a5f] text-[13px]">Hướng dẫn làm báo cáo tháng</span>
           </div>
-          <p className="text-[12px] text-amber-700 leading-relaxed font-medium">
-            Lên danh sách <strong>đầu việc tháng tới</strong> ở bảng bên dưới. Đừng quên chọn Trọng số (1 = nhỏ · 2 = vừa · 3 = quan trọng).
-          </p>
-          <div className="mt-auto text-[11px] text-amber-400 font-semibold uppercase tracking-wide">
-            🗓️ Bảng 2 — Kế hoạch {planMonth}
-          </div>
-        </div>
-
-        {/* Bước 3 */}
-        <div className="rounded-xl border-2 border-green-200 bg-green-50/60 p-4 flex flex-col gap-2">
-          <div className="flex items-center gap-2 font-black text-green-900 text-[13px]">
-            <span className="text-lg">⚖️</span>
-            <span>Trọng số là gì?</span>
-          </div>
-          <p className="text-[12px] text-green-700 leading-relaxed font-medium">
-            Phản ánh mức quan trọng của đầu việc:
-            <br /><strong>1</strong> = Nhỏ &nbsp;·&nbsp; <strong>2</strong> = Vừa &nbsp;·&nbsp; <strong>3</strong> = Quan trọng
-          </p>
-          <div className="mt-auto text-[11px] text-green-400 font-semibold uppercase tracking-wide">
-            📤 Gửi → CEO nhận thông báo
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3">
+            <div className="border-r border-gray-200 p-3 flex flex-col">
+              <div className="font-bold text-[#1e3a5f] text-sm mb-1">📋 Báo cáo tháng trước</div>
+              <div className="text-[13.5px] text-gray-700 leading-relaxed">
+                Điền đủ: nội dung, đơn vị, KH, <span className="bg-yellow-50 border border-yellow-500 rounded-sm px-1 font-semibold">Thực hiện</span>, trọng số.<br />
+                % &amp; Điểm tự động tính.<br />
+                Lần đầu: copy từ Excel cũ.<br />
+                Lần sau: tự lấy KH tháng trước.
+              </div>
+            </div>
+            <div className="border-r border-gray-200 p-3 flex flex-col">
+              <div className="font-bold text-[#1e3a5f] text-sm mb-1">🗓️ Kế hoạch tháng tới</div>
+              <div className="text-[13.5px] text-gray-700 leading-relaxed">
+                Liệt kê đầu việc dự kiến.<br />
+                Số lượng KH phải cụ thể, đo lường được.<br />
+                Cột Thực hiện bỏ trống.<br />
+                Đánh trọng số cao vào các đầu việc quan trọng.
+              </div>
+            </div>
+            <div className="p-3 flex flex-col">
+              <div className="font-bold text-[#1e3a5f] text-sm mb-1">⚖️ Trọng số</div>
+              <div className="text-[13.5px] text-gray-700 leading-relaxed">
+                <strong>1</strong> — Việc không quá quan trọng<br />
+                <strong>2</strong> — Việc bình thường<br />
+                <strong>3</strong> — Việc cốt lõi, cần chú tâm
+              </div>
+            </div>
           </div>
         </div>
       </div>
