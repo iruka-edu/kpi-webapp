@@ -155,15 +155,17 @@ function MonthlyContent() {
     async function fetchData() {
       setPageState("loading");
 
-      // Guard: nếu token trống → báo hết hạn ngay
-      if (!token && !nameParam) {
+      // Guard: chỉ báo lỗi khi không có name VÀ không có discord_id
+      // (Khác weekly: monthly không dùng token — bot gửi link không kèm token)
+      if (!nameParam && !discordId) {
         setPageState("token_expired");
         return;
       }
 
       try {
         const n = nameParam || name;
-        const url = `/api/kpi?name=${encodeURIComponent(n)}&report_week=${encodeURIComponent(reportMonthLabel)}&plan_week=${encodeURIComponent(planMonthLabel)}&discord_id=${discordId}&token=${token}`;
+        // Monthly dùng /api/monthly riêng (param: name + month + discord_id)
+        const url = `/api/monthly?name=${encodeURIComponent(n)}&month=${encodeURIComponent(reportMonthLabel)}&discord_id=${discordId}`;
         const res = await fetch(url);
 
         // TH4: Token hết hạn
@@ -313,7 +315,7 @@ function MonthlyContent() {
         type: "monthly",
       };
 
-      const res = await fetch("/api/kpi", {
+      const res = await fetch("/api/monthly", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
