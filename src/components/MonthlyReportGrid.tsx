@@ -198,11 +198,8 @@ function TableHeader2() {
         <th style={{ ...thBase, minWidth: 230, textAlign: "left" }}>Ghi chú / Mục tiêu cụ thể</th>
         <th style={{ ...thBase, minWidth: 70 }}>Đơn vị <Req /></th>
         <th style={{ ...thBase, minWidth: 110 }}>Số lượng (KH) <Req /></th>
-        {/* Cột Thực hiện bảng 2: nền vàng đồng bộ bảng 1, label 2 dòng */}
-        <th style={{ ...thBase, minWidth: 115, background: "#ca8a04" }}>
-          Thực hiện<br />
-          <span style={{ fontSize: 10, fontWeight: 400, fontStyle: 'italic', opacity: 0.85 }}>Tháng sau chốt</span>
-        </th>
+        {/* Cột Thực hiện bảng 2: nền vàng đồng bộ bảng 1 */}
+        <th style={{ ...thBase, minWidth: 115, background: "#ca8a04" }}>Thực hiện</th>
         <th style={{ ...thBase, minWidth: 110 }}>% Hoàn Thành</th>
         <th style={{ ...thBase, minWidth: 80 }}>Trọng số <Req /></th>
         <th style={{ ...thBase, minWidth: 80 }}>Đạt được</th>
