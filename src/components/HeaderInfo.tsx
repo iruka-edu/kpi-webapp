@@ -74,9 +74,10 @@ export default function HeaderInfo({ name, role, dept, date, reportWeek, planWee
         </div>
       </div>
 
-      {/* Bảng thông tin NV - Nằm dưới header dính, căn trái bằng với các khối bảng bên dưới */}
-      <div className="block">
-        <table className="border-collapse border border-gray-300 text-sm shadow-sm rounded-lg overflow-hidden bg-white max-w-full overflow-x-auto">
+      {/* Bảng thông tin NV + Hướng dẫn */}
+      <div className="flex flex-wrap items-stretch gap-5 mb-8">
+        {/* Bảng thông tin */}
+        <table className="border-collapse border border-gray-300 text-sm shadow-sm rounded-lg overflow-hidden bg-white flex-shrink-0">
           <tbody>
             <tr>
               <td className="border border-gray-300 px-4 py-2 font-bold bg-gray-100 w-36 text-gray-700">Họ tên</td>
@@ -96,6 +97,42 @@ export default function HeaderInfo({ name, role, dept, date, reportWeek, planWee
             </tr>
           </tbody>
         </table>
+
+        {/* Hướng dẫn làm báo cáo */}
+        <div className="flex-1 min-w-[320px] bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm flex flex-col">
+          <div className="bg-[#1e3a5f]/5 border-b border-gray-200 px-3 py-1.5 flex items-center gap-1.5 shrink-0">
+            <span className="text-sm">📌</span>
+            <span className="font-extrabold uppercase tracking-wide text-[#1e3a5f] text-[13px]">Hướng dẫn làm báo cáo tuần</span>
+          </div>
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3">
+            <div className="border-r border-gray-200 p-3 flex flex-col">
+              <div className="font-bold text-[#1e3a5f] text-sm mb-1">📋 Báo cáo tuần trước</div>
+              <div className="text-[13.5px] text-gray-700 leading-relaxed">
+                Điền đủ: nội dung, đơn vị, KH, <span className="bg-yellow-50 border border-yellow-500 rounded-sm px-1 font-semibold">Thực hiện</span>, trọng số.<br />
+                % &amp; Điểm tự động tính.<br />
+                Lần đầu: copy từ Excel cũ.<br />
+                Lần sau: tự lấy KH tuần trước.
+              </div>
+            </div>
+            <div className="border-r border-gray-200 p-3 flex flex-col">
+              <div className="font-bold text-[#1e3a5f] text-sm mb-1">🗓️ Kế hoạch tuần tới</div>
+              <div className="text-[13.5px] text-gray-700 leading-relaxed">
+                Liệt kê đầu việc dự kiến.<br />
+                Số lượng KH phải cụ thể, đo lường được.<br />
+                Cột Thực hiện bỏ trống.<br />
+                Đánh trọng số cao vào việc quan trọng.
+              </div>
+            </div>
+            <div className="p-3 flex flex-col">
+              <div className="font-bold text-[#1e3a5f] text-sm mb-1">⚖️ Trọng số</div>
+              <div className="text-[13.5px] text-gray-700 leading-relaxed">
+                <strong>1</strong> — Việc không quá quan trọng<br />
+                <strong>2</strong> — Việc bình thường<br />
+                <strong>3</strong> — Việc cốt lõi, cần chú tâm
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

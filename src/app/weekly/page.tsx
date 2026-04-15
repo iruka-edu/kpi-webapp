@@ -228,9 +228,8 @@ function AppContent() {
   useEffect(() => {
     async function loadData() {
       // Nếu không dính líu đến user cụ thể (chưa truyền param vào)
-      if (name === 'Bạn chưa có Tên') {
-        setScreen('form');
-        setIsFirstTime(true);
+      if (name === 'Bạn chưa có Tên' || !searchParams.get('name')) {
+        setScreen('token_expired');
         return;
       }
 
