@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Sếp — IruKa KPI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a1a1a; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 100%);
+      color: white; padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 12px rgba(30,58,95,0.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 12px; }
+    .topbar-brand .logo { width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .topbar-brand h1 { font-size: 18px; font-weight: 800; }
+    .topbar-brand p { font-size: 12px; color: #93c5fd; font-weight: 500; margin-top: 1px; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .avatar { width: 36px; height: 36px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; border: 2px solid rgba(255,255,255,0.3); }
+    .notif-btn { width: 36px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; border: none; color: white; font-size: 16px; }
+    .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: #f97316; border-radius: 50%; border: 1.5px solid #1e3a5f; }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; min-height: calc(100vh - 64px); }
+
+    /* ── SIDEBAR ── */
+    .sidebar { width: 220px; background: white; border-right: 1px solid #e5e7eb; padding: 20px 0; flex-shrink: 0; display: flex; flex-direction: column; }
+    .sidebar-section-label { font-size: 10px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 20px 8px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13.5px; font-weight: 600; color: #4b5563; cursor: pointer; border-left: 3px solid transparent; text-decoration: none; transition: all 0.15s; }
+    .nav-item:hover { background: #f3f4f6; color: #1e3a5f; }
+    .nav-item.active { background: #eff6ff; color: #1e3a5f; border-left-color: #1e3a5f; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge { margin-left: auto; background: #ef4444; color: white; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 99px; min-width: 18px; text-align: center; }
+    .nav-badge.gray { background: #d1d5db; color: #6b7280; }
+    .nav-badge.soon { background: #f3f4f6; color: #9ca3af; font-size: 9px; padding: 1px 5px; border: 1px dashed #d1d5db; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #f3f4f6; }
+    .logout-btn { width: 100%; background: none; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
+    .logout-btn:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; padding: 28px 32px; overflow-x: hidden; }
+
+    /* ── STAT CARDS ── */
+    .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 12px; padding: 18px 20px; border: 1px solid #e5e7eb; }
+    .stat-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .stat-value { font-size: 28px; font-weight: 900; color: #1e3a5f; line-height: 1; margin-bottom: 3px; }
+    .stat-sub { font-size: 12px; color: #6b7280; }
+    .stat-icon { font-size: 22px; float: right; margin-top: -2px; }
+    .stat-card.green .stat-value { color: #16a34a; }
+    .stat-card.orange .stat-value { color: #ea580c; }
+    .stat-card.red .stat-value { color: #dc2626; }
+    .stat-card.purple .stat-value { color: #7c3aed; }
+
+    /* ── FILTER BAR ── */
+    .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-bar-title { font-size: 18px; font-weight: 800; color: #1e3a5f; margin-right: 4px; }
+    .tab-btn { padding: 6px 16px; border-radius: 99px; font-size: 13px; font-weight: 600; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; cursor: pointer; transition: all 0.15s; }
+    .tab-btn.active { background: #1e3a5f; color: white; border-color: #1e3a5f; }
+    .tab-btn:hover:not(.active) { border-color: #1e3a5f; color: #1e3a5f; }
+    .filter-select { padding: 6px 12px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 13px; font-weight: 600; color: #374151; background: white; outline: none; }
+    .search-box { padding: 6px 12px 6px 32px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #374151; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center; outline: none; width: 180px; }
+
+    /* ── BADGE ── */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 700; }
+    .badge.pending { background: #fef9c3; color: #92400e; border: 1px solid #fcd34d; }
+    .badge.approved { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .badge.returned { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .badge.fixed { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+    .badge.late { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
+
+    /* ── REPORT CARD ── */
+    .reports-grid { display: flex; flex-direction: column; gap: 16px; }
+    .report-card { background: white; border-radius: 14px; border: 1.5px solid #e5e7eb; overflow: hidden; transition: box-shadow 0.2s; }
+    .report-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .report-card.pending { border-left: 4px solid #f59e0b; }
+    .report-card.approved { border-left: 4px solid #22c55e; }
+    .report-card.returned { border-left: 4px solid #ef4444; }
+    .report-card.fixed-by-boss { border-left: 4px solid #8b5cf6; }
+
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 18px 20px 12px; gap: 16px; }
+    .card-left { display: flex; align-items: center; gap: 14px; }
+    .card-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #1e3a5f, #2d5a8e); color: white; font-size: 16px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-name { font-size: 16px; font-weight: 800; color: #1e3a5f; margin-bottom: 3px; }
+    .card-meta { font-size: 12.5px; color: #6b7280; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .card-meta .dot { color: #d1d5db; }
+    .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+    .score-label { font-size: 10px; color: #9ca3af; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; text-align:right; }
+    .score-value { font-size: 28px; font-weight: 900; line-height: 1; text-align:right; }
+    .score-value.good { color: #16a34a; }
+    .score-value.mid { color: #d97706; }
+    .score-value.bad { color: #dc2626; }
+    .score-max { font-size: 13px; color: #9ca3af; font-weight: 500; }
+
+    /* Progress bar */
+    .progress-bar { margin: 0 20px 14px; }
+    .progress-bg { background: #f3f4f6; border-radius: 99px; height: 5px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; }
+
+    /* ─────────────────────────────────────────
+       3-TAB ACTION PANEL (trái tim của mockup)
+    ───────────────────────────────────────── */
+    .action-panel { border-top: 1.5px solid #f3f4f6; }
+
+    /* Tab selector */
+    .action-tabs { display: flex; border-bottom: 1.5px solid #f3f4f6; }
+    .action-tab {
+      flex: 1; padding: 11px 8px; text-align: center; font-size: 12.5px; font-weight: 700;
+      cursor: pointer; color: #9ca3af; border-bottom: 2.5px solid transparent;
+      transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px;
+      background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .action-tab:hover { color: #374151; background: #fafafa; }
+    .action-tab.tab-approve.tab-active { color: #16a34a; border-bottom-color: #16a34a; background: #f0fdf4; }
+    .action-tab.tab-return.tab-active { color: #ef4444; border-bottom-color: #ef4444; background: #fff1f2; }
+    .action-tab.tab-fix.tab-active { color: #7c3aed; border-bottom-color: #7c3aed; background: #faf5ff; }
+
+    /* Tab content panels */
+    .tab-content { display: none; padding: 16px 20px 18px; }
+    .tab-content.active { display: block; }
+
+    /* --- PANEL 1: Duyệt --- */
+    .approve-note { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #166534; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 14px; line-height: 1.5; }
+    .approve-comment-label { font-size: 11.5px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    textarea.comment-input { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 13.5px; color: #374151; resize: none; outline: none; transition: border-color 0.15s; line-height: 1.5; }
+    textarea.comment-input:focus { border-color: #1e3a5f; }
+    .action-btns { display: flex; gap: 10px; margin-top: 12px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; border-radius: 9px; font-size: 13.5px; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary-green { background: #16a34a; color: white; flex: 1; }
+    .btn-primary-green:hover { background: #15803d; }
+    .btn-primary-red { background: #ef4444; color: white; flex: 1; }
+    .btn-primary-red:hover { background: #dc2626; }
+    .btn-primary-purple { background: #7c3aed; color: white; flex: 1; }
+    .btn-primary-purple:hover { background: #6d28d9; }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1.5px solid #e5e7eb; padding: 10px 14px; }
+    .btn-secondary:hover { background: #e5e7eb; }
+
+    /* --- PANEL 2: Trả về --- */
+    .return-note { background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #991b1b; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 14px; line-height: 1.5; }
+    .return-flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 14px; }
+    .flow-step { background: white; border: 1.5px solid #fecdd3; border-radius: 7px; padding: 4px 10px; font-size: 11.5px; font-weight: 700; color: #991b1b; }
+    .flow-arrow { color: #f87171; font-weight: 900; font-size: 13px; }
+
+    /* --- PANEL 3: Sếp ấn định --- */
+    .fix-note { background: #faf5ff; border: 1.5px solid #e9d5ff; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #5b21b6; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px; line-height: 1.5; }
+    .fix-table-wrapper { overflow-x: auto; border: 1.5px solid #e9d5ff; border-radius: 10px; margin-bottom: 14px; }
+    .fix-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .fix-table th { background: #f5f3ff; color: #5b21b6; font-weight: 800; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.06em; padding: 9px 12px; text-align: left; border-bottom: 1.5px solid #e9d5ff; }
+    .fix-table td { padding: 9px 12px; border-bottom: 1px solid #f3f4f6; color: #374151; vertical-align: middle; }
+    .fix-table tr:last-child td { border-bottom: none; }
+    .fix-table tr:hover td { background: #fdf4ff; }
+    .fix-input { width: 100%; border: 1.5px solid #e9d5ff; border-radius: 6px; padding: 5px 8px; font-size: 12.5px; font-weight: 700; color: #374151; outline: none; text-align: center; background: white; transition: border-color 0.15s; }
+    .fix-input:focus { border-color: #8b5cf6; background: #faf5ff; }
+    .fix-input.edited { border-color: #8b5cf6; background: #faf5ff; color: #7c3aed; font-weight: 800; }
+    .original-val { font-size: 11px; color: #9ca3af; text-decoration: line-through; margin-left: 4px; }
+    .fix-reason-label { font-size: 11.5px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .fix-how-nv { background: #f5f3ff; border: 1.5px solid #e9d5ff; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+    .fix-how-nv h4 { font-size: 12.5px; font-weight: 800; color: #5b21b6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .fix-how-nv .step { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: #374151; line-height: 1.5; margin-bottom: 5px; }
+    .fix-how-nv .step-num { width: 20px; height: 20px; background: #8b5cf6; color: white; border-radius: 50%; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── COMING SOON ── */
+    .cs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+    .coming-soon-card { background: white; border-radius: 14px; border: 2px dashed #e5e7eb; padding: 40px 24px; text-align: center; }
+    .cs-icon { font-size: 40px; margin-bottom: 12px; }
+    .coming-soon-card h3 { font-size: 16px; font-weight: 800; color: #374151; margin-bottom: 6px; }
+    .coming-soon-card p { font-size: 13px; color: #6b7280; max-width: 260px; margin: 0 auto 16px; line-height: 1.6; }
+    .cs-badge { display: inline-block; background: #f3f4f6; color: #9ca3af; font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 99px; border: 1px solid #e5e7eb; }
+
+    /* section title */
+    .section-title { font-size: 18px; font-weight: 800; color: #1e3a5f; margin-bottom: 16px; margin-top: 36px; display: flex; align-items: center; gap: 8px; }
+
+    /* Tooltip highlight */
+    .chip { display: inline-flex; align-items: center; gap: 4px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #374151; }
+    .chip.purple { background: #f5f3ff; border-color: #e9d5ff; color: #5b21b6; }
+
+    .divider { height: 1px; background: #f3f4f6; margin: 0 20px 14px; }
+  </style>
+</head>
+<body>
+
+<!-- ══ TOPBAR ══════════════════════════ -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="logo">🦁</div>
+    <div>
+      <h1>IruKa KPI Dashboard</h1>
+      <p>Quản lý & duyệt báo cáo nhân sự</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+    <div style="text-align:right;font-size:12px;color:#93c5fd;">
+      <div style="font-weight:700;color:white;">Vũ Ngọc Đào</div>
+      <div>CEO / Founder</div>
+    </div>
+    <div class="avatar">VD</div>
+  </div>
+</div>
+
+<!-- ══ LAYOUT ══════════════════════════ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section-label">Báo cáo</div>
+    <a class="nav-item active" href="#">
+      <span class="nav-icon">📊</span> Báo cáo tuần
+      <span class="nav-badge">3</span>
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📋</span> Báo cáo tháng
+      <span class="nav-badge gray">12</span>
+    </a>
+    <div class="sidebar-section-label">Đánh giá nhân sự</div>
+    <a class="nav-item" href="#" style="opacity:0.5;pointer-events:none;">
+      <span class="nav-icon">🎓</span> Thử việc 2 tháng
+      <span class="nav-badge soon">Sớm</span>
+    </a>
+    <a class="nav-item" href="#" style="opacity:0.5;pointer-events:none;">
+      <span class="nav-icon">💰</span> Tăng lương 6 tháng
+      <span class="nav-badge soon">Sớm</span>
+    </a>
+    <a class="nav-item" href="#" style="opacity:0.5;pointer-events:none;">
+      <span class="nav-icon">🏆</span> Đánh giá cuối năm
+      <span class="nav-badge soon">Sớm</span>
+    </a>
+    <div class="sidebar-section-label">Thống kê</div>
+    <a class="nav-item" href="#"><span class="nav-icon">📈</span> Tổng quan KPI</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📤</span> Nộp muộn</a>
+    <div class="sidebar-bottom">
+      <button class="logout-btn">🚪 Đăng xuất</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STAT CARDS -->
+    <div class="stat-cards">
+      <div class="stat-card">
+        <span class="stat-icon">📥</span>
+        <div class="stat-label">Chờ duyệt</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">Tuần 15 · 2026</div>
+      </div>
+      <div class="stat-card green">
+        <span class="stat-icon">✅</span>
+        <div class="stat-label">Đã duyệt</div>
+        <div class="stat-value">8</div>
+        <div class="stat-sub">Tuần 15</div>
+      </div>
+      <div class="stat-card red">
+        <span class="stat-icon">↩️</span>
+        <div class="stat-label">Trả về</div>
+        <div class="stat-value">1</div>
+        <div class="stat-sub">NV cần sửa lại</div>
+      </div>
+      <div class="stat-card purple">
+        <span class="stat-icon">✏️</span>
+        <div class="stat-label">Sếp ấn định</div>
+        <div class="stat-value">2</div>
+        <div class="stat-sub">Sếp đã sửa & chốt</div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <span class="filter-bar-title">📊 Báo cáo tuần</span>
+      <button class="tab-btn active">Tuần 15</button>
+      <button class="tab-btn">Tuần 14</button>
+      <button class="tab-btn">Tuần 13</button>
+      <button class="tab-btn">Tất cả</button>
+      <select class="filter-select">
+        <option>Tất cả phòng ban</option>
+        <option>Content</option><option>Design</option><option>Tech</option>
+      </select>
+      <select class="filter-select">
+        <option>Tất cả trạng thái</option>
+        <option>Chờ duyệt</option><option>Đã duyệt</option>
+        <option>Trả về</option><option>Sếp ấn định</option>
+      </select>
+      <input class="search-box" type="text" placeholder="Tìm nhân viên..." />
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         REPORTS GRID
+    ══════════════════════════════════════════ -->
+    <div class="reports-grid">
+
+      <!-- ═══ CARD 1: Chờ duyệt — hiển thị TAB đang ở Duyệt === -->
+      <div class="report-card pending">
+        <div class="card-header">
+          <div class="card-left">
+            <div class="card-avatar">NT</div>
+            <div>
+              <div class="card-name">Nguyễn Thị Hoa</div>
+              <div class="card-meta">
+                <span>Design</span><span class="dot">·</span>
+                <span>Graphic Designer</span><span class="dot">·</span>
+                <span>📊 Tuần 15</span>
+              </div>
+              <div class="card-meta" style="color:#9ca3af;margin-top:2px;">
+                🕐 Nộp: Thứ 7, 12/04 · 09:14
+              </div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+              <span class="badge pending">⏳ Chờ duyệt</span>
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">👁️ Xem full báo cáo</button>
+            </div>
+            <div>
+              <div class="score-label">Điểm KPI</div>
+              <div class="score-value good">8.75<span class="score-max">/10</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-bg"><div class="progress-fill" style="width:87.5%;background:linear-gradient(90deg,#16a34a,#4ade80);"></div></div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- 3-TAB ACTION PANEL -->
+        <div class="action-panel">
+          <div class="action-tabs">
+            <button class="action-tab tab-approve tab-active" onclick="switchTab(this,'approve','card1')">
+              ✅ Duyệt
+            </button>
+            <button class="action-tab tab-return" onclick="switchTab(this,'return','card1')">
+              ↩️ Trả về — NV sửa lại
+            </button>
+            <button class="action-tab tab-fix" onclick="switchTab(this,'fix','card1')">
+              ✏️ Sếp sửa & Ấn định
+            </button>
+          </div>
+
+          <!-- TAB 1: Duyệt -->
+          <div class="tab-content active" id="card1-approve">
+            <div class="approve-note">
+              ✅&nbsp; <div><strong>Duyệt nguyên trạng</strong> — Giữ nguyên số liệu NV nộp. Viết nhận xét (tuỳ chọn) rồi ấn Duyệt. Bot Discord sẽ gửi DM thông báo cho NV ngay.</div>
+            </div>
+            <div class="approve-comment-label">💬 Nhận xét cho nhân viên (tuỳ chọn)</div>
+            <textarea class="comment-input" rows="2" placeholder="VD: Tuần này hoàn thành tốt, tiếp tục phát huy nhé!"></textarea>
+            <div class="action-btns">
+              <button class="btn btn-primary-green">✅ Xác nhận Duyệt — Gửi thông báo cho NV</button>
+            </div>
+          </div>
+
+          <!-- TAB 2: Trả về -->
+          <div class="tab-content" id="card1-return">
+            <div class="return-note">
+              ↩️&nbsp; <div>
+                <strong>Trả về để NV chỉnh sửa</strong> — NV sẽ nhận DM Discord kèm lý do và link mở lại form. NV sửa xong gửi lại, bạn duyệt lại lần sau.
+                <div class="return-flow">
+                  <span class="flow-step">📝 Sếp viết lý do</span>
+                  <span class="flow-arrow">→</span>
+                  <span class="flow-step">🤖 Bot DM NV + link form</span>
+                  <span class="flow-arrow">→</span>
+                  <span class="flow-step">✏️ NV mở form sửa lại</span>
+                  <span class="flow-arrow">→</span>
+                  <span class="flow-step">📥 NV nộp lại → Sếp duyệt</span>
+                </div>
+              </div>
+            </div>
+            <div class="approve-comment-label" style="color:#dc2626;">❗ Lý do trả về (bắt buộc — gửi thẳng đến NV)</div>
+            <textarea class="comment-input" rows="3" style="border-color:#fca5a5;" placeholder="VD: Cột % hoàn thành chưa điền đầy đủ. Clip TikTok tuần này thiếu số liệu thực hiện. Bạn mở lại form và cập nhật nhé."></textarea>
+            <div class="action-btns">
+              <button class="btn btn-primary-red">↩️ Gửi trả về — Bot DM lý do cho NV ngay</button>
+            </div>
+          </div>
+
+          <!-- TAB 3: Sếp ấn định -->
+          <div class="tab-content" id="card1-fix">
+            <div class="fix-note">
+              ✏️&nbsp; <div>
+                <strong>Sếp trực tiếp chỉnh sửa & ấn định</strong> — Sửa số liệu KPI bên dưới rồi ấn "Ấn định". Bản sếp sửa sẽ là <strong>bản chính thức</strong>. NV nhận DM Discord kèm link xem báo cáo đã được ấn định (chỉ đọc).
+              </div>
+            </div>
+
+            <!-- Bảng chỉnh sửa KPI -->
+            <div class="fix-table-wrapper">
+              <table class="fix-table">
+                <thead>
+                  <tr>
+                    <th style="width:35%;">Đầu việc</th>
+                    <th style="width:12%;text-align:center;">KH</th>
+                    <th style="width:14%;text-align:center;">Thực hiện (NV)</th>
+                    <th style="width:14%;text-align:center;">Sếp điều chỉnh</th>
+                    <th style="width:11%;text-align:center;">% HT</th>
+                    <th style="width:9%;text-align:center;">Trọng số</th>
+                    <th style="width:5%;text-align:center;">Đạt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Thiết kế banner sản phẩm tháng 4</td>
+                    <td style="text-align:center;font-weight:700;">10</td>
+                    <td style="text-align:center;color:#16a34a;font-weight:700;">10</td>
+                    <td style="text-align:center;"><input class="fix-input" type="number" value="10" /></td>
+                    <td style="text-align:center;font-weight:700;color:#16a34a;">100%</td>
+                    <td style="text-align:center;">3</td>
+                    <td style="text-align:center;color:#16a34a;font-weight:800;">3.0</td>
+                  </tr>
+                  <tr>
+                    <td>Làm video TikTok</td>
+                    <td style="text-align:center;font-weight:700;">4</td>
+                    <td style="text-align:center;color:#d97706;font-weight:700;">3</td>
+                    <td style="text-align:center;"><input class="fix-input edited" type="number" value="2" title="Sếp sửa từ 3 → 2 vì 1 clip không đạt yêu cầu" /></td>
+                    <td style="text-align:center;font-weight:700;color:#d97706;">50%</td>
+                    <td style="text-align:center;">2</td>
+                    <td style="text-align:center;color:#d97706;font-weight:800;">1.0</td>
+                  </tr>
+                  <tr>
+                    <td>Motion Design intro</td>
+                    <td style="text-align:center;font-weight:700;">2</td>
+                    <td style="text-align:center;color:#16a34a;font-weight:700;">2</td>
+                    <td style="text-align:center;"><input class="fix-input" type="number" value="2" /></td>
+                    <td style="text-align:center;font-weight:700;color:#16a34a;">100%</td>
+                    <td style="text-align:center;">2</td>
+                    <td style="text-align:center;color:#16a34a;font-weight:800;">2.0</td>
+                  </tr>
+                  <tr style="background:#faf5ff;">
+                    <td colspan="6" style="text-align:right;font-weight:800;color:#5b21b6;padding-right:16px;">Điểm KPI Sếp ấn định:</td>
+                    <td style="text-align:center;font-size:16px;font-weight:900;color:#7c3aed;">8.25</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Hướng NV sẽ nhận được gì -->
+            <div class="fix-how-nv">
+              <h4>📱 NV sẽ nhận được gì sau khi Sếp ấn định?</h4>
+              <div class="step">
+                <div class="step-num">1</div>
+                <div>Bot Discord gửi DM: <em>"Sếp đã điều chỉnh và ấn định báo cáo tuần 15 của bạn. Điểm KPI chính thức: <strong>8.25/10</strong>. Xem chi tiết tại: [link]"</em></div>
+              </div>
+              <div class="step">
+                <div class="step-num">2</div>
+                <div>NV mở link → xem <strong>bản báo cáo đã được Sếp điều chỉnh</strong> (chế độ chỉ đọc) + ghi chú lý do của Sếp.</div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div>Google Sheet ghi nhận bản ấn định là <strong>kết quả chính thức</strong> — dùng cho thống kê KPI tháng, quý.</div>
+              </div>
+            </div>
+
+            <div class="fix-reason-label">📝 Lý do điều chỉnh (gửi kèm cho NV)</div>
+            <textarea class="comment-input" rows="2" style="border-color:#e9d5ff;margin-bottom:12px;" placeholder="VD: Clip TikTok thứ 3 chất lượng chưa đạt, nội dung sai brief. Sếp đã điều chỉnh số thực hiện từ 3 → 2."></textarea>
+            <div class="action-btns">
+              <button class="btn btn-secondary">← Huỷ chỉnh sửa</button>
+              <button class="btn btn-primary-purple">✏️ Ấn định — Chốt bản Sếp sửa & Gửi DM NV</button>
+            </div>
+          </div>
+        </div><!-- end action-panel -->
+      </div><!-- end card 1 -->
+
+
+      <!-- ═══ CARD 2: Đã được Sếp ấn định (hiển thị kết quả) === -->
+      <div class="report-card fixed-by-boss">
+        <div class="card-header">
+          <div class="card-left">
+            <div class="card-avatar" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">LM</div>
+            <div>
+              <div class="card-name">Lê Minh Tuấn</div>
+              <div class="card-meta">
+                <span>Content</span><span class="dot">·</span>
+                <span>Content Creator</span><span class="dot">·</span>
+                <span>📊 Tuần 15</span>
+                <span class="dot">·</span>
+                <span style="color:#f97316;">⏰ Nộp muộn</span>
+              </div>
+              <div class="card-meta" style="color:#9ca3af;margin-top:2px;">
+                🕐 Nộp: Thứ 2, 14/04 · 10:32
+              </div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+              <span class="badge fixed">✏️ Sếp đã ấn định</span>
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">👁️ Xem full</button>
+            </div>
+            <div>
+              <div class="score-label">Điểm NV nộp → <strong style="color:#7c3aed;">Sếp ấn định</strong></div>
+              <div style="display:flex;align-items:baseline;gap:6px;">
+                <span style="font-size:16px;color:#9ca3af;font-weight:700;text-decoration:line-through;">7.20</span>
+                <span style="font-size:28px;font-weight:900;color:#7c3aed;">6.50<span class="score-max">/10</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-bg"><div class="progress-fill" style="width:65%;background:linear-gradient(90deg,#7c3aed,#a855f7);"></div></div>
+        </div>
+
+        <!-- Kết quả ấn định đã được lưu -->
+        <div style="padding: 0 20px 18px;">
+          <div style="background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:11.5px;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">✏️ Ghi chú Sếp đã gửi cho NV</div>
+            <div style="font-size:13.5px;color:#374151;line-height:1.6;font-style:italic;">"Clip thumbnail tuần này chưa đủ số lượng theo brief (3 thay vì 4), nội dung 1 clip sai concept. Đã điều chỉnh thực hiện: 3 → 2. Tuần sau chú ý đọc kỹ brief trước."</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="chip purple">🤖 Đã gửi DM Discord cho NV</span>
+              <span class="chip">📅 14/04/2026 11:05</span>
+              <span class="chip">📊 Sheet đã cập nhật</span>
+            </div>
+          </div>
+          <div class="action-btns" style="margin-top:12px;">
+            <button class="btn btn-secondary" style="flex:1;">📝 Chỉnh sửa lại ghi chú</button>
+            <button class="btn btn-primary-green" style="flex:1;">✅ Duyệt & khoá báo cáo</button>
+          </div>
+        </div>
+      </div><!-- end card 2 -->
+
+
+      <!-- ═══ CARD 3: Đã trả về — NV đang sửa === -->
+      <div class="report-card returned">
+        <div class="card-header">
+          <div class="card-left">
+            <div class="card-avatar" style="background:linear-gradient(135deg,#dc2626,#ef4444);">TQ</div>
+            <div>
+              <div class="card-name">Trần Quốc Bảo</div>
+              <div class="card-meta">
+                <span>Content</span><span class="dot">·</span>
+                <span>Video Editor</span><span class="dot">·</span>
+                <span>📊 Tuần 15</span>
+              </div>
+              <div class="card-meta" style="color:#9ca3af;margin-top:2px;">
+                🕐 Nộp: Chủ Nhật, 13/04 · 23:11
+              </div>
+            </div>
+          </div>
+          <div class="card-right">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+              <span class="badge returned">↩️ Đã trả về</span>
+              <span style="font-size:11.5px;color:#ea580c;font-weight:700;padding:3px 8px;background:#fff7ed;border:1px solid #fdba74;border-radius:6px;">⏳ Chờ NV gửi lại</span>
+            </div>
+            <div>
+              <div class="score-label">Điểm KPI</div>
+              <div class="score-value bad">4.50<span class="score-max">/10</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-bg"><div class="progress-fill" style="width:45%;background:linear-gradient(90deg,#dc2626,#ef4444);"></div></div>
+        </div>
+        <div style="padding: 0 20px 18px;">
+          <div style="background:#fff1f2;border:1.5px solid #fecdd3;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:11.5px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">❗ Lý do trả về đã gửi NV</div>
+            <div style="font-size:13.5px;color:#374151;line-height:1.6;font-style:italic;">"Số liệu thực hiện chưa đủ, thiếu báo cáo clip TikTok tuần này. Cần điền đầy đủ % hoàn thành và gửi lại."</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="chip" style="background:#fff1f2;border-color:#fca5a5;color:#dc2626;">🤖 DM đã gửi 14/04 · 09:00</span>
+              <span class="chip">⏳ NV chưa gửi lại</span>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:12.5px;color:#9ca3af;font-style:italic;">💡 Khi NV gửi lại, báo cáo sẽ xuất hiện lại ở tab "Chờ duyệt" — bạn duyệt hoặc ấn định lại.</div>
+        </div>
+      </div><!-- end card 3 -->
+
+    </div><!-- end reports-grid -->
+
+
+    <!-- COMING SOON -->
+    <div class="section-title">🧑‍💼 Đánh giá nhân sự</div>
+    <div class="cs-grid">
+      <div class="coming-soon-card">
+        <div class="cs-icon">🎓</div>
+        <h3>Thử việc 2 tháng</h3>
+        <p>Đánh giá kỹ năng, thái độ, mức độ phù hợp sau 2 tháng.</p>
+        <span class="cs-badge">Sắp ra mắt</span>
+      </div>
+      <div class="coming-soon-card">
+        <div class="cs-icon">💰</div>
+        <h3>Xét tăng lương 6 tháng</h3>
+        <p>Duyệt đề xuất tăng lương định kỳ dựa trên điểm KPI tích lũy.</p>
+        <span class="cs-badge">Sắp ra mắt</span>
+      </div>
+      <div class="coming-soon-card">
+        <div class="cs-icon">🏆</div>
+        <h3>Đánh giá cuối năm</h3>
+        <p>Đánh giá toàn diện hiệu suất, phân hạng và bonus cuối năm.</p>
+        <span class="cs-badge">Sắp ra mắt</span>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end layout -->
+
+<script>
+  // Chuyển tab trong mỗi card
+  function switchTab(btn, tabName, cardId) {
+    // Reset tất cả tab của card này
+    const panel = btn.closest('.action-panel');
+    panel.querySelectorAll('.action-tab').forEach(t => t.classList.remove('tab-active'));
+    panel.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    // Kích hoạt tab được chọn
+    btn.classList.add('tab-active');
+    document.getElementById(cardId + '-' + tabName).classList.add('active');
+  }
+</script>
+</body>
+</html>
