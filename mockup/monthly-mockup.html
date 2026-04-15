@@ -6,614 +6,1412 @@
   <title>Mockup — Báo Cáo KPI Tháng | IruKa</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --navy: #1e3a5f;
-      --navy-light: rgba(30,58,95,0.08);
-      --amber: #d97706;
-      --green: #16a34a;
-      --red: #dc2626;
+      --green: #15803d;
       --gray-border: #d1d5db;
-      --gray-bg: #f9fafb;
-      --white: #ffffff;
-      color-scheme: light;
     }
     html, body { background: #fff; color: #111; font-family: 'Inter', sans-serif; font-size: 14px; }
 
     /* ── PAGE WRAPPER ─────────────────────────────── */
-    .page { max-width: 1600px; margin: 0 auto; padding: 0 20px 120px; }
+    .page { max-width: 1600px; margin: 0 auto; padding: 0 16px 120px; }
 
-    /* ── STICKY HEADER ────────────────────────────── */
+    /* ── STICKY HEADER ──────────────────────────────── */
     .sticky-header {
       position: sticky; top: 0; z-index: 50;
-      background: rgba(255,255,255,0.97);
+      /* margin âm để background kéo ra ngoài padding của .page */
+      margin: 0 -16px 32px;
+      padding: 16px 16px;
+      background: rgba(255,255,255,0.95);
       backdrop-filter: blur(8px);
-      border-bottom: 1px solid #e5e7eb;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-      padding: 14px 0;
-      margin-bottom: 28px;
-      border-radius: 0 0 10px 10px;
+      border-bottom: 1px solid #f3f4f6;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      border-radius: 0 0 8px 8px;
     }
     .sticky-header-inner {
       display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
     }
-    .sticky-header h1 {
-      font-size: 26px; font-weight: 900; text-transform: uppercase;
-      color: var(--navy); letter-spacing: 0.04em;
-    }
-    .badge-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
-    .badge {
-      padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
-      display: inline-flex; align-items: center; gap: 5px;
-    }
-    .badge-navy { background: var(--navy); color: #fff; box-shadow: 0 2px 8px rgba(30,58,95,0.25); }
-    .badge-blue  { background: #eff6ff; color: #1d4ed8; border: 2px solid #bfdbfe; }
-    .badge-orange{ background: #fff7ed; color: #c2410c; border: 2px solid #fed7aa; animation: pulse 2s infinite; }
+    .sticky-header h1 { font-size: 26px; font-weight: 900; text-transform: uppercase; color: var(--navy); letter-spacing: 0.04em; }
+    @media(min-width:640px){ .sticky-header h1 { font-size: 30px; } }
+    .badge-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+    .badge { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+    @media(min-width:640px){ .badge { font-size: 14px; } }
+    .badge-navy  { background: var(--navy); color: #fff; box-shadow: 0 2px 6px rgba(30,58,95,0.3); }
+    .badge-blue  { background: #dbeafe; color: #1e3a8a; border: 2px solid #bfdbfe; }
+    .badge-orange{ background: #ffedd5; color: #c2410c; border: 2px solid #fed7aa; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.65} }
 
-    /* ── INFO TABLE ──────────────────────────────── */
-    .info-table { border-collapse: collapse; font-size: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-radius: 8px; overflow: hidden; margin-bottom: 28px; }
-    .info-table td { border: 1px solid var(--gray-border); padding: 9px 16px; }
+    /* ── INFO TABLE ──────────────────────────────────── */
+    .info-table { border-collapse: collapse; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-radius: 8px; overflow: hidden; margin-bottom: 32px; background: #fff; }
+    .info-table td { border: 1px solid var(--gray-border); padding: 8px 16px; }
     .info-table .label { background: #f3f4f6; font-weight: 700; color: #374151; width: 140px; }
-    .info-table .value { color: var(--navy); font-weight: 800; min-width: 200px; font-size: 15px; }
+    .info-table .value { color: var(--navy); font-weight: 400; min-width: 200px; }
+    .info-table .value.bold { font-weight: 900; }
 
-    /* ── SECTION BANNER ─────────────────────────── */
+    /* ── CONTENT BLOCK ─────────────────────────────────── */
+    .content-block { width: 100%; }
+
+    /* ── SECTION BANNER ─────────────────────────────── */
     .section-banner {
-      width: 100%; display: flex; align-items: center; gap: 8px;
+      width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
       padding: 12px 16px; border: 1px solid var(--gray-border); border-bottom: none;
       border-radius: 8px 8px 0 0; font-size: 14px;
     }
     .banner-icon { font-size: 18px; }
-    .banner-label { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13px; }
+    .banner-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 13px; }
     .banner-spacer { flex: 1; }
-    .banner-hint { font-size: 12px; opacity: 0.7; font-style: italic; }
-    .banner-navy { background: rgba(30,58,95,0.08); color: var(--navy); }
-    .banner-gray  { background: #e9eaec; color: #111; }
+    .banner-hint { font-size: 12px; opacity: 0.75; font-style: italic; margin-left: auto; }
+    .banner-navy { background: rgba(30,58,95,0.1); color: var(--navy); }
+    .banner-gray  { background: #e5e7eb; color: #111; }
 
-    /* ── KPI TABLE ───────────────────────────────── */
+    /* ── BLOCKS SCROLL — 1 scroll duy nhất cho cả 4 khối ── */
+    /* Outer: clip + scroll ngang */
+    .blocks-scroll { overflow-x: auto; width: 100%; }
+    /* Inner: chiều ngang thực — đủ rộng cho bảng, cả 4 khối bằng nhau */
+    .blocks-inner  { min-width: 1280px; display: flex; flex-direction: column; gap: 32px; }
+
+    /* ── TABLE SCROLL WRAPPER ───────────────────────── */
+    /* overflow-x đã chuyển lên blocks-scroll, table-scroll chỉ còn width */
+    .table-scroll { width: 100%; }
+
+    /* ── KPI TABLE ──────────────────────────────────── */
     .kpi-table { width: 100%; border-collapse: collapse; border: 1px solid var(--gray-border); font-size: 13px; }
-    .kpi-table th {
-      background: var(--navy); color: #fff;
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 10px 8px; text-align: center; white-space: nowrap; font-weight: 700; font-size: 13px;
-    }
+    .kpi-table thead tr { background: var(--navy); color: #fff; }
+    .kpi-table th { border: 1px solid rgba(255,255,255,0.15); padding: 10px 8px; text-align: center; white-space: nowrap; font-weight: 700; font-size: 13px; }
     .kpi-table th.col-content { text-align: left; min-width: 380px; }
-    .kpi-table th.col-note    { text-align: left; min-width: 220px; }
+    .kpi-table th.col-note    { text-align: left; min-width: 230px; }
     .kpi-table th.col-unit    { min-width: 70px; }
     .kpi-table th.col-qty     { min-width: 110px; }
-    .kpi-table th.col-actual  { min-width: 110px; background: #92400e; }
-    .kpi-table th.col-pct     { min-width: 100px; }
-    .kpi-table th.col-weight  { min-width: 80px; }
-    .kpi-table th.col-score   { min-width: 80px; }
+    .kpi-table th.col-actual  { min-width: 115px; background: #ca8a04; font-style: italic; }
+    .kpi-table th.col-actual-gray { min-width: 115px; background: #4b5563; }
+    .kpi-table th.col-pct     { min-width: 110px; font-size: 13px; }
+    .kpi-table th.col-weight  { min-width: 80px; font-size: 13px; }
+    .kpi-table th.col-score   { min-width: 80px; font-size: 13px; }
     .kpi-table th.col-del     { width: 44px; }
     .req { color: #fca5a5; }
 
-    .kpi-table td {
-      border: 1px solid var(--gray-border); padding: 6px;
-      vertical-align: middle;
-    }
-    .row-old { background: rgba(239,246,255,0.35); }
-    .row-old:hover { background: rgba(239,246,255,0.7); }
+    .kpi-table td { border: 1px solid var(--gray-border); padding: 4px; vertical-align: middle; }
+    .row-old { background: rgba(239,246,255,0.2); }
+    .row-old:hover { background: rgba(239,246,255,0.5); }
     .row-new:hover { background: #f9fafb; }
 
-    /* Cell types */
-    .cell-stt  { text-align: center; font-weight: 600; color: #111; padding: 8px; }
-    .cell-ro   { padding: 8px; color: #111; font-weight: 600; }
-    .cell-ro-center { padding: 8px; text-align: center; font-weight: 700; color: #111; }
-    .cell-pct  { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 3px; padding: 8px; text-align: center; font-weight: 700; color: var(--green); }
-    .cell-score{ background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 3px; padding: 8px; text-align: center; font-weight: 700; color: var(--green); }
-    .cell-dash { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 3px; padding: 8px; text-align: center; color: #9ca3af; font-weight: 700; }
-    .cell-pending { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 3px; padding: 8px; text-align: center; color: #9ca3af; font-size: 11px; font-style: italic; white-space: nowrap; }
+    .cell-stt       { text-align: center; font-weight: 500; color: #111; padding: 8px; }
+    .cell-ro        { padding: 8px; color: #111; font-weight: 500; }
+    .cell-ro-center { padding: 8px; text-align: center; font-weight: 500; color: #111; }
+    .cell-pct   { background: rgba(240,253,244,0.6); border: 1px solid #bbf7d0 !important; border-radius: 2px; padding: 8px; text-align: center; font-weight: 700; color: var(--green); }
+    .cell-score { background: rgba(240,253,244,0.6); border: 1px solid #bbf7d0 !important; border-radius: 2px; padding: 8px; text-align: center; font-weight: 700; color: var(--green); }
+    .cell-dash    { background: #f3f4f6; border: 1px solid #e5e7eb !important; border-radius: 2px; padding: 8px; text-align: center; color: #9ca3af; font-weight: 700; }
+    .cell-pending { background: #f3f4f6; border: 1px solid #e5e7eb !important; border-radius: 2px; padding: 8px; text-align: center; color: #6b7280; font-size: 11px; font-style: italic; font-weight: 500; white-space: nowrap; }
 
     /* Inputs */
     textarea, input[type=text], input[type=number], select {
       font-family: 'Inter', sans-serif; font-size: 13px;
-      border: 2px solid var(--gray-border); border-radius: 4px;
-      padding: 7px 8px; outline: none; color: #111; font-weight: 600;
-      width: 100%; background: #fff;
-      transition: border-color 0.15s;
+      border: 2px solid var(--gray-border); border-radius: 3px;
+      padding: 8px; outline: none; color: #111; font-weight: 400;
+      width: 100%; background: #fff; transition: border-color 0.15s;
     }
-    textarea { resize: vertical; min-height: 58px; }
+    textarea { resize: vertical; min-height: 60px; }
     textarea:focus, input:focus, select:focus { border-color: #3b82f6; }
-    input[type=number].actual-input {
-      background: #fefce8; border-color: #d97706;
+
+    /* Ô Thực hiện — vàng */
+    input.actual-input {
+      background: #fefce8 !important; border-color: #eab308 !important;
       font-weight: 700; text-align: center; font-size: 14px;
     }
-    input[type=number].actual-input:focus { border-color: #92400e; box-shadow: 0 0 0 3px rgba(217,119,6,0.25); }
+    input.actual-input:focus { border-color: #ca8a04 !important; box-shadow: 0 0 0 3px rgba(234,179,8,0.25); }
 
-    /* Add row btn */
-    .add-row-td { border: 1px dashed #93c5fd; background: rgba(239,246,255,0.25); padding: 10px; text-align: center; }
-    .add-row-btn { color: var(--navy); font-weight: 700; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
+    /* Placeholder — mờ italic */
+    textarea::placeholder, input::placeholder {
+      color: #9ca3af !important; opacity: 0.8; font-style: italic; font-weight: 400;
+    }
+
+    /* Nút thêm dòng */
+    .add-row-td { border: 1px dashed #93c5fd !important; background: rgba(239,246,255,0.2); padding: 10px; text-align: center; }
+    .add-row-btn { color: var(--navy); font-weight: 600; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
     .add-row-btn:hover { color: #1d4ed8; }
-    .add-row-td.gray { border-color: #d1d5db; background: rgba(249,250,251,0.4); }
+    .add-row-td.gray { border-color: #d1d5db !important; background: rgba(249,250,251,0.3); }
     .add-row-btn.gray-btn { color: #2563eb; }
 
-    /* Delete btn */
-    .del-btn { background: none; border: none; cursor: pointer; color: #f87171; padding: 6px; line-height: 1; font-size: 16px; }
+    /* Nút xóa — khớp Trash2 lucide ReportGrid.tsx */
+    .del-btn { background: none; border: none; cursor: pointer; color: #f87171; padding: 8px; line-height: 1; transition: color 0.15s; display: flex; align-items: center; justify-content: center; margin: auto; }
     .del-btn:hover { color: #b91c1c; }
+    .del-btn:disabled { color: #d1d5db; cursor: default; pointer-events: none; }
 
-    /* ── TABLE WRAPPER ───────────────────── */
-    .table-section { width: 100%; margin-bottom: 32px; overflow-x: auto; }
+    /* Summary */
+    .summary-row td { background: rgba(30,58,95,0.05); }
+    .summary-label { font-weight: 700; color: var(--navy); font-size: 13px; padding: 8px 12px; }
+    .summary-pct   { color: var(--green); font-weight: 700; font-size: 14px; text-align: center; padding: 8px; }
 
-    /* ── SUMMARY ROW ───────────────────────────── */
-    .summary-row td { background: rgba(30,58,95,0.06); font-weight: 700; }
-    .summary-label { font-weight: 800; color: var(--navy); font-size: 13px; padding: 8px; }
-    .summary-pct   { color: var(--green); font-weight: 900; font-size: 15px; text-align: center; padding: 8px; }
-
-    /* ── ACHIEVEMENTS SECTION ─────────────────── */
-    .achieve-section {
-      border: 1px solid var(--gray-border); border-radius: 8px;
-      overflow: hidden; margin-bottom: 32px;
-    }
-    .achieve-header {
-      background: #fffbeb; border-bottom: 1px solid #fde68a;
-      padding: 12px 16px; display: flex; align-items: center; gap: 8px;
-    }
-    .achieve-header span { font-weight: 800; font-size: 13px; color: #92400e; text-transform: uppercase; letter-spacing: 0.04em; }
+    /* ── THÀNH TỰU & KHÓ KHĂN ──────────────────────── */
+    .achieve-section { border: 1px solid var(--gray-border); border-radius: 8px; overflow: hidden; }
+    .achieve-header { background: rgba(30,58,95,0.1); border-bottom: 1px solid var(--gray-border); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+    .achieve-header .label { font-weight: 700; font-size: 13px; color: var(--navy); text-transform: uppercase; letter-spacing: 0.05em; }
     .achieve-body { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #fff; }
     @media(max-width:640px){ .achieve-body { grid-template-columns: 1fr; } }
     .achieve-field label { display: block; font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-    .achieve-field textarea { min-height: 80px; }
-    .achieve-field.full-width { grid-column: 1 / -1; }
+    .achieve-field textarea { min-height: 80px; color: #111; font-weight: 400; }
 
-    /* ── SELF-RATING SECTION ──────────────────── */
-    .rating-section {
-      border: 1px solid #c7d2fe; border-radius: 8px;
-      overflow: hidden; margin-bottom: 32px;
-    }
-    .rating-header {
-      background: #eef2ff; border-bottom: 1px solid #c7d2fe;
-      padding: 12px 16px; display: flex; align-items: center; gap: 8px;
-    }
-    .rating-header span { font-weight: 800; font-size: 13px; color: #3730a3; text-transform: uppercase; letter-spacing: 0.04em; }
+    /* ── TỰ ĐÁNH GIÁ ────────────────────────────────── */
+    .rating-section { border: 1px solid var(--gray-border); border-radius: 8px; overflow: hidden; }
+    .rating-header { background: #e5e7eb; border-bottom: 1px solid var(--gray-border); padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+    .rating-header .label { font-weight: 700; font-size: 13px; color: #111; text-transform: uppercase; letter-spacing: 0.05em; }
     .rating-body { padding: 20px; background: #fff; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
     .rating-stars { display: flex; gap: 8px; }
-    .star-btn {
-      font-size: 30px; cursor: pointer; background: none; border: none;
-      opacity: 0.3; transition: all 0.15s; transform-origin: center;
-    }
+    .star-btn { font-size: 30px; cursor: pointer; background: none; border: none; opacity: 0.25; transition: all 0.15s; }
     .star-btn.active { opacity: 1; transform: scale(1.15); }
-    .star-btn:hover { opacity: 0.85; transform: scale(1.1); }
-    .rating-label { font-size: 14px; font-weight: 700; color: var(--navy); }
-    .rating-desc { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .star-btn:hover  { opacity: 0.8; transform: scale(1.1); }
+    .rating-text .rating-label { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .rating-text .rating-desc  { font-size: 12px; color: #6b7280; margin-top: 2px; }
 
-    /* ── FIXED BOTTOM BAR ─────────────────────── */
+    /* ── BOTTOM BAR ─────────────────────────────────── */
     .bottom-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: #fff; border-top: 2px solid var(--navy);
-      box-shadow: 0 -8px 24px rgba(0,0,0,0.1);
-      padding: 14px 24px;
-      display: flex; justify-content: flex-end; align-items: center;
-      z-index: 100;
+      box-shadow: 0 -10px 20px -3px rgba(0,0,0,0.12);
+      padding: 16px 24px; display: flex; justify-content: flex-end; align-items: center; z-index: 50;
     }
-    .bottom-bar-inner { display: flex; align-items: center; gap: 24px; }
+    .bottom-bar-inner { display: flex; align-items: center; gap: 16px; }
+    @media(min-width:640px){ .bottom-bar-inner { gap: 32px; } }
     .score-display { text-align: right; }
     .score-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
-    .score-value { display: flex; align-items: baseline; gap: 4px; justify-content: flex-end; }
-    .score-week  { font-size: 15px; font-weight: 700; color: #374151; text-transform: uppercase; }
-    .score-pct   { font-size: 30px; font-weight: 900; color: var(--green); }
-    .score-kh    { font-size: 13px; font-weight: 900; color: var(--green); }
+    .score-value { display: flex; align-items: baseline; gap: 6px; justify-content: flex-end; white-space: nowrap; }
+    .score-week { font-size: 14px; font-weight: 700; color: #4b5563; text-transform: uppercase; }
+    @media(min-width:640px){ .score-week { font-size: 18px; } }
+    .score-pct { font-size: 28px; font-weight: 900; color: var(--green); }
+    @media(min-width:640px){ .score-pct { font-size: 32px; } }
+    .score-kh  { font-size: 14px; font-weight: 900; color: var(--green); margin-left: 2px; }
 
     .submit-btn {
-      position: relative; font-weight: 900; padding: 13px 52px; border-radius: 12px;
-      color: #fff; font-size: 16px; white-space: nowrap; border: none; cursor: pointer;
+      position: relative; font-weight: 900; padding: 12px 24px; border-radius: 12px;
+      color: #fff; font-size: 14px; white-space: nowrap; border: none; cursor: pointer;
       background: linear-gradient(135deg, #3b82f6 0%, var(--navy) 100%);
-      box-shadow: 0 10px 28px rgba(59,130,246,0.5);
-      border-bottom: 5px solid #1e3a5f;
-      border-top: 1px solid rgba(255,255,255,0.3);
-      font-family: 'Inter', sans-serif;
-      transition: all 0.15s;
+      box-shadow: 0 10px 25px rgba(59,130,246,0.6);
+      border-bottom: 5px solid #1e3a5f; border-top: 1px solid rgba(255,255,255,0.3);
+      font-family: 'Inter', sans-serif; transition: all 0.15s; z-index: 10;
     }
-    .submit-btn:hover { transform: scale(1.04); box-shadow: 0 14px 36px rgba(59,130,246,0.7); }
+    @media(min-width:640px){ .submit-btn { font-size: 18px; padding: 12px 56px; } }
+    .submit-btn:hover { transform: scale(1.05); box-shadow: 0 15px 35px rgba(59,130,246,0.9); }
     .submit-btn:active { transform: scale(0.97); }
-    .glow {
-      position: absolute; inset: -4px; border-radius: 14px;
-      background: #60a5fa; filter: blur(12px); opacity: 0.4;
-      z-index: -1; animation: pulse 2s infinite;
+    .submit-btn .glow { position: absolute; inset: -4px; border-radius: 14px; background: #60a5fa; filter: blur(12px); opacity: 0.5; z-index: -1; animation: pulse 2s infinite; }
+    .submit-btn .btn-label { position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; }
+
+    /* ═══════════════════════════════════════════════════
+       SCENARIO SYSTEM — nhãn phân loại từng tình huống
+    ═══════════════════════════════════════════════════ */
+    .sc-label {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      background: #1e3a5f; color: #fff;
+      padding: 10px 20px; border-radius: 10px 10px 0 0;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .sc-label .sc-num { background: #fbbf24; color: #111; font-size: 12px; font-weight: 900; padding: 2px 10px; border-radius: 999px; flex-shrink: 0; }
+    .sc-label .sc-note { font-size: 11px; font-weight: 500; opacity: 0.7; font-style: italic; text-transform: none; letter-spacing: 0; }
+    .sc-frame { border: 2px solid #1e3a5f; border-radius: 0 10px 10px 10px; overflow: hidden; background: #fff; }
+    .sc-frame.no-pad { padding: 0; }
+    .sc-frame.pad { padding: 24px; }
+    .sc-frame.bg-gray { background: #f0f4f8; }
+    .sc-wrapper { margin: 72px 0 0; max-width: 1600px; margin-left: auto; margin-right: auto; padding: 0 16px; }
+    .sc-diff-note { background: #fef9c3; border: 1px solid #fde047; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #713f12; margin-bottom: 16px; }
+    .sc-diff-note strong { font-weight: 800; color: #92400e; }
+    hr.sc-sep { border: none; border-top: 3px dashed #e5e7eb; margin: 0; }
+
+    /* ── SKELETON ─────────────────────────────────────── */
+    .sk { background: #e5e7eb; border-radius: 6px; animation: skpulse 1.5s ease-in-out infinite; }
+    @keyframes skpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .sk-h { height: 18px; } .sk-h2 { height: 14px; } .sk-h3 { height: 11px; }
+    .sk-row { display: flex; gap: 8px; align-items: center; }
+
+    /* ── FULL-SCREEN ERROR / SUCCESS CARDS ───────────── */
+    .fsc { min-height: 420px; display: flex; align-items: center; justify-content: center; padding: 32px; }
+    .fsc-card { background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.12); padding: 48px 40px; max-width: 480px; width: 100%; text-align: center; }
+    .fsc-icon { font-size: 72px; line-height: 1; margin-bottom: 20px; }
+    .fsc-title { font-size: 22px; font-weight: 900; color: var(--navy); margin-bottom: 12px; }
+    .fsc-desc { font-size: 14px; color: #6b7280; line-height: 1.7; margin-bottom: 28px; }
+    .fsc-desc a { color: #3b82f6; text-decoration: underline; }
+    .fsc-btn { padding: 12px 36px; border-radius: 10px; font-weight: 800; font-size: 15px; border: none; cursor: pointer; font-family: 'Inter',sans-serif; display: inline-flex; align-items: center; gap: 8px; }
+    .fsc-btn-navy { background: var(--navy); color: #fff; }
+    .fsc-btn-gray { background: #e5e7eb; color: #374151; margin-right: 10px; }
+    .fsc-btn-green { background: var(--green); color: #fff; }
+    .fsc-bg-success { background: linear-gradient(135deg,#ecfdf5,#dbeafe); }
+    .fsc-bg-error   { background: #fff0f0; }
+    .fsc-bg-neutral { background: #f0f4f8; }
+    .fsc-score-box { background: rgba(21,128,61,0.08); border: 2px solid #bbf7d0; border-radius: 14px; padding: 20px 32px; margin: 0 auto 28px; display: inline-block; }
+    .fsc-score-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; }
+    .fsc-score-val { font-size: 48px; font-weight: 900; color: var(--green); line-height: 1; }
+    .fsc-score-sub  { font-size: 13px; color: #15803d; font-weight: 700; margin-top: 2px; }
+
+    /* ── MODAL ────────────────────────────────────────── */
+    .modal-wrapper { position: relative; min-height: 300px; background: rgba(0,0,0,0.45); border-radius: 0; display: flex; align-items: center; justify-content: center; padding: 32px; backdrop-filter: blur(2px); }
+    .modal-card { background: #fff; border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); padding: 36px; max-width: 440px; width: 100%; }
+    .modal-title { font-size: 20px; font-weight: 900; color: var(--navy); margin-bottom: 10px; }
+    .modal-body { font-size: 14px; color: #4b5563; line-height: 1.7; margin-bottom: 28px; white-space: pre-line; }
+    .modal-body strong { color: #111; font-weight: 700; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    .modal-btn { padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; font-family: 'Inter',sans-serif; }
+    .modal-btn-cancel  { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+    .modal-btn-confirm { background: var(--navy); color: #fff; }
+    .modal-btn-danger  { background: #dc2626; color: #fff; }
+    .modal-btn-amber   { background: #f59e0b; color: #111; }
+
+    /* ── TOAST ────────────────────────────────────────── */
+    .toast-stage { position: relative; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px; padding: 20px; min-height: 80px; display: flex; align-items: center; justify-content: flex-end; }
+    .toast-stage-label { position: absolute; top: 10px; left: 14px; font-size: 11px; color: #9ca3af; font-style: italic; }
+    .toast { display: inline-flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 14px; font-weight: 600; font-size: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.18); max-width: 380px; }
+    .toast-error   { background: #dc2626; color: #fff; }
+    .toast-success { background: var(--green); color: #fff; }
+    .toast-close { font-size: 18px; opacity: 0.75; cursor: pointer; margin-left: 6px; line-height: 1; }
+
+    /* ── VALIDATE / FIELD ERROR ───────────────────────── */
+    .field-err { border-color: #dc2626 !important; background: #fef2f2 !important; }
+    .err-hint { font-size: 12px; color: #dc2626; font-weight: 700; margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+
+    /* ── ROW-LEVEL REQUIRED FIELD ERRORS ─────────────── */
+    /* Áp dụng cho input/textarea/select trong row bị thiếu * */
+    .row-field-err { border-color: #dc2626 !important; background: #fef2f2 !important; box-shadow: 0 0 0 2px rgba(220,38,38,0.15) !important; }
+    select.row-field-err { border-color: #dc2626 !important; background: #fef2f2 !important; }
+
+    /* ── PLAN BLOCK EMPTY ERROR ───────────────────────── */
+    /* Khi bảng kế hoạch không có đầu việc nào */
+    .plan-block-err .section-banner { border-color: #dc2626 !important; background: #fef2f2; color: #991b1b; }
+    .plan-block-err .kpi-table      { border-color: #fca5a5 !important; }
+    .plan-block-err .add-row-td     { border-color: #fca5a5 !important; background: #fff5f5; }
+    .plan-err-msg {
+      background: #fef2f2; border: 1px solid #fca5a5; border-top: none;
+      border-radius: 0 0 8px 8px; padding: 10px 16px;
+      font-size: 13px; color: #dc2626; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
     }
 
-    /* ── HELPER ANNOTATION (mockup only) ───────── */
-    .mockup-note {
-      background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px;
-      padding: 10px 14px; font-size: 12px; color: #92400e; font-weight: 600; margin-bottom: 24px;
-      display: flex; align-items: flex-start; gap: 8px;
-    }
+    /* ── DRAFT BANNER ─────────────────────────────────── */
+    .draft-banner { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .draft-banner-text .dt { font-weight: 800; font-size: 14px; color: #92400e; }
+    .draft-banner-text .dd { font-size: 13px; color: #78350f; margin-top: 2px; }
+    .draft-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .draft-btn-restore { background: #f59e0b; color: #111; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px; font-family:'Inter',sans-serif; }
+    .draft-btn-discard { background: none; color: #6b7280; border: 1px solid #d1d5db; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; font-family:'Inter',sans-serif; }
 
-    /* ── DIFF so với Weekly ─────────────────────── */
-    /* 1. Cột Thực hiện = vàng nhạt, cho điền tháng trước */
-    /* 2. Kế hoạch tháng tới = bảng 2 */
-    /* 3. Thêm block "Thành tựu & Khó khăn" */
-    /* 4. Thêm block "Tự đánh giá" (stars) */
-    /* 5. Header badge = "Tháng X" thay "Tuần X" */
+    /* ── FIRST TIME BANNER ────────────────────────────── */
+    .ft-banner { background: linear-gradient(135deg,#eff6ff,#f0fdf4); border: 2px solid #93c5fd; border-radius: 12px; padding: 24px 28px; margin-bottom: 28px; display: flex; align-items: flex-start; gap: 16px; }
+    .ft-banner .ft-icon { font-size: 40px; flex-shrink: 0; }
+    .ft-banner .ft-title { font-size: 16px; font-weight: 900; color: var(--navy); margin-bottom: 6px; }
+    .ft-banner .ft-desc { font-size: 13px; color: #374151; line-height: 1.7; }
+    .ft-banner .ft-step { display: inline-flex; align-items: center; gap: 6px; background: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin: 4px 4px 0 0; }
+
+    /* ── NỘP MUỘN badge (chỉ phần header thay đổi) ────── */
+    .mini-header { background: rgba(255,255,255,0.95); padding: 16px; border: 1px solid #f3f4f6; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+
+    /* ── BOTTOM BAR VARIANTS ─────────────────────────── */
+    .bb-demo { border-top: 2px solid var(--navy); background: #fff; padding: 16px 24px; display: flex; justify-content: flex-end; align-items: center; box-shadow: 0 -4px 12px rgba(0,0,0,0.07); }
+    .bb-inner { display: flex; align-items: center; gap: 32px; }
+    .submit-btn-loading { background: #9ca3af !important; cursor: not-allowed !important; box-shadow: none !important; border-bottom-color: #6b7280 !important; }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════
-     STICKY HEADER
-══════════════════════════════════════════════ -->
-<div class="sticky-header">
-  <div class="sticky-header-inner">
-    <h1>Báo Cáo &amp; Kế Hoạch Tháng</h1>
-    <div class="badge-row">
-      <span class="badge badge-navy">📋 BC: Tháng 3 (01/03 – 31/03)</span>
-      <span class="badge badge-blue">🗓️ KH: Tháng 4 (01/04 – 30/04)</span>
-      <!-- Uncomment để hiện badge nộp muộn -->
-      <!-- <span class="badge badge-orange">⏰ Nộp muộn</span> -->
-    </div>
-  </div>
+<!-- ══ LABEL CHO FORM HIỆN TẠI (TH3) ══ -->
+<div style="background:#1e3a5f;color:#fff;padding:12px 24px;font-size:13px;font-weight:800;letter-spacing:0.05em;display:flex;align-items:center;gap:12px;">
+  <span style="background:#22c55e;color:#fff;padding:3px 12px;border-radius:999px;font-size:12px;">TH3</span>
+  FORM BÌNH THƯỜNG — Có data tháng cũ từ server (màn hình chính, đang dùng)
+  <span style="opacity:0.6;font-style:italic;font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;">↓ scroll xuống để xem tất cả tình huống khác</span>
 </div>
 
 <div class="page">
 
-  <!-- ── MOCKUP NOTE ──────────────────────────── -->
-  <div class="mockup-note">
-    📐 <span><strong>MOCKUP — Báo Cáo Tháng.</strong> File này dùng để review trước khi implement vào Next.js. Các tương tác chỉ mang tính minh hoạ.</span>
+  <!-- ══ STICKY HEADER — nằm trong .page → tự khớp chiều ngang ══ -->
+  <div class="sticky-header">
+    <div class="sticky-header-inner">
+      <h1>Báo Cáo &amp; Kế Hoạch Tháng</h1>
+      <div class="badge-row">
+        <span class="badge badge-navy">📋 BC: Tháng 3 (01/03 – 31/03)</span>
+        <span class="badge badge-blue">🗓️ KH: Tháng 4 (01/04 – 30/04)</span>
+        <!-- <span class="badge badge-orange">⏰ Nộp muộn</span> -->
+      </div>
+    </div>
   </div>
 
-  <!-- ── INFO TABLE ──────────────────────────── -->
-  <table class="info-table">
-    <tbody>
-      <tr>
-        <td class="label">Họ tên</td>
-        <td class="value">Nguyễn Văn A</td>
-      </tr>
-      <tr>
-        <td class="label">Báo cáo cho</td>
-        <td class="value">CEO</td>
-      </tr>
-      <tr>
-        <td class="label">Phòng ban</td>
-        <td class="value">Content</td>
-      </tr>
-      <tr>
-        <td class="label">Ngày đánh giá</td>
-        <td class="value">14/04/2026</td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- ── INFO TABLE + HƯỚNG DẪN ──────────────── -->
+  <div style="display:flex; gap:20px; align-items:stretch; margin-bottom:32px; flex-wrap:wrap;">
+
+    <!-- Bảng thông tin NV -->
+    <table class="info-table" style="margin-bottom:0; flex-shrink:0;">
+      <tbody>
+        <tr><td class="label">Họ tên</td><td class="value bold">Nguyễn Văn A</td></tr>
+        <tr><td class="label">Báo cáo cho</td><td class="value">CEO</td></tr>
+        <tr><td class="label">Phòng ban</td><td class="value">Content</td></tr>
+        <tr><td class="label">Ngày đánh giá</td><td class="value">14/04/2026</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Bảng hướng dẫn — chiều cao khớp bảng tên -->
+    <div style="flex:1; min-width:320px; border:1px solid var(--gray-border); border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.06); display:flex; flex-direction:column;">
+      <div style="background:rgba(30,58,95,0.08); border-bottom:1px solid var(--gray-border); padding:6px 12px; display:flex; align-items:center; gap:6px; flex-shrink:0;">
+        <span style="font-size:14px;">📌</span>
+        <span style="font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--navy); font-size:13px;">Hướng dẫn làm báo cáo tháng</span>
+      </div>
+      <div style="flex:1; background:#fff; display:grid; grid-template-columns:1fr 1fr 1fr; align-items:stretch;">
+
+        <div style="border-right:1px solid #e5e7eb; padding:12px 12px 12px 12px; display:flex; flex-direction:column;">
+          <div style="font-weight:700; color:var(--navy); font-size:14px; margin-bottom:5px;">📋 Báo cáo tháng trước</div>
+          <div style="font-size:13.5px; color:#374151; line-height:1.7;">
+            Điền đủ: nội dung, đơn vị, KH, <span style="background:#fefce8;border:1px solid #eab308;border-radius:2px;padding:0 4px;font-weight:600;">Thực hiện</span>, trọng số.<br>
+            % &amp; Điểm tự động tính.<br>
+            Lần đầu: copy từ Excel cũ.<br>
+            Lần sau: tự lấy KH tháng trước.
+          </div>
+        </div>
+
+        <div style="border-right:1px solid #e5e7eb; padding:12px; display:flex; flex-direction:column;">
+          <div style="font-weight:700; color:var(--navy); font-size:14px; margin-bottom:5px;">🗓️ Kế hoạch tháng tới</div>
+          <div style="font-size:13.5px; color:#374151; line-height:1.7;">
+            Liệt kê đầu việc dự kiến.<br>
+            Số lượng KH phải cụ thể, đo lường được.<br>
+            Cột Thực hiện bỏ trống.<br>
+            Đánh trọng số cao vào các đầu việc quan trọng.
+          </div>
+        </div>
+
+        <div style="padding:12px; display:flex; flex-direction:column;">
+          <div style="font-weight:700; color:var(--navy); font-size:14px; margin-bottom:5px;">⚖️ Trọng số</div>
+          <div style="font-size:13.5px; color:#374151; line-height:1.7;">
+            <strong>1</strong> — Việc không quá quan trọng<br>
+            <strong>2</strong> — Việc bình thường<br>
+            <strong>3</strong> — Việc cốt lõi, cần chú tâm
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ WRAPPER 1 SCROLL DUY NHẤT CHO CẢ 4 KHỐI ══ -->
+  <div class="blocks-scroll">
+  <div class="blocks-inner">
 
   <!-- ══════════════════════════════════════════
        BẢNG 1 — BÁO CÁO THÁNG TRƯỚC
+       content-block bọc cả banner + bảng + section dưới
+       → đảm bảo chiều ngang đồng nhất
   ══════════════════════════════════════════ -->
-  <div class="table-section">
+  <div class="content-block">
     <div class="section-banner banner-navy">
       <span class="banner-icon">📋</span>
-      <span class="banner-label">Báo Cáo Tháng 3 — Kết Quả Thực Đạt</span>
+      <span class="banner-label">Báo Cáo Tháng 3</span>
       <span class="banner-spacer"></span>
-      <span class="banner-hint">Điền số vào cột Thực hiện để chốt kết quả</span>
+      <span class="banner-hint">Lần đầu: Tự điền kết quả từ Excel của bạn</span>
     </div>
 
-    <table class="kpi-table">
-      <thead>
-        <tr>
-          <th>STT</th>
-          <th class="col-content">Nội dung công việc <span class="req">*</span></th>
-          <th class="col-note">Ghi chú tiến độ</th>
-          <th class="col-unit">Đơn vị <span class="req">*</span></th>
-          <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
-          <th class="col-actual">Thực hiện <span class="req">*</span></th>
-          <th class="col-pct">% Hoàn Thành</th>
-          <th class="col-weight">Trọng số <span class="req">*</span></th>
-          <th class="col-score">Đạt được</th>
-          <th class="col-del">Xóa</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Dòng mẫu 1: server-loaded, chỉ được nhập Thực hiện -->
-        <tr class="row-old">
-          <td class="cell-stt">1</td>
-          <td><div class="cell-ro">Viết bài blog hàng tháng cho IruKa Edu</div></td>
-          <td><div class="cell-ro">4 bài đã publish, 1 bài pending review</div></td>
-          <td><div class="cell-ro-center">Bài</div></td>
-          <td><div class="cell-ro-center">5</div></td>
-          <td>
-            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="4" />
-          </td>
-          <td><div class="cell-pct">80%</div></td>
-          <td><div class="cell-ro-center">3</div></td>
-          <td><div class="cell-score">2.4</div></td>
-          <td><button class="del-btn" title="Không thể xóa task từ server">—</button></td>
-        </tr>
+    <div class="table-scroll">
+      <table class="kpi-table" id="table1">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th class="col-content">Nội dung công việc <span class="req">*</span></th>
+            <th class="col-note">Ghi chú tiến độ</th>
+            <th class="col-unit">Đơn vị <span class="req">*</span></th>
+            <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
+            <th class="col-actual">Thực hiện <span class="req">*</span></th>
+            <th class="col-pct">% Hoàn Thành</th>
+            <th class="col-weight">Trọng số <span class="req">*</span></th>
+            <th class="col-score">Đạt được</th>
+            <th class="col-del">Xóa</th>
+          </tr>
+        </thead>
+        <tbody id="tbody1">
 
-        <!-- Dòng mẫu 2 -->
-        <tr class="row-old">
-          <td class="cell-stt">2</td>
-          <td><div class="cell-ro">Tạo video ngắn TikTok cho kênh IruKa</div></td>
-          <td><div class="cell-ro">8/10 video hoàn thành, 2 chưa edit</div></td>
-          <td><div class="cell-ro-center">Video</div></td>
-          <td><div class="cell-ro-center">10</div></td>
-          <td>
-            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="8" />
-          </td>
-          <td><div class="cell-pct">80%</div></td>
-          <td><div class="cell-ro-center">2</div></td>
-          <td><div class="cell-score">1.6</div></td>
-          <td><button class="del-btn">—</button></td>
-        </tr>
+          <!-- Dòng 1: Content Marketing -->
+          <tr class="row-old" data-kh="8" data-ts="3">
+            <td class="cell-stt">1</td>
+            <td><div class="cell-ro">Sản xuất bài viết Blog &amp; Social cho IruKa Edu</div></td>
+            <td><div class="cell-ro">7/8 bài đã publish, 1 bài đang chờ duyệt nội dung</div></td>
+            <td><div class="cell-ro-center">Bài</div></td>
+            <td><div class="cell-ro-center">8</div></td>
+            <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="7" oninput="recalcRow(this)" /></td>
+            <td><div class="cell-pct" data-pct>87.5%</div></td>
+            <td><div class="cell-ro-center">3</div></td>
+            <td><div class="cell-score" data-score>2.63</div></td>
+            <td><span style="color:#d1d5db; display:flex; align-items:center; justify-content:center; padding:8px;">—</span></td>
+          </tr>
 
-        <!-- Dòng mẫu 3 -->
-        <tr class="row-old">
-          <td class="cell-stt">3</td>
-          <td><div class="cell-ro">Thiết kế banner quảng cáo sự kiện tháng 3</div></td>
-          <td><div class="cell-ro">Hoàn thành đúng hạn, khách hàng satisfied</div></td>
-          <td><div class="cell-ro-center">Banner</div></td>
-          <td><div class="cell-ro-center">4</div></td>
-          <td>
-            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="4" />
-          </td>
-          <td><div class="cell-pct">100%</div></td>
-          <td><div class="cell-ro-center">1</div></td>
-          <td><div class="cell-score">1</div></td>
-          <td><button class="del-btn">—</button></td>
-        </tr>
+          <!-- Dòng 2: Backend -->
+          <tr class="row-old" data-kh="5" data-ts="3">
+            <td class="cell-stt">2</td>
+            <td><div class="cell-ro">Xây dựng API quản lý KPI &amp; báo cáo nhân sự</div></td>
+            <td><div class="cell-ro">Hoàn thành 5/5 endpoint, đã viết unit test đầy đủ</div></td>
+            <td><div class="cell-ro-center">API</div></td>
+            <td><div class="cell-ro-center">5</div></td>
+            <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="5" oninput="recalcRow(this)" /></td>
+            <td><div class="cell-pct" data-pct>100%</div></td>
+            <td><div class="cell-ro-center">3</div></td>
+            <td><div class="cell-score" data-score>3.0</div></td>
+            <td><span style="color:#d1d5db; display:flex; align-items:center; justify-content:center; padding:8px;">—</span></td>
+          </tr>
 
-        <!-- Dòng trống (lần đầu) -->
-        <tr class="row-old">
-          <td class="cell-stt">4</td>
-          <td>
-            <textarea placeholder="Tên đầu việc tháng trước..."></textarea>
-          </td>
-          <td>
-            <textarea placeholder="Ghi chú tiến độ..."></textarea>
-          </td>
-          <td><input type="text" placeholder="game" style="text-align:center" /></td>
-          <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700" /></td>
-          <td>
-            <input type="number" class="actual-input" min="0" step="0.5" placeholder="?" />
-          </td>
-          <td><div class="cell-dash">—</div></td>
-          <td>
-            <select>
-              <option value="" disabled selected>-- chọn --</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-            </select>
-          </td>
-          <td><div class="cell-dash">—</div></td>
-          <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
-        </tr>
+          <!-- Dòng 3: Dev Game -->
+          <tr class="row-old" data-kh="3" data-ts="2">
+            <td class="cell-stt">3</td>
+            <td><div class="cell-ro">Phát triển module Game STEM cho học sinh lớp 4–5</div></td>
+            <td><div class="cell-ro">2/3 game hoàn thành, game thứ 3 đang fix lỗi va chạm</div></td>
+            <td><div class="cell-ro-center">Game</div></td>
+            <td><div class="cell-ro-center">3</div></td>
+            <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="2" oninput="recalcRow(this)" /></td>
+            <td><div class="cell-pct" data-pct>66.7%</div></td>
+            <td><div class="cell-ro-center">2</div></td>
+            <td><div class="cell-score" data-score>1.33</div></td>
+            <td><span style="color:#d1d5db; display:flex; align-items:center; justify-content:center; padding:8px;">—</span></td>
+          </tr>
 
-        <!-- Nút thêm dòng -->
-        <tr>
-          <td colspan="10" class="add-row-td">
-            <button class="add-row-btn" onclick="addOldRow()">
-              ＋ Thêm đầu việc tháng trước
-            </button>
-          </td>
-        </tr>
+          <!-- Dòng 4: Design -->
+          <tr class="row-old" data-kh="6" data-ts="2">
+            <td class="cell-stt">4</td>
+            <td><div class="cell-ro">Thiết kế UI/UX màn hình &amp; banner sự kiện tháng 3</div></td>
+            <td><div class="cell-ro">Hoàn thành toàn bộ, đã bàn giao dev đúng deadline</div></td>
+            <td><div class="cell-ro-center">Màn hình</div></td>
+            <td><div class="cell-ro-center">6</div></td>
+            <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?" value="6" oninput="recalcRow(this)" /></td>
+            <td><div class="cell-pct" data-pct>100%</div></td>
+            <td><div class="cell-ro-center">2</div></td>
+            <td><div class="cell-score" data-score>2.0</div></td>
+            <td><span style="color:#d1d5db; display:flex; align-items:center; justify-content:center; padding:8px;">—</span></td>
+          </tr>
 
-        <!-- Summary row -->
-        <tr class="summary-row">
-          <td colspan="6" class="summary-label">📊 Tổng kết Tháng 3</td>
-          <td class="summary-pct" colspan="2">Tổng trọng số: <strong>6</strong></td>
-          <td class="summary-pct" colspan="2">Đạt: <strong>5.0 / 6</strong> → <span style="color:#16a34a;font-size:16px">83.3% KH</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          <!-- Dòng 5: trống — tự điền -->
+          <tr class="row-old" data-kh="" data-ts="">
+            <td class="cell-stt">5</td>
+            <td><textarea placeholder="Tên đầu việc tháng trước..."></textarea></td>
+            <td><textarea placeholder="Ghi chú tiến độ..."></textarea></td>
+            <td><input type="text" placeholder="VD: Bài" style="text-align:center" /></td>
+            <td><input type="number" class="kh-input" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700" oninput="updateKH(this)" /></td>
+            <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?" oninput="recalcRow(this)" /></td>
+            <td><div class="cell-dash" data-pct>—</div></td>
+            <td>
+              <select class="ts-select" onchange="updateTS(this)">
+                <option value="" disabled selected>-- chọn --</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </td>
+            <td><div class="cell-dash" data-score>—</div></td>
+            <td><button class="del-btn" onclick="removeRow(this)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button></td>
+          </tr>
+
+          <!-- Nút thêm dòng -->
+          <tr id="addOldRowTr">
+            <td colspan="10" class="add-row-td">
+              <button class="add-row-btn" onclick="addOldRow()">＋ Thêm đầu việc tháng trước</button>
+            </td>
+          </tr>
+
+          <!-- Summary row -->
+          <tr class="summary-row" id="summaryRow">
+            <td colspan="6" class="summary-label">📊 Tổng kết Tháng 3</td>
+            <td class="summary-pct" colspan="2" id="sumWeight">Tổng trọng số: <strong>10</strong></td>
+            <td class="summary-pct" colspan="2" id="sumScore">Đạt: <strong>8.96 / 10</strong> → <span id="sumPct" style="color:#15803d;font-size:15px;font-weight:900">89.6% KH</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /content-block bảng 1 -->
 
   <!-- ══════════════════════════════════════════
        BẢNG 2 — KẾ HOẠCH THÁNG TỚI
   ══════════════════════════════════════════ -->
-  <div class="table-section">
+  <div class="content-block">
     <div class="section-banner banner-gray">
       <span class="banner-icon">🗓️</span>
-      <span class="banner-label">Kế Hoạch Tháng 4 — Mục Tiêu Sắp Tới</span>
+      <span class="banner-label">Kế Hoạch Tháng 4</span>
       <span class="banner-spacer"></span>
       <span class="banner-hint">Đặt mục tiêu cho tháng tới — Điền đủ các cột</span>
     </div>
 
-    <table class="kpi-table">
-      <thead>
-        <tr>
-          <th>STT</th>
-          <th class="col-content">Nội dung công việc <span class="req">*</span></th>
-          <th class="col-note">Ghi chú / Mục tiêu cụ thể</th>
-          <th class="col-unit">Đơn vị <span class="req">*</span></th>
-          <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
-          <th class="col-actual" style="background:#6b7280">Thực hiện</th>
-          <th class="col-pct">% Hoàn Thành</th>
-          <th class="col-weight">Trọng số <span class="req">*</span></th>
-          <th class="col-score">Đạt được</th>
-          <th class="col-del">Xóa</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Dòng kế hoạch 1 -->
-        <tr class="row-new">
-          <td class="cell-stt">1</td>
-          <td>
-            <textarea placeholder="Tên đầu việc tháng tới...">Viết bài blog cho IruKa Edu – tháng 4</textarea>
-          </td>
-          <td>
-            <textarea placeholder="Mô tả chi tiết...">Ít nhất 5 bài, ưu tiên chủ đề giáo dục STEM</textarea>
-          </td>
-          <td><input type="text" value="Bài" style="text-align:center" /></td>
-          <td><input type="number" value="5" style="text-align:center;font-weight:700" /></td>
-          <td><div class="cell-pending">Tháng sau chốt</div></td>
-          <td><div class="cell-dash">—</div></td>
-          <td>
-            <select>
-              <option value="3" selected>3</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-            </select>
-          </td>
-          <td><div class="cell-dash">—</div></td>
-          <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
-        </tr>
+    <div class="table-scroll">
+      <table class="kpi-table" id="table2">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th class="col-content">Nội dung công việc <span class="req">*</span></th>
+            <th class="col-note">Ghi chú / Mục tiêu cụ thể</th>
+            <th class="col-unit">Đơn vị <span class="req">*</span></th>
+            <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
+            <th class="col-actual-gray">Thực hiện</th>
+            <th class="col-pct">% Hoàn Thành</th>
+            <th class="col-weight">Trọng số <span class="req">*</span></th>
+            <th class="col-score">Đạt được</th>
+            <th class="col-del">Xóa</th>
+          </tr>
+        </thead>
+        <tbody id="tbody2">
+          <!-- Dòng kế hoạch 1 -->
+          <tr class="row-new">
+            <td class="cell-stt">1</td>
+            <td><textarea placeholder="Tên đầu việc tháng tới..."></textarea></td>
+            <td><textarea placeholder="Mô tả chi tiết..."></textarea></td>
+            <td><input type="text" placeholder="VD: Bài" style="text-align:center" /></td>
+            <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700" /></td>
+            <td><div class="cell-pending">Tháng sau chốt</div></td>
+            <td><div class="cell-dash">—</div></td>
+            <td>
+              <select>
+                <option value="" disabled selected>-- chọn --</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </td>
+            <td><div class="cell-dash">—</div></td>
+            <td><button class="del-btn" onclick="removeRow(this)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button></td>
+          </tr>
 
-        <!-- Dòng kế hoạch trống -->
-        <tr class="row-new">
-          <td class="cell-stt">2</td>
-          <td>
-            <textarea placeholder="Tên đầu việc tháng tới..."></textarea>
-          </td>
-          <td>
-            <textarea placeholder="Mô tả chi tiết..."></textarea>
-          </td>
-          <td><input type="text" placeholder="game" style="text-align:center" /></td>
-          <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700" /></td>
-          <td><div class="cell-pending">Tháng sau chốt</div></td>
-          <td><div class="cell-dash">—</div></td>
-          <td>
-            <select>
-              <option value="" disabled selected>-- chọn --</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-            </select>
-          </td>
-          <td><div class="cell-dash">—</div></td>
-          <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
-        </tr>
+          <!-- Nút thêm dòng bảng 2 -->
+          <tr id="addNewRowTr">
+            <td colspan="10" class="add-row-td gray">
+              <button class="add-row-btn gray-btn" onclick="addNewRow()">＋ Thêm đầu việc mới</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /content-block bảng 2 -->
 
-        <!-- Nút thêm dòng bảng 2 -->
-        <tr>
-          <td colspan="10" class="add-row-td gray">
-            <button class="add-row-btn gray-btn" onclick="addNewRow()">
-              ＋ Thêm đầu việc mới
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ══════════════════════════════════════════
-       BLOCK 3 — THÀNH TỰU & KHÓ KHĂN
-       (Điểm khác biệt so với Báo cáo Tuần)
-  ══════════════════════════════════════════ -->
+  <!-- ── THÀNH TỰU & KHÓ KHĂN ─────────────────── -->
   <div class="achieve-section">
     <div class="achieve-header">
       <span class="banner-icon">🏆</span>
-      <span>Thành tựu nổi bật &amp; Khó khăn trong tháng</span>
+      <span class="label">Thành tựu nổi bật &amp; Khó khăn trong tháng</span>
     </div>
     <div class="achieve-body">
       <div class="achieve-field">
-        <label>⭐ Thành tựu / Kết quả nổi bật</label>
-        <textarea placeholder="VD: Hoàn thành chiến dịch marketing tháng 3, đạt 120% KPI lượt xem...">Hoàn thành toàn bộ bộ banner tháng 3 trước deadline 2 ngày. Bài blog về STEM đạt 4.2k lượt đọc, cao nhất từ trước đến nay.</textarea>
+        <label>⭐ Thành tựu / Kết quả nổi bật <span style="color:#dc2626;">*</span></label>
+        <textarea id="ta-thanhtuu" placeholder="VD: Hoàn thành 5 game STEM mới, Landing Page đạt 10k view..." oninput="validateAchieve()"></textarea>
       </div>
       <div class="achieve-field">
         <label>⛔ Khó khăn / Vướng mắc gặp phải</label>
-        <textarea placeholder="VD: Thiếu tài nguyên hình ảnh, cần hỗ trợ từ Design...">Video TikTok 2 clip bị trễ do chờ approval content từ phía khách hàng (>3 ngày). Đề xuất rút ngắn quy trình duyệt xuống 1 ngày.</textarea>
+        <textarea placeholder="VD: Game SDK v2 còn lỗi logic va chạm, chờ Designer duyệt assets..."></textarea>
       </div>
       <div class="achieve-field">
         <label>💡 Đề xuất cải tiến / Cần hỗ trợ gì?</label>
-        <textarea placeholder="VD: Đề nghị trang bị thêm công cụ...">Cần thêm account Canva Pro để sản xuất nhanh hơn. Đề xuất họp kickoff tháng 4 sớm hơn (giữa tháng 3) để có nhiều thời gian chuẩn bị.</textarea>
+        <textarea placeholder="VD: Đề xuất trang bị thêm account ChatGPT Team..."></textarea>
       </div>
       <div class="achieve-field">
-        <label>🎯 Mục tiêu ưu tiên tháng tới</label>
-        <textarea placeholder="Mục tiêu quan trọng nhất bạn muốn đạt được tháng tới...">Ra mắt series blog 5 bài về STEM, đạt 10k lượt đọc tổng cộng. Hoàn thiện 10 video TikTok đúng hạn.</textarea>
+        <label>🎯 Mục tiêu ưu tiên tháng tới <span style="color:#dc2626;">*</span></label>
+        <textarea id="ta-muctieu" placeholder="Mục tiêu quan trọng nhất bạn muốn đạt được tháng tới..." oninput="validateAchieve()"></textarea>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       BLOCK 4 — TỰ ĐÁNH GIÁ
-       (Điểm khác biệt so với Báo cáo Tuần)
-  ══════════════════════════════════════════ -->
+  <!-- ── TỰ ĐÁNH GIÁ ─────────────────────────── -->
   <div class="rating-section">
     <div class="rating-header">
       <span class="banner-icon">🌟</span>
-      <span>Tự đánh giá mức độ hoàn thành tháng</span>
+      <span class="label">Tự đánh giá mức độ hoàn thành tháng</span>
     </div>
     <div class="rating-body">
-      <div>
+      <div class="rating-text">
         <div class="rating-label">Bạn tự chấm điểm tháng này:</div>
-        <div class="rating-desc" style="color:#6b7280;font-size:12px;margin-top:2px">1 = Chưa đạt · 2 = Đạt · 3 = Tốt · 4 = Rất tốt · 5 = Xuất sắc</div>
+        <div class="rating-desc">1 = Yếu · 2 = Kém · 3 = Trung Bình · 4 = Khá · 5 = Đạt</div>
       </div>
       <div class="rating-stars" id="stars">
         <button class="star-btn active" onclick="setStar(1)">⭐</button>
         <button class="star-btn active" onclick="setStar(2)">⭐</button>
         <button class="star-btn active" onclick="setStar(3)">⭐</button>
         <button class="star-btn active" onclick="setStar(4)">⭐</button>
-        <button class="star-btn" onclick="setStar(5)">⭐</button>
+        <button class="star-btn"        onclick="setStar(5)">⭐</button>
       </div>
-      <div>
-        <div class="rating-label" id="star-label">4 / 5 — Rất tốt</div>
+      <div class="rating-text">
+        <div class="rating-label" id="star-label">4 / 5 — Khá</div>
         <div class="rating-desc">CEO sẽ xem xét và phản hồi sau khi duyệt</div>
       </div>
     </div>
   </div>
 
+  </div><!-- /blocks-inner -->
+  </div><!-- /blocks-scroll -->
+
 </div><!-- /page -->
 
-<!-- ══════════════════════════════════════════
-     FIXED BOTTOM BAR
-══════════════════════════════════════════ -->
+
+<!-- ████████████████████████████████████████████████████
+     TẤT CẢ CÁC TÌNH HUỐNG MOCKUP — TH1 → TH14
+████████████████████████████████████████████████████ -->
+
+<div style="background:#111;color:#fff;text-align:center;padding:20px;font-size:15px;font-weight:900;letter-spacing:0.07em;text-transform:uppercase;">
+  📋 Tất Cả Tình Huống — Monthly KPI Report
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH1 — LOADING / SKELETON
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper" style="margin-top:48px;">
+  <div class="sc-label">
+    <span class="sc-num">TH1</span>
+    Loading / Skeleton
+    <span class="sc-note">— Đang tải dữ liệu từ server. Hiện placeholder pulse animation, chặn toàn bộ form.</span>
+  </div>
+  <div class="sc-frame pad" style="background:#fff;">
+    <!-- Skeleton: sticky header area -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-bottom:24px;border-bottom:1px solid #f3f4f6;margin-bottom:24px;">
+      <div class="sk sk-h" style="width:320px;"></div>
+      <div style="display:flex;gap:10px;">
+        <div class="sk sk-h2" style="width:140px;border-radius:999px;"></div>
+        <div class="sk sk-h2" style="width:140px;border-radius:999px;"></div>
+      </div>
+    </div>
+    <!-- Skeleton: info table -->
+    <div style="display:flex;gap:16px;margin-bottom:28px;">
+      <div style="width:340px;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="sk-row"><div class="sk sk-h3" style="width:100px;flex-shrink:0;"></div><div class="sk sk-h3" style="flex:1;"></div></div>
+          <div class="sk-row"><div class="sk sk-h3" style="width:100px;flex-shrink:0;"></div><div class="sk sk-h3" style="flex:1;"></div></div>
+          <div class="sk-row"><div class="sk sk-h3" style="width:100px;flex-shrink:0;"></div><div class="sk sk-h3" style="flex:1;"></div></div>
+          <div class="sk-row"><div class="sk sk-h3" style="width:100px;flex-shrink:0;"></div><div class="sk sk-h3" style="flex:1;"></div></div>
+        </div>
+      </div>
+      <div class="sk" style="flex:1;height:90px;border-radius:10px;"></div>
+    </div>
+    <!-- Skeleton: table header + rows -->
+    <div class="sk" style="height:44px;border-radius:6px 6px 0 0;margin-bottom:2px;"></div>
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <div class="sk sk-h" style="height:36px;border-radius:0;opacity:0.85;"></div>
+      <div class="sk sk-h" style="height:36px;border-radius:0;opacity:0.65;"></div>
+      <div class="sk sk-h" style="height:36px;border-radius:0;opacity:0.45;"></div>
+      <div class="sk sk-h" style="height:36px;border-radius:0;opacity:0.28;"></div>
+    </div>
+    <p style="text-align:center;font-size:13px;color:#9ca3af;margin-top:20px;font-style:italic;" class="sk-h3" style="background:none;animation:skpulse 1.5s ease-in-out infinite;">
+      ⏳ Đang tải dữ liệu của Nguyễn Văn A...
+    </p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH2 — FORM LẦN ĐẦU (không có data tháng cũ)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH2</span>
+    Form — Lần đầu (chưa từng nộp, không có data tháng cũ)
+    <span class="sc-note">— Header, info table, guide box, bảng kế hoạch, thành tựu, đánh giá: giống TH3. Khác: có banner chào + bảng 1 trống hoàn toàn.</span>
+  </div>
+  <div class="sc-frame no-pad">
+    <div style="padding:24px;">
+
+      <!-- Diff note -->
+      <div class="sc-diff-note">
+        <strong>📌 Phần khác so với TH3:</strong> Có banner "Lần đầu" màu xanh ở trên + Bảng 1 hoàn toàn trống (không có dòng server nào, chỉ có nút Thêm). Bảng 2, khối Thành tựu, Đánh giá: y hệt TH3.
+      </div>
+
+      <!-- First-time welcome banner -->
+      <div class="ft-banner">
+        <div class="ft-icon">👋</div>
+        <div>
+          <div class="ft-title">Chào mừng bạn lần đầu dùng hệ thống!</div>
+          <div class="ft-desc">
+            Bảng <strong>Báo cáo tháng trước</strong> đang trống — bạn cần tự điền kết quả từ file Excel cũ.<br/>
+            <span class="ft-step">① Nhớ lại KH và thực hiện tháng trước</span>
+            <span class="ft-step">② Bấm "Thêm đầu việc tháng trước"</span>
+            <span class="ft-step">③ Điền đủ các cột rồi nộp</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner xanh bảng 1 (trống) -->
+      <div class="section-banner banner-navy" style="margin-bottom:0;">
+        <span class="banner-icon">📋</span>
+        <span class="banner-label">Báo Cáo Tháng 3</span>
+        <span class="banner-spacer"></span>
+        <span class="banner-hint">Lần đầu: Tự điền kết quả từ Excel của bạn</span>
+      </div>
+      <table class="kpi-table" style="width:100%;margin-bottom:28px;">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th class="col-content">Nội dung công việc <span class="req">*</span></th>
+            <th class="col-note">Ghi chú tiến độ</th>
+            <th class="col-unit">Đơn vị <span class="req">*</span></th>
+            <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
+            <th class="col-actual">Thực hiện <span class="req">*</span></th>
+            <th class="col-pct">% Hoàn Thành</th>
+            <th class="col-weight">Trọng số <span class="req">*</span></th>
+            <th class="col-score">Đạt được</th>
+            <th class="col-del">Xóa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Không có dòng nào từ server -->
+          <tr>
+            <td colspan="10" style="padding:32px;text-align:center;color:#9ca3af;font-style:italic;font-size:13px;background:#fafafa;border:1px dashed #d1d5db;">
+              Chưa có đầu việc nào — Bấm nút bên dưới để thêm
+            </td>
+          </tr>
+          <tr>
+            <td colspan="10" class="add-row-td">
+              <button class="add-row-btn">＋ Thêm đầu việc tháng trước</button>
+            </td>
+          </tr>
+          <tr class="summary-row">
+            <td colspan="6" class="summary-label">📊 Tổng kết Tháng 3</td>
+            <td class="summary-pct" colspan="2">Tổng trọng số: <strong>0</strong></td>
+            <td class="summary-pct" colspan="2">Đạt: <strong>0 / 0</strong> → <span style="color:#15803d;font-size:15px;font-weight:900">0% KH</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH4 — TOKEN HẾT HẠN
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH4</span>
+    Token hết hạn (link &gt;72h hoặc sai)
+    <span class="sc-note">— Chặn toàn bộ trang. Không render form.</span>
+  </div>
+  <div class="sc-frame no-pad">
+    <div class="fsc fsc-bg-neutral">
+      <div class="fsc-card">
+        <div class="fsc-icon">🔗</div>
+        <div class="fsc-title">Link đã hết hạn</div>
+        <div class="fsc-desc">
+          Link báo cáo chỉ có hiệu lực trong <strong>72 giờ</strong>.<br/>
+          Vui lòng liên hệ quản lý để nhận link mới,<br/>hoặc kiểm tra lại email.
+        </div>
+        <div>
+          <button class="fsc-btn fsc-btn-gray">📧 Liên hệ quản lý</button>
+          <button class="fsc-btn fsc-btn-navy">🔄 Thử lại</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH5 — LỖI API / MẠNG KHI LOAD
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH5</span>
+    Lỗi API / mạng khi load dữ liệu
+    <span class="sc-note">— Fetch thất bại (GAS lỗi hoặc mất kết nối). Chặn toàn trang, cho thử lại.</span>
+  </div>
+  <div class="sc-frame no-pad">
+    <div class="fsc fsc-bg-error">
+      <div class="fsc-card">
+        <div class="fsc-icon">⚠️</div>
+        <div class="fsc-title">Không thể tải dữ liệu</div>
+        <div class="fsc-desc">
+          Hệ thống gặp sự cố khi tải dữ liệu.<br/>
+          Có thể do mạng không ổn định hoặc server đang bảo trì.<br/><br/>
+          <span style="font-size:12px;background:#fee2e2;padding:6px 12px;border-radius:6px;color:#991b1b;font-family:monospace;">Error: Failed to fetch — 503</span>
+        </div>
+        <button class="fsc-btn fsc-btn-navy" style="width:100%;justify-content:center;">🔄 Thử tải lại</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH6 — NỘP THÀNH CÔNG (màn hình full)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH6</span>
+    Nộp thành công — Màn hình chúc mừng
+    <span class="sc-note">— Sau khi POST thành công. Ẩn form, hiện full-screen success.</span>
+  </div>
+  <div class="sc-frame no-pad">
+    <div class="fsc fsc-bg-success">
+      <div class="fsc-card" style="max-width:520px;">
+        <div class="fsc-icon">🎉</div>
+        <div class="fsc-title">Đã nộp báo cáo thành công!</div>
+
+        <!-- Score box -->
+        <div class="fsc-score-box">
+          <div class="fsc-score-label">Kết quả Tháng 3</div>
+          <div class="fsc-score-val">89.6%</div>
+          <div class="fsc-score-sub">KH đạt được</div>
+        </div>
+
+        <div class="fsc-desc">
+          Báo cáo của bạn đã được ghi nhận vào hệ thống.<br/>
+          CEO sẽ xem xét và phản hồi trong vòng <strong>1–2 ngày làm việc</strong>.<br/><br/>
+          <span style="font-size:12px;color:#6b7280;">Nộp lúc: 14/04/2026 · 09:35 SA</span><br/>
+          <span style="font-size:12px;color:#6b7280;">Bot Discord đã thông báo đến CEO ✓</span>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button class="fsc-btn fsc-btn-gray">📋 Xem lại báo cáo</button>
+          <button class="fsc-btn fsc-btn-green">✅ Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH7 — NỘP MUỘN (badge ⏰ xuất hiện)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH7</span>
+    Nộp muộn — Badge ⏰ xuất hiện trên header
+    <span class="sc-note">— Toàn bộ form giữ nguyên như TH3. Chỉ thêm badge cam "Nộp muộn" trong sticky header.</span>
+  </div>
+  <div class="sc-frame pad">
+    <div class="sc-diff-note">
+      <strong>📌 Chỉ phần sticky header thay đổi:</strong> Badge cam "⏰ Nộp muộn" xuất hiện thêm. Form phía dưới y hệt TH3.
+    </div>
+    <!-- Mini header preview -->
+    <div class="mini-header">
+      <h1 style="font-size:26px;font-weight:900;text-transform:uppercase;color:var(--navy);letter-spacing:0.04em;">Báo Cáo &amp; Kế Hoạch Tháng</h1>
+      <div class="badge-row">
+        <span class="badge badge-navy">📋 BC: Tháng 3 (01/03 – 31/03)</span>
+        <span class="badge badge-blue">🗓️ KH: Tháng 4 (01/04 – 30/04)</span>
+        <!-- Badge cam xuất hiện khi isLate = true -->
+        <span class="badge badge-orange">⏰ Nộp muộn</span>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:12px;font-style:italic;">↕ Phần còn lại bên dưới giữ nguyên như TH3</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH8 — ĐANG NỘP (button loading state)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH8</span>
+    Đang nộp — Button loading, disabled
+    <span class="sc-note">— Form giữ nguyên như TH3. Chỉ bottom bar thay đổi: button chuyển sang "⏳ Đang nộp..." + disabled.</span>
+  </div>
+  <div class="sc-frame pad">
+    <div class="sc-diff-note">
+      <strong>📌 Chỉ bottom bar thay đổi.</strong> Nút bị disabled, màu xám, không hover/click được. Phần còn lại giữ nguyên.
+    </div>
+    <!-- Bottom bar preview -->
+    <div class="bb-demo" style="border-radius:8px;margin-top:8px;">
+      <div class="bb-inner">
+        <div class="score-display">
+          <div class="score-label">Kết quả hoàn thành</div>
+          <div class="score-value">
+            <span class="score-week">Tháng 3 Đạt</span>
+            <span class="score-pct">89.6%</span>
+            <span class="score-kh">KH</span>
+          </div>
+        </div>
+        <!-- Nút đang nộp — xám, disabled -->
+        <button class="submit-btn submit-btn-loading" disabled>
+          <span class="btn-label">⏳ Đang nộp...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH9 — VALIDATE LỖI (3 loại: trường *, kế hoạch trống, thành tựu)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH9</span>
+    Validate lỗi — Bấm Nộp khi thiếu dữ liệu bắt buộc
+    <span class="sc-note">— 3 loại lỗi: ① trường * trong row, ② bảng kế hoạch trống, ③ Thành tựu / Mục tiêu trống.</span>
+  </div>
+  <div class="sc-frame pad">
+    <div class="sc-diff-note">
+      <strong>📌 Tất cả lỗi xảy ra đồng thời</strong> khi NV bấm Nộp mà thiếu dữ liệu. Hệ thống highlight đỏ từng ô, scroll đến lỗi đầu tiên, và hiện danh sách lỗi. User gõ vào ô đang đỏ → đỏ tự xóa.
+    </div>
+
+    <!-- ── LỖI LOẠI 1: TRƯỜNG * TRONG ROW CỦA BẢNG ── -->
+    <p style="font-size:13px;font-weight:800;color:#dc2626;margin:0 0 10px;display:flex;align-items:center;gap:6px;">
+      ① Trường * trong bảng báo cáo chưa điền (ô Thực hiện + trường tự nhập)
+    </p>
+    <div class="table-scroll" style="margin-bottom:28px;">
+      <table class="kpi-table" style="width:100%;">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th class="col-content">Nội dung công việc <span class="req">*</span></th>
+            <th class="col-note">Ghi chú</th>
+            <th class="col-unit">Đơn vị <span class="req">*</span></th>
+            <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
+            <th class="col-actual">Thực hiện <span class="req">*</span></th>
+            <th class="col-pct">%</th>
+            <th class="col-weight">Trọng số <span class="req">*</span></th>
+            <th class="col-score">Đạt</th>
+            <th class="col-del">Xóa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dòng server — chỉ Thực hiện đỏ (bỏ trống) -->
+          <tr class="row-old" data-kh="8" data-ts="3">
+            <td class="cell-stt">1</td>
+            <td><div class="cell-ro">Sản xuất bài viết Blog &amp; Social</div></td>
+            <td><div class="cell-ro">7/8 bài đã publish</div></td>
+            <td><div class="cell-ro-center">Bài</div></td>
+            <td><div class="cell-ro-center">8</div></td>
+            <!-- Ô Thực hiện bỏ trống → đỏ -->
+            <td><input type="number" class="actual-input row-field-err" placeholder="?" style="border-color:#dc2626!important;background:#fef2f2!important;box-shadow:0 0 0 2px rgba(220,38,38,0.15)!important;" /></td>
+            <td><div class="cell-dash" data-pct>—</div></td>
+            <td><div class="cell-ro-center">3</div></td>
+            <td><div class="cell-dash" data-score>—</div></td>
+            <td><span style="color:#d1d5db;display:flex;align-items:center;justify-content:center;padding:8px;">—</span></td>
+          </tr>
+          <!-- Dòng user tự thêm — nhiều trường đỏ -->
+          <tr class="row-old" data-kh="" data-ts="">
+            <td class="cell-stt">2</td>
+            <!-- Nội dung trống → đỏ -->
+            <td><textarea class="row-field-err" placeholder="Tên đầu việc tháng trước..." style="border-color:#dc2626!important;background:#fef2f2!important;"></textarea></td>
+            <td><textarea placeholder="Ghi chú tiến độ..."></textarea></td>
+            <!-- Đơn vị trống → đỏ -->
+            <td><input type="text" class="row-field-err" placeholder="VD: Bài" style="text-align:center;border-color:#dc2626!important;background:#fef2f2!important;" /></td>
+            <!-- KH trống → đỏ -->
+            <td><input type="number" class="kh-input row-field-err" placeholder="VD: 5" style="text-align:center;font-weight:700;border-color:#dc2626!important;background:#fef2f2!important;" /></td>
+            <!-- Thực hiện trống → đỏ -->
+            <td><input type="number" class="actual-input row-field-err" placeholder="?" style="border-color:#dc2626!important;background:#fef2f2!important;box-shadow:0 0 0 2px rgba(220,38,38,0.15)!important;" /></td>
+            <td><div class="cell-dash" data-pct>—</div></td>
+            <!-- Trọng số chưa chọn → đỏ -->
+            <td><select class="ts-select row-field-err" style="border-color:#dc2626!important;background:#fef2f2!important;">
+              <option value="" disabled selected>-- chọn --</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            </select></td>
+            <td><div class="cell-dash" data-score>—</div></td>
+            <td><button class="del-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── LỖI LOẠI 2: BẢNG KẾ HOẠCH TRỐNG ── -->
+    <p style="font-size:13px;font-weight:800;color:#dc2626;margin:0 0 10px;display:flex;align-items:center;gap:6px;">
+      ② Bảng kế hoạch tháng tới không có đầu việc nào
+    </p>
+    <!-- Simulate plan-block-err state -->
+    <div style="margin-bottom:28px;">
+      <!-- Section banner đỏ -->
+      <div class="section-banner" style="background:#fef2f2;border-color:#dc2626;color:#991b1b;border-bottom:none;">
+        <span class="banner-icon">🗓️</span>
+        <span class="banner-label" style="color:#991b1b;">Kế Hoạch Tháng 4</span>
+        <span class="banner-spacer"></span>
+        <span class="banner-hint" style="color:#dc2626;opacity:1;">Đặt mục tiêu cho tháng tới — Điền đủ các cột</span>
+      </div>
+      <table class="kpi-table" style="border-color:#fca5a5;">
+        <thead>
+          <tr>
+            <th>STT</th><th class="col-content">Nội dung công việc <span class="req">*</span></th>
+            <th class="col-note">Ghi chú</th><th class="col-unit">Đơn vị <span class="req">*</span></th>
+            <th class="col-qty">Số lượng (KH) <span class="req">*</span></th>
+            <th class="col-actual-gray">Thực hiện</th>
+            <th class="col-pct">%</th><th class="col-weight">Trọng số <span class="req">*</span></th>
+            <th class="col-score">Đạt</th><th class="col-del">Xóa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Không có dòng nào -->
+          <tr><td colspan="10" style="padding:24px;text-align:center;color:#9ca3af;font-style:italic;background:#fafafa;">Bảng trống — chưa có đầu việc nào</td></tr>
+          <tr><td colspan="10" style="border:1px dashed #fca5a5!important;background:#fff5f5;padding:10px;text-align:center;">
+            <button class="add-row-btn gray-btn">＋ Thêm đầu việc mới</button>
+          </td></tr>
+        </tbody>
+      </table>
+      <!-- Thông báo lỗi dưới bảng -->
+      <div class="plan-err-msg">
+        ⚠️ Kế hoạch tháng tới phải có ít nhất 1 đầu việc — Bấm <strong>"Thêm đầu việc mới"</strong> để thêm
+      </div>
+    </div>
+
+    <!-- ── LỖI LOẠI 3: THÀNH TỰU & MỤC TIÊU TRỐNG ── -->
+    <p style="font-size:13px;font-weight:800;color:#dc2626;margin:0 0 10px;display:flex;align-items:center;gap:6px;">
+      ③ Thành tựu và Mục tiêu bỏ trống (giữ nguyên từ trước, thêm ghi chú)
+    </p>
+    <div class="achieve-section">
+      <div class="achieve-header">
+        <span class="banner-icon">🏆</span>
+        <span class="label">Thành tựu nổi bật &amp; Khó khăn trong tháng</span>
+      </div>
+      <div class="achieve-body">
+        <div class="achieve-field">
+          <label>⭐ Thành tựu / Kết quả nổi bật <span style="color:#dc2626;">*</span></label>
+          <textarea class="field-err" placeholder="VD: Hoàn thành 5 game STEM mới..." style="min-height:80px;"></textarea>
+          <div class="err-hint">⚠️ Không được để trống</div>
+        </div>
+        <div class="achieve-field">
+          <label>⛔ Khó khăn / Vướng mắc gặp phải</label>
+          <textarea placeholder="VD: Game SDK v2 còn lỗi..." style="min-height:80px;"></textarea>
+        </div>
+        <div class="achieve-field">
+          <label>💡 Đề xuất cải tiến / Cần hỗ trợ gì?</label>
+          <textarea placeholder="VD: Đề xuất trang bị thêm account ChatGPT Team..." style="min-height:80px;"></textarea>
+        </div>
+        <div class="achieve-field">
+          <label>🎯 Mục tiêu ưu tiên tháng tới <span style="color:#dc2626;">*</span></label>
+          <textarea class="field-err" placeholder="Mục tiêu quan trọng nhất bạn muốn đạt được..." style="min-height:80px;"></textarea>
+          <div class="err-hint">⚠️ Không được để trống</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH10 — PHÁT HIỆN DRAFT CŨ (banner hỏi khôi phục)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH10</span>
+    Phát hiện draft cũ trong localStorage
+    <span class="sc-note">— Hiện banner vàng ở đầu form hỏi có muốn khôi phục. Form bên dưới giữ nguyên như TH3.</span>
+  </div>
+  <div class="sc-frame pad">
+    <div class="sc-diff-note">
+      <strong>📌 Phần thêm:</strong> Banner vàng xuất hiện ngay dưới sticky header, trên info table. Form bên dưới bị "mờ/blur" nhẹ cho đến khi user chọn.
+    </div>
+    <!-- Draft banner -->
+    <div class="draft-banner">
+      <span style="font-size:28px;flex-shrink:0;">💾</span>
+      <div class="draft-banner-text">
+        <div class="dt">Bạn có bản nháp chưa nộp từ trước</div>
+        <div class="dd">Lưu lúc: 13/04/2026 · 16:42 — Bạn muốn tiếp tục hay bắt đầu lại?</div>
+      </div>
+      <div class="draft-actions">
+        <button class="draft-btn-discard">🗑 Bắt đầu lại</button>
+        <button class="draft-btn-restore">📂 Khôi phục nháp</button>
+      </div>
+    </div>
+    <!-- Phần form bên dưới mờ đi -->
+    <div style="opacity:0.35;pointer-events:none;filter:blur(1px);">
+      <table class="info-table" style="margin-bottom:0;">
+        <tbody>
+          <tr><td class="label">Họ tên</td><td class="value bold">Nguyễn Văn A</td></tr>
+          <tr><td class="label">Báo cáo cho</td><td class="value">CEO</td></tr>
+          <tr><td class="label">Phòng ban</td><td class="value">Content</td></tr>
+          <tr><td class="label">Ngày đánh giá</td><td class="value">14/04/2026</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:12px;font-style:italic;">↕ Phần form bên dưới mờ đến khi user chọn khôi phục hoặc bắt đầu lại</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH11 — MODAL XÁC NHẬN NỘP LẠI
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH11</span>
+    Modal — Xác nhận nộp lại (đã nộp trước đó)
+    <span class="sc-note">— Khi NV bấm "Nộp" nhưng submittedAt != null. Modal overlay xuất hiện trên form.</span>
+  </div>
+  <div class="sc-frame no-pad">
+    <div class="modal-wrapper">
+      <!-- Background là form mờ -->
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;">
+        <div style="width:100%;max-width:900px;opacity:0.3;font-size:13px;color:#111;text-align:center;letter-spacing:0.02em;">
+          [ Nền: Form TH3 đang hiển thị phía sau, mờ do overlay ]
+        </div>
+      </div>
+      <!-- Modal card -->
+      <div class="modal-card">
+        <div class="modal-title">📤 Bạn đã nộp báo cáo này rồi</div>
+        <div class="modal-body">Báo cáo <strong>Tháng 3</strong> đã được nộp lúc <strong>10/04/2026 · 08:22 SA</strong>.
+
+Nếu bạn nộp lại, dữ liệu cũ sẽ bị <strong>ghi đè hoàn toàn</strong>. CEO sẽ nhận thông báo mới.</div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-cancel">Huỷ — Giữ lần nộp cũ</button>
+          <button class="modal-btn modal-btn-danger">🔄 Nộp lại &amp; Ghi đè</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH12 — MODAL KHÔI PHỤC DRAFT (chi tiết hơn TH10)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH12</span>
+    Modal — Hỏi khôi phục draft (variant modal thay vì banner)
+    <span class="sc-note">— Biến thể của TH10 nhưng dùng modal overlay thay vì banner. Chọn một trong hai cách khi code.</span>
+  </div>
+  <div class="sc-frame no-pad">
+    <div class="modal-wrapper">
+      <div class="modal-card">
+        <div class="modal-title">💾 Tìm thấy bản nháp</div>
+        <div class="modal-body">Bạn có bản nháp báo cáo <strong>Tháng 3</strong> chưa nộp, lưu lúc <strong>13/04/2026 · 16:42</strong>.
+
+Bạn muốn tiếp tục từ bản nháp hay bắt đầu lại từ đầu?</div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-cancel">🗑 Bắt đầu lại</button>
+          <button class="modal-btn modal-btn-amber">📂 Khôi phục nháp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH13 — TOAST LỖI MẠNG KHI NỘP
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper">
+  <div class="sc-label">
+    <span class="sc-num">TH13</span>
+    Toast lỗi — Mạng đứt khi đang nộp
+    <span class="sc-note">— POST thất bại, giữ nguyên form (không mất data). Toast đỏ xuất hiện góc phải trên, tự ẩn sau 4 giây.</span>
+  </div>
+  <div class="sc-frame pad">
+    <div class="sc-diff-note">
+      <strong>📌 Phần thay đổi:</strong> Toast đỏ xuất hiện góc trên phải màn hình. Button "Nộp" trở lại trạng thái bình thường (không loading). Form được giữ nguyên toàn bộ, không mất data.
+    </div>
+    <div class="toast-stage">
+      <span class="toast-stage-label">Góc trên phải màn hình →</span>
+      <div class="toast toast-error">
+        <span>❌</span>
+        <span>Nộp thất bại — Kiểm tra kết nối mạng và thử lại</span>
+        <span class="toast-close">×</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TH14 — TOAST THÀNH CÔNG NHỎ (variant của TH6)
+════════════════════════════════════════════════════ -->
+<div class="sc-wrapper" style="margin-bottom:140px;">
+  <div class="sc-label">
+    <span class="sc-num">TH14</span>
+    Toast thành công nhỏ (variant — dùng thay hoặc cùng với TH6)
+    <span class="sc-note">— Nếu không muốn chuyển màn hình full như TH6, dùng toast xanh + giữ form read-only. Chọn một trong hai cách.</span>
+  </div>
+  <div class="sc-frame pad">
+    <div class="sc-diff-note">
+      <strong>📌 Phần thay đổi:</strong> Toast xanh xuất hiện góc trên phải. Form chuyển sang read-only (lock mọi input). Bottom bar ẩn hoặc hiện label "Đã nộp lúc...".
+    </div>
+    <!-- Toast thành công -->
+    <div class="toast-stage" style="margin-bottom:16px;">
+      <span class="toast-stage-label">Góc trên phải màn hình →</span>
+      <div class="toast toast-success">
+        <span>✅</span>
+        <span>Báo cáo đã được nộp thành công! (89.6% KH)</span>
+        <span class="toast-close">×</span>
+      </div>
+    </div>
+    <!-- Bottom bar variant: đã nộp -->
+    <div class="bb-demo" style="border-radius:8px;margin-top:4px;">
+      <div class="bb-inner">
+        <div class="score-display">
+          <div class="score-label">Kết quả hoàn thành</div>
+          <div class="score-value">
+            <span class="score-week">Tháng 3 Đạt</span>
+            <span class="score-pct">89.6%</span>
+            <span class="score-kh">KH</span>
+          </div>
+        </div>
+        <!-- Nút đã nộp — xanh lá, disabled, label khác -->
+        <button class="submit-btn" disabled style="background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 10px 25px rgba(21,128,61,0.4);border-bottom-color:#14532d;cursor:default;">
+          <span class="btn-label">✅ Đã nộp lúc 09:35 SA</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ BOTTOM BAR ══════════════════════════════════ -->
 <div class="bottom-bar">
   <div class="bottom-bar-inner">
     <div class="score-display">
       <div class="score-label">Kết quả hoàn thành</div>
       <div class="score-value">
         <span class="score-week">Tháng 3 Đạt</span>
-        <span class="score-pct">83.3%</span>
+        <span class="score-pct" id="bottomPct">83.3%</span>
         <span class="score-kh">KH</span>
       </div>
     </div>
-    <button class="submit-btn">
+    <button class="submit-btn" id="submitBtn">
       <span class="glow"></span>
-      <span style="position:relative;z-index:1;display:flex;align-items:center;gap:8px">
-        📤 NỘP BÁO CÁO
-      </span>
+      <span class="btn-label">📤 NỘP BÁO CÁO</span>
     </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     SCRIPTS (demo interactions)
-══════════════════════════════════════════ -->
+<!-- ══ SCRIPTS ══════════════════════════════════════ -->
 <script>
-  // ── Star rating ────────────────────────
-  const starLabels = ['', '1 / 5 — Chưa đạt', '2 / 5 — Đạt', '3 / 5 — Tốt', '4 / 5 — Rất tốt', '5 / 5 — Xuất sắc'];
-  let currentStar = 4;
+  // ══════════════════════════════════════════════════
+  //  LOGIC TÍNH TOÁN — tự động cập nhật khi đổi số
+  // ══════════════════════════════════════════════════
 
+  /**
+   * Tính lại % hoàn thành và điểm đạt được cho 1 dòng row-old
+   * Gọi khi: thay đổi ô Thực hiện
+   */
+  function recalcRow(input) {
+    const tr = input.closest('tr');
+    const thucHien = parseFloat(input.value);
+
+    // Lấy kế hoạch: ưu tiên data-kh trên tr, fallback lấy từ input .kh-input
+    let keHoach = parseFloat(tr.dataset.kh);
+    if (isNaN(keHoach)) {
+      const khInput = tr.querySelector('.kh-input');
+      keHoach = khInput ? parseFloat(khInput.value) : NaN;
+    }
+
+    // Lấy trọng số: ưu tiên data-ts trên tr, fallback lấy từ select .ts-select
+    let trongSo = parseFloat(tr.dataset.ts);
+    if (isNaN(trongSo)) {
+      const tsSelect = tr.querySelector('.ts-select');
+      trongSo = tsSelect ? parseFloat(tsSelect.value) : NaN;
+    }
+
+    const pctCell   = tr.querySelector('[data-pct]');
+    const scoreCell = tr.querySelector('[data-score]');
+
+    if (isNaN(thucHien) || isNaN(keHoach) || keHoach <= 0) {
+      // Chưa đủ dữ liệu — hiện —
+      if (pctCell)   { pctCell.textContent = '—'; pctCell.className = 'cell-dash'; }
+      if (scoreCell) { scoreCell.textContent = '—'; scoreCell.className = 'cell-dash'; }
+    } else {
+      const pct   = Math.min((thucHien / keHoach) * 100, 999); // cap 999%
+      const score = isNaN(trongSo) ? null : (pct / 100) * trongSo;
+
+      if (pctCell)   {
+        pctCell.textContent = pct.toFixed(1).replace('.0','') + '%';
+        pctCell.className = 'cell-pct';
+      }
+      if (scoreCell) {
+        scoreCell.textContent = score !== null ? score.toFixed(2).replace(/\.?0+$/, '') : '—';
+        scoreCell.className = score !== null ? 'cell-score' : 'cell-dash';
+      }
+    }
+
+    // Cập nhật summary
+    recalcSummary();
+  }
+
+  /** Gọi khi thay đổi ô KH (dòng tự điền) */
+  function updateKH(input) {
+    // Không cần ghi data-kh vì recalcRow đọc trực tiếp từ .kh-input
+    const actualInput = input.closest('tr').querySelector('.actual-input');
+    if (actualInput && actualInput.value !== '') recalcRow(actualInput);
+  }
+
+  /** Gọi khi thay đổi trọng số select (dòng tự điền) */
+  function updateTS(select) {
+    const actualInput = select.closest('tr').querySelector('.actual-input');
+    if (actualInput && actualInput.value !== '') recalcRow(actualInput);
+  }
+
+  /** Tính lại summary row (tổng trọng số, tổng đạt, % gia quyền) */
+  function recalcSummary() {
+    const rows = document.querySelectorAll('#tbody1 tr.row-old');
+    let totalWeight = 0, totalScore = 0;
+
+    rows.forEach(tr => {
+      // Trọng số
+      let ts = parseFloat(tr.dataset.ts);
+      if (isNaN(ts)) {
+        const sel = tr.querySelector('.ts-select');
+        ts = sel ? parseFloat(sel.value) : NaN;
+      }
+
+      // Điểm đạt được (đọc từ cell-score)
+      const scoreCell = tr.querySelector('[data-score]');
+      const scoreVal = scoreCell ? parseFloat(scoreCell.textContent) : NaN;
+
+      if (!isNaN(ts))      totalWeight += ts;
+      if (!isNaN(scoreVal)) totalScore  += scoreVal;
+    });
+
+    const pct = totalWeight > 0 ? (totalScore / totalWeight) * 100 : 0;
+
+    document.getElementById('sumWeight').innerHTML =
+      `Tổng trọng số: <strong>${totalWeight}</strong>`;
+    document.getElementById('sumScore').innerHTML =
+      `Đạt: <strong>${totalScore.toFixed(1)} / ${totalWeight}</strong> → <span id="sumPct" style="color:#15803d;font-size:15px;font-weight:900">${pct.toFixed(1)}% KH</span>`;
+
+    // Cập nhật bottom bar
+    document.getElementById('bottomPct').textContent = pct.toFixed(1) + '%';
+  }
+
+  // ══════════════════════════════════════════════════
+  //  STAR RATING
+  // ══════════════════════════════════════════════════
+  const starLabels = ['', '1 / 5 — Yếu', '2 / 5 — Kém', '3 / 5 — Trung Bình', '4 / 5 — Khá', '5 / 5 — Đạt'];
+  let currentStar = 4;
   function setStar(n) {
     currentStar = n;
-    const btns = document.querySelectorAll('.star-btn');
-    btns.forEach((b, i) => b.classList.toggle('active', i < n));
+    document.querySelectorAll('.star-btn').forEach((b, i) => b.classList.toggle('active', i < n));
     document.getElementById('star-label').textContent = starLabels[n];
   }
 
-  // ── Add row to Table 1 (old) ──────────
+  // ══════════════════════════════════════════════════
+  //  THÊM / XÓA DÒNG
+  // ══════════════════════════════════════════════════
+  function removeRow(btn) {
+    btn.closest('tr').remove();
+    renumberRows('#tbody1', 'row-old');
+    renumberRows('#tbody2', 'row-new');
+    recalcSummary();
+  }
+
+  function renumberRows(tbodyId, cls) {
+    const rows = document.querySelectorAll(tbodyId + ' tr.' + cls);
+    rows.forEach((tr, i) => {
+      const stt = tr.querySelector('.cell-stt');
+      if (stt) stt.textContent = i + 1;
+    });
+  }
+
   function addOldRow() {
-    const tbody = document.querySelector('.kpi-table tbody');
-    const addRow = tbody.querySelector('.add-row-td').parentElement;
+    const tbody = document.getElementById('tbody1');
+    const addTr = document.getElementById('addOldRowTr');
     const idx = tbody.querySelectorAll('tr.row-old').length + 1;
     const tr = document.createElement('tr');
     tr.className = 'row-old';
+    tr.dataset.kh = '';
+    tr.dataset.ts = '';
     tr.innerHTML = `
       <td class="cell-stt">${idx}</td>
       <td><textarea placeholder="Tên đầu việc tháng trước..."></textarea></td>
-      <td><textarea placeholder="Ghi chú..."></textarea></td>
-      <td><input type="text" placeholder="game" style="text-align:center"/></td>
-      <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700"/></td>
-      <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?"/></td>
-      <td><div class="cell-dash">—</div></td>
+      <td><textarea placeholder="Ghi chú tiến độ..."></textarea></td>
+      <td><input type="text" placeholder="VD: Bài" style="text-align:center"/></td>
+      <td><input type="number" class="kh-input" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700" oninput="updateKH(this)"/></td>
+      <td><input type="number" class="actual-input" min="0" step="0.5" placeholder="?" oninput="recalcRow(this)"/></td>
+      <td><div class="cell-dash" data-pct>—</div></td>
       <td>
-        <select>
+        <select class="ts-select" onchange="updateTS(this)">
           <option value="" disabled selected>-- chọn --</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
         </select>
       </td>
-      <td><div class="cell-dash">—</div></td>
-      <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
+      <td><div class="cell-dash" data-score>—</div></td>
+      <td><button class="del-btn" onclick="removeRow(this)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button></td>
     `;
-    tbody.insertBefore(tr, addRow);
+    tbody.insertBefore(tr, addTr);
   }
 
-  // ── Add row to Table 2 (new) ──────────
   function addNewRow() {
-    const tables = document.querySelectorAll('.kpi-table');
-    const tbody = tables[1].querySelector('tbody');
-    const addRow = tbody.querySelector('.add-row-td').parentElement;
+    const tbody = document.getElementById('tbody2');
+    const addTr = document.getElementById('addNewRowTr');
     const idx = tbody.querySelectorAll('tr.row-new').length + 1;
     const tr = document.createElement('tr');
     tr.className = 'row-new';
@@ -621,28 +1419,160 @@
       <td class="cell-stt">${idx}</td>
       <td><textarea placeholder="Tên đầu việc tháng tới..."></textarea></td>
       <td><textarea placeholder="Mô tả chi tiết..."></textarea></td>
-      <td><input type="text" placeholder="game" style="text-align:center"/></td>
+      <td><input type="text" placeholder="VD: Bài" style="text-align:center"/></td>
       <td><input type="number" min="0" step="1" placeholder="VD: 5" style="text-align:center;font-weight:700"/></td>
       <td><div class="cell-pending">Tháng sau chốt</div></td>
       <td><div class="cell-dash">—</div></td>
       <td>
         <select>
           <option value="" disabled selected>-- chọn --</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
         </select>
       </td>
       <td><div class="cell-dash">—</div></td>
-      <td><button class="del-btn" onclick="this.closest('tr').remove()">🗑</button></td>
+      <td><button class="del-btn" onclick="removeRow(this)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button></td>
     `;
-    tbody.insertBefore(tr, addRow);
+    tbody.insertBefore(tr, addTr);
   }
 
-  // ── Submit demo ──────────────────────
-  document.querySelector('.submit-btn').addEventListener('click', () => {
-    alert('✅ [MOCKUP] Nộp báo cáo tháng thành công!\n\nTrong production: Dữ liệu sẽ được ghi vào Google Sheets và Bot sẽ thông báo CEO.');
+  // ══════════════════════════════════════════════════
+  //  VALIDATE — Helpers
+  // ══════════════════════════════════════════════════
+
+  /** Highlight textarea Thành tựu / Mục tiêu (xóa lỗi khi user gõ) */
+  function highlight(el, isEmpty) {
+    el.style.borderColor = isEmpty ? '#dc2626' : '#d1d5db';
+    el.style.background  = isEmpty ? '#fef2f2' : '#fff';
+  }
+
+  function validateAchieve() {
+    const taThanhTuu = document.getElementById('ta-thanhtuu');
+    const taMucTieu  = document.getElementById('ta-muctieu');
+    highlight(taThanhTuu, taThanhTuu.value.trim() === '');
+    highlight(taMucTieu,  taMucTieu.value.trim() === '');
+  }
+
+  /** Xóa toàn bộ lỗi row-level cũ + plan block error */
+  function clearAllErrors() {
+    document.querySelectorAll('.row-field-err').forEach(el => el.classList.remove('row-field-err'));
+    document.querySelectorAll('.plan-block-err').forEach(el => el.classList.remove('plan-block-err'));
+    document.querySelectorAll('.plan-err-msg').forEach(el => el.remove());
+  }
+
+  /**
+   * Validate required fields (*) cho từng dòng đã được thêm.
+   *
+   * Phân loại:
+   *  - Server row (div.cell-ro): chỉ check thucHien (cột Thực hiện)
+   *  - User row (có textarea cột 2): check tất cả trường *
+   *
+   * @param tbodyId   '#tbody1' hoặc '#tbody2'
+   * @param isOldTable  true = bảng báo cáo (có cột Thực hiện bắt buộc)
+   * @returns số lỗi tìm thấy
+   */
+  function validateRows(tbodyId, isOldTable) {
+    let errCount = 0;
+    const cls = isOldTable ? 'tr.row-old' : 'tr.row-new';
+    document.querySelectorAll(tbodyId + ' ' + cls).forEach(tr => {
+      const isUserRow = !!tr.querySelector('td:nth-child(2) textarea');
+
+      if (isUserRow) {
+        // ① Nội dung CV
+        const contentTA = tr.querySelector('td:nth-child(2) textarea');
+        if (contentTA && !contentTA.value.trim()) { contentTA.classList.add('row-field-err'); errCount++; }
+
+        // ② Đơn vị
+        const unitEl = tr.querySelector('td:nth-child(4) input');
+        if (unitEl && !unitEl.value.trim()) { unitEl.classList.add('row-field-err'); errCount++; }
+
+        // ③ Số lượng KH
+        const khEl = tr.querySelector('.kh-input') || tr.querySelector('td:nth-child(5) input[type=number]');
+        if (khEl && (khEl.value === '' || khEl.value === null)) { khEl.classList.add('row-field-err'); errCount++; }
+
+        // ④ Trọng số
+        const tsEl = tr.querySelector('.ts-select') || tr.querySelector('select');
+        if (tsEl && !tsEl.value) { tsEl.classList.add('row-field-err'); errCount++; }
+      }
+
+      // ⑤ Thực hiện — bắt buộc với mọi dòng bảng báo cáo (kể cả server row)
+      if (isOldTable) {
+        const actualInput = tr.querySelector('.actual-input');
+        if (actualInput && actualInput.value === '') { actualInput.classList.add('row-field-err'); errCount++; }
+      }
+    });
+    return errCount;
+  }
+
+  /**
+   * Kiểm tra bảng kế hoạch có ít nhất 1 đầu việc.
+   * Nếu trống: đánh dấu đỏ block + chèn thông báo lỗi ngay dưới bảng.
+   * @returns true nếu hợp lệ
+   */
+  function validatePlanNotEmpty() {
+    const planRows = document.querySelectorAll('#tbody2 tr.row-new');
+    if (planRows.length === 0) {
+      const planBlock = document.querySelector('#table2').closest('.content-block');
+      planBlock.classList.add('plan-block-err');
+      const errMsg = document.createElement('div');
+      errMsg.className = 'plan-err-msg';
+      errMsg.innerHTML = '⚠️ Kế hoạch tháng tới phải có ít nhất 1 đầu việc — Bấm <strong>"Thêm đầu việc mới"</strong> để thêm';
+      // Chèn sau .table-scroll của bảng 2
+      document.querySelector('#table2').closest('.table-scroll').after(errMsg);
+      return false;
+    }
+    return true;
+  }
+
+  // ══════════════════════════════════════════════════
+  //  SUBMIT DEMO
+  // ══════════════════════════════════════════════════
+  document.getElementById('submitBtn').addEventListener('click', () => {
+    // 1. Xóa hết lỗi cũ
+    clearAllErrors();
+    const errors = [];
+
+    // 2. Required fields — Bảng báo cáo
+    const errOld = validateRows('#tbody1', true);
+    if (errOld > 0) errors.push(`${errOld} trường bắt buộc trong Báo cáo tháng trước chưa điền`);
+
+    // 3. Bảng kế hoạch phải có ít nhất 1 đầu việc
+    const planOk = validatePlanNotEmpty();
+    if (!planOk) errors.push('Kế hoạch tháng tới phải có ít nhất 1 đầu việc');
+    else {
+      // 4. Required fields — Bảng kế hoạch (chỉ check nếu có dòng)
+      const errNew = validateRows('#tbody2', false);
+      if (errNew > 0) errors.push(`${errNew} trường bắt buộc trong Kế hoạch tháng tới chưa điền`);
+    }
+
+    // 5. Thành tựu & Mục tiêu
+    const taThanhTuu = document.getElementById('ta-thanhtuu');
+    const taMucTieu  = document.getElementById('ta-muctieu');
+    if (!taThanhTuu.value.trim()) { highlight(taThanhTuu, true); errors.push('⭐ Thành tựu / Kết quả nổi bật chưa điền'); }
+    if (!taMucTieu.value.trim())  { highlight(taMucTieu,  true); errors.push('🎯 Mục tiêu ưu tiên tháng tới chưa điền'); }
+
+    // 6. Có lỗi → scroll đến lỗi đầu tiên, hiện thông báo
+    if (errors.length > 0) {
+      const firstErr = document.querySelector('.row-field-err, .plan-err-msg');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      alert('⚠️ Vui lòng kiểm tra lại:\n\n• ' + errors.join('\n• '));
+      return;
+    }
+
+    // 7. Hợp lệ → nộp
+    const pct = document.getElementById('bottomPct').textContent;
+    alert(`✅ [MOCKUP] Nộp báo cáo tháng thành công!\n\nKết quả: ${pct} KH\n\nTrong production: Dữ liệu sẽ được ghi vào Google Sheets và Bot Discord sẽ thông báo CEO.`);
   });
+
+  // Tự xóa lỗi row-level khi user gõ/chọn vào ô đang đỏ
+  document.addEventListener('input', e => {
+    if (e.target.classList.contains('row-field-err') && e.target.value !== '') e.target.classList.remove('row-field-err');
+  });
+  document.addEventListener('change', e => {
+    if (e.target.classList.contains('row-field-err') && e.target.value !== '') e.target.classList.remove('row-field-err');
+  });
+
+  // ── Khởi tạo summary ngay khi load ────────────────
+  recalcSummary();
 </script>
 </body>
 </html>
