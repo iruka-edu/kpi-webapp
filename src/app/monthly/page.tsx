@@ -389,15 +389,15 @@ function MonthlyContent() {
     );
   }
 
-  // TH4 — Token hết hạn
+  // TH4 — Không có link hợp lệ (vào thẳng URL không có params)
   if (pageState === "token_expired") {
     return (
       <FullScreenCard
         icon="🔗"
-        title="Link đã hết hạn"
-        desc={"Link báo cáo chỉ có hiệu lực trong 72 giờ.\nVui lòng liên hệ quản lý để nhận link mới,\nhoặc kiểm tra lại email."}
-        btnText="🔄 Thử lại"
-        onBtn={() => window.location.reload()}
+        title="Cần link từ Discord"
+        desc={"Trang báo cáo tháng chỉ mở được qua link cá nhân từ Discord.\n\nVào Discord → Nhắn tin trực tiếp cho CEO - IruKa\nhoặc nhóm Plan-Report → gõ lệnh /monthly\n→ bấm link trong tin nhắn để gửi báo cáo."}
+        btnText="📖 Hướng dẫn"
+        onBtn={() => window.open("https://discord.com", "_blank")}
       />
     );
   }
