@@ -478,32 +478,42 @@ function MonthlyContent() {
           isLate={isLate}
         />
 
-        {/* ── Bảng KPI — MonthlyReportGrid (Scope 2) ─────────── */}
-        <MonthlyReportGrid
-          reportMonth={reportMonthLabel}
-          planMonth={planMonthLabel}
-          onSubmit={handleSubmit}
-          isSubmitting={submitting}
-          invalidTaskIds={invalidTaskIds}
-          isFirstTime={isFirstTime}
-        />
+        {/* ── blocks-scroll: 4 khối scroll ngang đồng bộ — spec mục 3 ── */}
+        <div style={{ overflowX: "auto", width: "100%" }}>
+          <div style={{ minWidth: 1280, display: "flex", flexDirection: "column", gap: 32 }}>
 
-        {/* ── Thành tựu & Tự đánh giá ─────────────────────── */}
-        <div style={{ marginTop: 32 }}>
-          {/* Cảnh báo extras trống (Loại 3) — tạm thời inline */}
-          {extrasHasError && (
-            <div
-              data-invalid="true"
-              style={{
-                background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8,
-                padding: "10px 16px", fontSize: 13, color: "#dc2626", fontWeight: 700,
-                display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
-              }}
-            >
-              ⚠️ Vui lòng điền &quot;Thành tựu nổi bật&quot; và &quot;Mục tiêu tháng tới&quot; trước khi nộp
+            {/* ── Bảng KPI — MonthlyReportGrid ── */}
+            <MonthlyReportGrid
+              reportMonth={reportMonthLabel}
+              planMonth={planMonthLabel}
+              onSubmit={handleSubmit}
+              isSubmitting={submitting}
+              invalidTaskIds={invalidTaskIds}
+              isFirstTime={isFirstTime}
+              onClearError={(id) =>
+                setInvalidTaskIds((prev) => prev.filter((eid) => eid !== id))
+              }
+            />
+
+            {/* ── Thành tựu & Tự đánh giá ── */}
+            <div>
+              {/* Cảnh báo extras trống (Loại 3) */}
+              {extrasHasError && (
+                <div
+                  data-invalid="true"
+                  style={{
+                    background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8,
+                    padding: "10px 16px", fontSize: 13, color: "#dc2626", fontWeight: 700,
+                    display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
+                  }}
+                >
+                  ⚠️ Vui lòng điền &quot;Thành tựu nổi bật&quot; và &quot;Mục tiêu tháng tới&quot; trước khi nộp
+                </div>
+              )}
+              <MonthlyExtras />
             </div>
-          )}
-          <MonthlyExtras />
+
+          </div>
         </div>
       </div>
 

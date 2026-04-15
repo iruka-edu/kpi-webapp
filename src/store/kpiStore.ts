@@ -44,7 +44,7 @@ function calculateFields(thucHien: number | null, keHoach: number | '', trongSo:
   if (thucHien === null || isNaN(thucHien) || !keHoach || !trongSo) {
     return { phanTram: 0, datDuoc: 0 };
   }
-  const phanTram = (thucHien / keHoach) * 100;
+  const phanTram = Math.min((thucHien / keHoach) * 100, 999); // Cap tại 999% theo spec
   const datDuoc = (thucHien / keHoach) * trongSo;
   
   return { phanTram: parseFloat(phanTram.toFixed(1)), datDuoc: parseFloat(datDuoc.toFixed(2)) };

@@ -47,6 +47,7 @@ type Props = {
   isSubmitting: boolean;
   invalidTaskIds: string[]; // IDs lỗi + "__plan_empty__" + "__extras__"
   isFirstTime: boolean;
+  onClearError?: (id: string) => void; // Tự xóa lỗi khi user gõ vào ô đang đỏ
 };
 
 // ── Format Helpers ────────────────────────────────────────
@@ -218,6 +219,7 @@ export default function MonthlyReportGrid({
   isSubmitting,
   invalidTaskIds,
   isFirstTime,
+  onClearError,
 }: Props) {
   const {
     tasks,
@@ -254,9 +256,10 @@ export default function MonthlyReportGrid({
   const renderTsSelect = (taskId: string, value: number | "", isErr: boolean) => (
     <select
       value={value}
-      onChange={(e) =>
-        updateTaskField(taskId, "trongSo", e.target.value === "" ? "" : parseInt(e.target.value))
-      }
+      onChange={(e) => {
+        updateTaskField(taskId, "trongSo", e.target.value === "" ? "" : parseInt(e.target.value));
+        if (e.target.value !== "") onClearError?.(taskId); // auto-clear lỗi
+      }}
       style={{ ...inputBase, textAlign: "center", fontWeight: 700, ...errStyle(isErr && value === "") }}
     >
       <option value="" disabled>-- chọn --</option>
@@ -383,7 +386,10 @@ export default function MonthlyReportGrid({
                         <textarea
                           style={{ ...textareaStyle, ...errStyle(isErr && !t.noiDung.trim()) }}
                           value={t.noiDung}
-                          onChange={(e) => updateTaskField(t.id, "noiDung", e.target.value)}
+                          onChange={(e) => {
+                            updateTaskField(t.id, "noiDung", e.target.value);
+                            if (e.target.value.trim()) onClearError?.(t.id);
+                          }}
                           placeholder="Tên đầu việc tháng trước..."
                         />
                       ) : (
@@ -412,7 +418,10 @@ export default function MonthlyReportGrid({
                           type="text"
                           style={{ ...inputBase, textAlign: "center", ...errStyle(isErr && !t.donVi.trim()) }}
                           value={t.donVi}
-                          onChange={(e) => updateTaskField(t.id, "donVi", e.target.value)}
+                          onChange={(e) => {
+                            updateTaskField(t.id, "donVi", e.target.value);
+                            if (e.target.value.trim()) onClearError?.(t.id);
+                          }}
                           placeholder="VD: Bài"
                         />
                       ) : (
@@ -431,7 +440,9 @@ export default function MonthlyReportGrid({
                           value={t.keHoach === "" ? "" : t.keHoach}
                           onChange={(e) => {
                             const v = parseFloat(e.target.value);
-                            updateTaskField(t.id, "keHoach", isNaN(v) ? "" : Math.max(0, v));
+                            const val = isNaN(v) ? "" : Math.max(0, v);
+                            updateTaskField(t.id, "keHoach", val);
+                            if (val !== "") onClearError?.(t.id);
                           }}
                           placeholder="VD: 5"
                         />
@@ -461,6 +472,7 @@ export default function MonthlyReportGrid({
                         onChange={(e) => {
                           const v = e.target.value === "" ? null : parseFloat(e.target.value);
                           updateThucHien(t.id, v);
+                          if (v !== null) onClearError?.(t.id);
                         }}
                         placeholder="?"
                       />
@@ -673,7 +685,10 @@ export default function MonthlyReportGrid({
                       <textarea
                         style={{ ...textareaStyle, ...errStyle(isErr && !t.noiDung.trim()) }}
                         value={t.noiDung}
-                        onChange={(e) => updateTaskField(t.id, "noiDung", e.target.value)}
+                        onChange={(e) => {
+                          updateTaskField(t.id, "noiDung", e.target.value);
+                          if (e.target.value.trim()) onClearError?.(t.id);
+                        }}
                         placeholder="Tên đầu việc tháng tới..."
                       />
                     </td>
@@ -694,7 +709,10 @@ export default function MonthlyReportGrid({
                         type="text"
                         style={{ ...inputBase, textAlign: "center", ...errStyle(isErr && !t.donVi.trim()) }}
                         value={t.donVi}
-                        onChange={(e) => updateTaskField(t.id, "donVi", e.target.value)}
+                        onChange={(e) => {
+                          updateTaskField(t.id, "donVi", e.target.value);
+                          if (e.target.value.trim()) onClearError?.(t.id);
+                        }}
                         placeholder="VD: Bài"
                       />
                     </td>
@@ -709,7 +727,9 @@ export default function MonthlyReportGrid({
                         value={t.keHoach === "" ? "" : t.keHoach}
                         onChange={(e) => {
                           const v = parseFloat(e.target.value);
-                          updateTaskField(t.id, "keHoach", isNaN(v) ? "" : Math.max(0, v));
+                          const val = isNaN(v) ? "" : Math.max(0, v);
+                          updateTaskField(t.id, "keHoach", val);
+                          if (val !== "") onClearError?.(t.id);
                         }}
                         placeholder="VD: 5"
                       />
@@ -924,27 +944,5 @@ export default function MonthlyReportGrid({
       </div>
     </div>
   );
-
-  // ── Inner helper: Select trọng số ─────────────────────
-  function renderTsSelect(taskId: string, value: number | "", isErr: boolean) {
-    return (
-      <select
-        value={value}
-        onChange={(e) =>
-          updateTaskField(taskId, "trongSo", e.target.value === "" ? "" : parseInt(e.target.value))
-        }
-        style={{
-          ...inputBase,
-          textAlign: "center",
-          fontWeight: 700,
-          ...(isErr && value === "" ? { borderColor: "#dc2626", background: "#fef2f2" } : {}),
-        }}
-      >
-        <option value="" disabled>-- chọn --</option>
-        <option value={1}>1</option>
-        <option value={2}>2</option>
-        <option value={3}>3</option>
-      </select>
-    );
-  }
 }
+

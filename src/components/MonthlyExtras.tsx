@@ -18,9 +18,12 @@ export default function MonthlyExtras() {
       
       {/* ── BLOCK 3: THÀNH TỰU & KHÓ KHĂN ────────────────── */}
       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
-        <div className="bg-amber-50/50 border-b border-amber-100 px-4 py-3.5 flex items-center gap-2">
-          <Trophy className="text-amber-600 w-5 h-5" />
-          <span className="font-extrabold text-[13px] text-amber-800 uppercase tracking-wider">Thành tựu nổi bật &amp; Khó khăn trong tháng</span>
+        <div
+          className="flex items-center gap-2"
+          style={{ background: 'rgba(30,58,95,0.1)', borderBottom: '1px solid #d1d5db', padding: '10px 16px' }}
+        >
+          <Trophy className="text-[#1e3a5f] w-5 h-5" />
+          <span style={{ fontWeight: 800, fontSize: 13, color: '#1e3a5f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Thành tựu nổi bật &amp; Khó khăn trong tháng</span>
         </div>
         
         <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -76,9 +79,12 @@ export default function MonthlyExtras() {
 
       {/* ── BLOCK 4: TỰ ĐÁNH GIÁ ────────────────────────── */}
       <div className="border border-indigo-200 rounded-xl overflow-hidden shadow-sm bg-white">
-        <div className="bg-indigo-50/50 border-b border-indigo-100 px-4 py-3.5 flex items-center gap-2">
-          <MessageSquare className="text-indigo-600 w-5 h-5" />
-          <span className="font-extrabold text-[13px] text-indigo-800 uppercase tracking-wider">Tự đánh giá mức độ hoàn thành tháng</span>
+        <div
+          className="flex items-center gap-2"
+          style={{ background: '#e5e7eb', borderBottom: '1px solid #d1d5db', padding: '10px 16px' }}
+        >
+          <MessageSquare className="text-gray-600 w-5 h-5" />
+          <span style={{ fontWeight: 800, fontSize: 13, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tự đánh giá mức độ hoàn thành tháng</span>
         </div>
         
         <div className="p-6 flex items-center gap-8 flex-wrap">
@@ -102,7 +108,7 @@ export default function MonthlyExtras() {
           </div>
 
           <div className="flex flex-col min-w-[120px]">
-            <div className="text-[15px] font-black text-indigo-700 leading-tight">
+            <div className="text-[15px] font-black text-[#1e3a5f] leading-tight">
               {starLabels[monthlyData.rating]}
             </div>
             <div className="text-[12px] text-slate-400 font-medium mt-0.5 whitespace-nowrap">CEO sẽ xem xét & Duyệt sau</div>
