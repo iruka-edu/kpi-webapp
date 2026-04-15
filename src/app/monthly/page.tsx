@@ -110,6 +110,8 @@ function MonthlyContent() {
   const token = searchParams.get("token") || "";
   const nameParam = searchParams.get("name") || "";
   const discordId = searchParams.get("discord_id") || "";
+  const deptParam = searchParams.get("dept") || "";   // Bot truyền dept thẳng vào URL
+  const roleParam = searchParams.get("role") || "";   // Bot truyền role thẳng vào URL
 
   const { tasks, monthlyData, initTasks, initMonthlyData, resetStore } = useKpiStore();
 
@@ -119,8 +121,8 @@ function MonthlyContent() {
 
   // ── User Info (lấy từ API hoặc query param) ───────────
   const [name, setName] = useState(nameParam);
-  const [role, setRole] = useState("");
-  const [dept, setDept] = useState("");
+  const [role, setRole] = useState(roleParam);   // Ưu tiên URL param trước
+  const [dept, setDept] = useState(deptParam);   // Ưu tiên URL param trước
   const [reportTo, setReportTo] = useState("CEO");
   const [isLate, setIsLate] = useState(false);
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
@@ -185,8 +187,8 @@ function MonthlyContent() {
 
         // Cập nhật thông tin người dùng từ response
         if (data.name) setName(data.name);
-        if (data.role) setRole(data.role);
-        if (data.dept) setDept(data.dept);
+        if (data.role) setRole(data.role);     // GAS override nếu có (lấy từ Sheet Nhân viên)
+        if (data.dept) setDept(data.dept);     // GAS override nếu có
         if (data.reportTo) setReportTo(data.reportTo);
         if (data.isLate !== undefined) setIsLate(data.isLate);
         if (data.submittedAt) setSubmittedAt(data.submittedAt);
@@ -313,6 +315,7 @@ function MonthlyContent() {
         monthly_data: monthlyData,
         timestamp: new Date().toISOString(),
         type: "monthly",
+        is_late: isLate,   // Ghi trạng thái nộp muộn để GAS lưu vào Sheet thống kê
       };
 
       const res = await fetch("/api/monthly", {

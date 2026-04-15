@@ -199,6 +199,7 @@ function handleSubmit(body) {
   var monthlyData = body.monthly_data || {};
   var timestamp   = body.timestamp    || new Date().toISOString();
   var discordId   = body.discord_id   || '';
+  var isLate      = body.is_late === true || body.is_late === 'true'; // Trạng thái nộp muộn
 
   if (!name || !reportMonth) {
     return jsonResponse({ error: 'Thiếu name hoặc report_week' });
@@ -247,6 +248,7 @@ function handleSubmit(body) {
       idx === 0 ? (monthlyData.priorities   || '') : '',  // Q: Mục tiêu tháng tới
       idx === 0 ? (monthlyData.rating       || 3)  : '',  // R: Tự đánh giá (sao)
       idx === 0 ? getRatingLabel(monthlyData.rating) : '', // S: Nhãn đánh giá
+      idx === 0 ? (isLate ? 'Nộp muộn' : 'Đúng hạn') : '', // T: Trạng thái nộp
     ]);
   });
 
@@ -400,9 +402,10 @@ function ensureReportHeaders(sheet) {
       'Mục tiêu tháng tới',// Q
       'Tự đánh giá (sao)', // R
       'Nhãn đánh giá',     // S
+      'Trạng thái nộp',    // T ← Mới: ghi nhận Đúng hạn / Nộp muộn
     ]);
     // Format header
-    sheet.getRange(1, 1, 1, 19)
+    sheet.getRange(1, 1, 1, 20)
       .setBackground('#1e3a5f')
       .setFontColor('#ffffff')
       .setFontWeight('bold');
@@ -444,10 +447,10 @@ function getPrevMonthLabel(monthLabel) {
   return 'Tháng ' + prev;
 }
 
-/** Kiểm tra nộp muộn — sau ngày 7 hàng tháng = muộn */
+/** Kiểm tra nộp muộn — sau 24:00 ngày mùng 4 hàng tháng (giờ VN UTC+7) = muộn */
 function isLateSubmission() {
-  var now = new Date();
-  return now.getDate() > 7;
+  var vnNow = new Date(new Date().getTime() + 7 * 3600 * 1000);
+  return vnNow.getUTCDate() > 4;
 }
 
 /** Nhãn tự đánh giá theo số sao */
