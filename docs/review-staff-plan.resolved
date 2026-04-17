@@ -1,0 +1,292 @@
+# 📋 Kế Hoạch Triển Khai — Đánh Giá Nhân Sự IruKa
+## Kiến trúc: Google Sheets + GAS + kpi-webapp + Discord Bot
+
+---
+
+## 🏗️ Kiến Trúc Hệ Thống (Thực Tế)
+
+```
+Discord Bot (Node.js)
+  ↕ slash command /eval-create
+kpi-webapp (Next.js)
+  ↕ fetch API route /api/evaluation
+Google Apps Script (GAS)
+  ↕ đọc/ghi
+Google Sheets (Lưu trữ toàn bộ dữ liệu phiếu)
+```
+
+> **Không có DB riêng** — Google Sheets là nguồn dữ liệu duy nhất, giống hệt luồng KPI tuần/tháng đã có.
+
+---
+
+## 🔄 Sơ Đồ Luồng Tổng Quan
+
+```mermaid
+graph TD
+    A["👤 HR\n/eval-create trong Discord\nChọn NV + Quản lý + Loại đánh giá"] --> B["🤖 Discord Bot\nGhi phiếu mới vào Google Sheets\n(trạng thái: pending_employee)\nTạo 2 token: NV-token + QL-token"]
+
+    B --> C["📨 DM gửi đến NV\nLink: /evaluation?id=xxx&token=NV-token\nDeadline + hướng dẫn điền"]
+
+    B --> D["📨 DM gửi đến Quản lý/CEO\nLink: /evaluation?id=xxx&token=QL-token\n'NV đang điền — bạn sẽ chấm sau'"]
+
+    C --> E["🧑 NV mở link\nvào kpi-webapp\nĐiền tự đánh giá + Submit"]
+
+    E --> F["📡 kpi-webapp POST → GAS\nCập nhật phiếu trong Sheets\ntrạng thái → pending_reviewer"]
+
+    F --> G["📨 DM báo HR + Quản lý\n'NV [Tên] đã nộp phiếu!\nMời vào chấm: [link QL-token]'"]
+
+    G --> H["👔 Quản lý/CEO mở link\nThấy phần NV đã điền\nChấm điểm + Nhận xét + Submit"]
+
+    H --> I["📡 kpi-webapp POST → GAS\nCập nhật điểm QL vào Sheets\ntrạng thái → completed"]
+
+    I --> J["📨 DM báo HR + NV\n'Quản lý đã chấm xong!\nKết quả: [X/45 điểm]\nXem tại: [link NV-token]'"]
+
+    J --> K["👑 CEO Dashboard\n/dashboard/evaluation\nXem tất cả phiếu\ntheo trạng thái + người"]
+```
+
+---
+
+## 📌 Mục 1 — Lệnh HR Gửi (Discord Slash Command)
+
+### Lệnh: `/staff review`
+
+> **Thêm vào `commands/staff.js`** như 1 subcommand mới — cùng file, cùng phân quyền CEO/HR, không tạo file mới.
+
+**HR gõ trong Discord:**
+```
+/staff review
+  employee: @Nguyễn Văn A
+  reviewer: @CEO (hoặc @TeamLead)
+  type: trial | period | semi
+  deadline: 21/04/2026
+  note: (tùy chọn — ghi chú thêm cho NV)
+```
+
+**Bot xử lý:**
+1. Tạo `form_id` = UUID ngắn (VD: `eval-abc123`)
+2. Tạo 2 HMAC token (giống cơ chế đã có):
+   - `employee_token` = HMAC(`{form_id}:employee:{discordId_NV}`)
+   - `reviewer_token` = HMAC(`{form_id}:reviewer:{discordId_QL}`)
+3. Ghi dòng mới vào Google Sheet tab **"Phiếu Đánh Giá"**
+4. Gửi DM cho NV + Quản lý
+
+**Dữ liệu ghi vào Sheets (1 dòng):**
+```
+form_id | created_at | employee_name | employee_discord_id |
+reviewer_name | reviewer_discord_id | created_by_hr_id |
+type | deadline | status | note |
+employee_token | reviewer_token |
+[...các cột NV điền — để trống] |
+[...các cột QL điền — để trống]
+```
+
+---
+
+## 📌 Mục 2 — NV Nhận Được Gì
+
+**Discord DM từ Bot:**
+```
+📋 Phiếu đánh giá sau thử việc của bạn đã sẵn sàng!
+
+👤 Nhân viên: Nguyễn Văn A
+📅 Hạn nộp: Chủ nhật 21/04/2026 (còn 3 ngày)
+📝 Loại: Đánh giá sau thử việc
+
+Bạn cần:
+① Tổng kết công việc đã làm trong thời gian thử việc
+② Tự chấm điểm 9 tiêu chí năng lực
+③ Ghi đề xuất lương + mong muốn đào tạo
+
+🔗 Mở phiếu tại đây (link cá nhân, không chia sẻ):
+https://kpi.iruka.vn/evaluation?id=eval-abc123&token=NV-token
+
+⏰ Link có hiệu lực đến hết ngày 21/04/2026
+```
+
+---
+
+## 📌 Mục 3 — NV Điền & Gửi Lại
+
+**Trang `/evaluation?id=...&token=...` trên kpi-webapp:**
+
+- Hiện thị form đầy đủ (từ mockup evaluation-mockup.html)
+- Token xác định: đây là NV → chỉ thấy phần tự điền, **cột Quản lý bị ẩn/khóa**
+- NV điền xong bấm **"Nộp phiếu"**
+
+**POST lên `/api/evaluation` → GAS:**
+```json
+{
+  "action": "employee_submit",
+  "form_id": "eval-abc123",
+  "token": "NV-token",
+  "work_summary": [
+    { "area": "Phát triển tính năng Login", "detail": "...", "result": "..." }
+  ],
+  "self_scores": {
+    "1": 4, "2": 3, "3": 4, "4": 4, "5": 3, "6": 4, "7": 5, "8": 4, "9": 3
+  },
+  "self_general_note": "Tôi cảm thấy đã hòa nhập tốt...",
+  "proposal_salary": "Mong muốn mức lương 15tr...",
+  "proposal_training": "Cần học khóa React nâng cao...",
+  "proposal_feedback": "Cần quy trình onboarding rõ hơn...",
+  "submitted_at": "2026-04-19T10:30:00+07:00"
+}
+```
+
+**GAS nhận → cập nhật dòng phiếu trong Sheets + đổi status = `pending_reviewer`**
+
+**Bot gửi DM báo HR + Quản lý:**
+```
+✅ Nguyễn Văn A vừa nộp phiếu đánh giá!
+
+📊 Phiếu: eval-abc123 (Sau thử việc)
+🕐 Nộp lúc: 19/04/2026 10:30
+
+Mời bạn vào chấm điểm:
+🔗 https://kpi.iruka.vn/evaluation?id=eval-abc123&token=QL-token
+```
+
+---
+
+## 📌 Mục 4 — Quản Lý Nhận & Chấm Phiếu
+
+**Discord DM khi NV nộp:**
+```
+📬 Nguyễn Văn A đã nộp phiếu tự đánh giá
+
+Phiếu: Đánh giá sau thử việc (30-60 ngày)
+Nộp lúc: 19/04/2026 - 10:30
+
+Bạn cần:
+① Xem phần tự đánh giá của nhân viên
+② Chấm điểm theo góc nhìn của Quản lý
+③ Viết nhận xét chung + Chọn quyết định
+   (Chính thức / Gia hạn / Chấm dứt)
+
+🔗 Mở phiếu chấm điểm (link riêng):
+https://kpi.iruka.vn/evaluation?id=eval-abc123&token=QL-token
+```
+
+**Trang QL thấy:**
+- Toàn bộ phần NV đã điền (readonly)
+- Cột "Quản lý chấm" mở → QL chấm điểm
+- Phần nhận xét chung + Đề xuất lương từ QL
+- Dropdown chọn quyết định: ✅ Chính thức / ⏳ Gia hạn / ❌ Chấm dứt
+- Nút **"Hoàn thành đánh giá"**
+
+**POST lên GAS:**
+```json
+{
+  "action": "reviewer_submit",
+  "form_id": "eval-abc123",
+  "token": "QL-token",
+  "mgr_scores": { "1": 4, "2": 3, "3": 4, ... },
+  "mgr_general_comment": "Nhân viên có tinh thần học hỏi tốt...",
+  "mgr_expectation": "Cần cải thiện deadline trong 3 tháng tới...",
+  "mgr_salary_proposal": "Đề xuất 14tr chính thức...",
+  "decision": "pass",
+  "reviewed_at": "2026-04-20T14:00:00+07:00"
+}
+```
+
+**GAS cập nhật dòng → status = `completed`**
+
+**Bot gửi DM báo NV + HR:**
+```
+🎉 Phiếu đánh giá của bạn đã được quản lý chấm xong!
+
+📊 Kết quả sơ bộ:
+   Điểm tự đánh giá: 34/45
+   Điểm quản lý:     36/45
+   Bình quân QL:     4.0/5.0
+   Kết luận: ✅ Chính thức
+
+🔗 Xem chi tiết: https://kpi.iruka.vn/evaluation?id=eval-abc123&token=NV-token
+
+💬 CEO sẽ gặp bạn để trao đổi thêm.
+```
+
+---
+
+## 🗄️ Cấu Trúc Google Sheets Mới Cần Tạo
+
+### Tab **"Phiếu Đánh Giá"** (thêm vào cùng Spreadsheet KPI hiện có)
+
+| Cột | Tên | Mô tả |
+|---|---|---|
+| A | form_id | eval-abc123 |
+| B | created_at | Timestamp tạo phiếu |
+| C | type | trial / period / semi |
+| D | status | pending_employee → pending_reviewer → completed |
+| E | deadline | Ngày hết hạn NV điền |
+| F | employee_name | Tên nhân viên |
+| G | employee_discord_id | Discord ID NV |
+| H | reviewer_name | Tên quản lý |
+| I | reviewer_discord_id | Discord ID QL |
+| J | created_by | Discord ID HR tạo phiếu |
+| K | note | Ghi chú khi tạo |
+| L | employee_token | HMAC token NV |
+| M | reviewer_token | HMAC token QL |
+| N | employee_submitted_at | Thời điểm NV nộp |
+| O | work_summary_json | JSON chuỗi tổng kết CV |
+| P | self_scores_json | JSON điểm tự chấm |
+| Q | self_note | Nhận xét chung của NV |
+| R | proposal_salary | Đề xuất lương NV |
+| S | proposal_training | Đề xuất đào tạo |
+| T | proposal_feedback | Góp ý môi trường |
+| U | reviewer_submitted_at | Thời điểm QL chấm |
+| V | mgr_scores_json | JSON điểm QL chấm |
+| W | mgr_comment | Nhận xét chung QL |
+| X | mgr_expectation | Kỳ vọng từ QL |
+| Y | mgr_salary_proposal | Đề xuất lương từ QL |
+| Z | decision | pass / extend / fail |
+| AA | ceo_note | Ghi chú CEO (optional) |
+
+---
+
+## 🔧 Danh Sách Việc Cần Làm
+
+### Phase 1 — Google Sheets + GAS
+- [ ] Tạo tab "Phiếu Đánh Giá" trong Google Sheet KPI
+- [ ] Viết GAS functions: `createEvalForm`, `employeeSubmit`, `reviewerSubmit`, `getForm`
+- [ ] Thêm vào GAS đã deploy (hoặc deploy endpoint riêng)
+
+### Phase 2 — kpi-webapp
+- [ ] Tạo trang `/evaluation` — hiển thị form theo token
+- [ ] Tạo API route `/api/evaluation` — GET (load phiếu) + POST (submit)
+- [ ] Logic phân quyền: token NV → ẩn cột QL; token QL → xem NV + chấm
+
+### Phase 3 — Discord Bot
+- [ ] Thêm subcommand `/staff review` vào `commands/staff.js` (thêm vào switch case tại dòng ~160)
+- [ ] Thêm handler `handleReview(interaction)` trong `staff.js`
+- [ ] Thêm service `eval-service.js` — gọi GAS tạo phiếu, gửi DM
+- [ ] Sau NV submit → kpi-webapp gọi Bot API (port 18790) → bot gửi DM QL ngay
+
+### Tại sao dùng `/staff review` thay vì lệnh riêng?
+
+| | `/staff review` | Lệnh riêng `/eval-create` |
+|---|---|---|
+| File cần tạo | 0 (thêm vào staff.js) | 1 file mới |
+| Phân quyền | Kế thừa CEO/HR của `/staff` | Phải viết lại |
+| Autocomplete NV | Kế thừa sẵn từ `handleAutocomplete` | Phải viết lại |
+| Độ phức tạp | Thấp | Cao hơn |
+
+---
+
+### Phase 4 — CEO Dashboard
+- [ ] Trang `/dashboard/evaluation` — liệt kê tất cả phiếu
+- [ ] Filter theo: trạng thái / người / loại / tháng
+
+---
+
+## ❓ Vấn Đề Cần Xác Nhận
+
+> [!IMPORTANT]
+> **Bot biết NV đã submit như thế nào?**
+> - Option A: kpi-webapp sau khi POST thành công → gọi thêm Bot API (`port 18790`) để bot gửi DM *(khuyến nghị — đã có sẵn MCP port)*
+> - Option B: Bot poll GAS định kỳ 1 phút kiểm tra status thay đổi *(đơn giản hơn nhưng chậm hơn)*
+
+> [!NOTE]
+> **NV có thấy điểm QL chấm không?**
+> Đề xuất: NV thấy điểm sau khi phiếu `completed` (QL đã nộp xong). Như vậy minh bạch nhưng không ảnh hưởng quá trình chấm.
+

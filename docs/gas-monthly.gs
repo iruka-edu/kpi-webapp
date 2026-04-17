@@ -117,10 +117,56 @@ function doGet(e) {
       return handleGet(p);
     }
 
+    // action=status — Trả về danh sách đã nộp theo tháng
+    // Dùng bởi scheduler.js (buildMonthlyReport + remindMonthlyReport)
+    if (action === 'status') {
+      return handleStatus(p);
+    }
+
     return jsonResponse({ error: 'action không hợp lệ' });
   } catch (err) {
     return jsonResponse({ error: err.message });
   }
+}
+
+// ================================================================
+//  handleStatus — Trả về danh sách đã submit theo tháng
+//
+//  Query params: ?action=status&month=Tháng+4
+//  Response: { submitted_names: ["Nguyễn Văn A", ...], month: "Tháng 4" }
+// ================================================================
+function handleStatus(p) {
+  var monthParam = (p.month || '').trim(); // VD: "Tháng 4"
+
+  if (!monthParam) {
+    return jsonResponse({ error: 'Thiếu tham số month' });
+  }
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheetReport = ss.getSheetByName(SHEET_REPORT);
+
+  if (!sheetReport || sheetReport.getLastRow() < 2) {
+    return jsonResponse({ submitted_names: [], month: monthParam });
+  }
+
+  var data = sheetReport.getDataRange().getValues();
+  var submittedNames = [];
+  var seen = {};
+
+  // Header ở dòng 1 — bắt đầu từ dòng 2
+  // Cột B (index 1) = Tên, Cột D (index 3) = Tháng BC
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var name = (row[1] || '').toString().trim();
+    var month = (row[3] || '').toString().trim();
+
+    if (name && month === monthParam && !seen[name]) {
+      submittedNames.push(name);
+      seen[name] = true;
+    }
+  }
+
+  return jsonResponse({ submitted_names: submittedNames, month: monthParam });
 }
 
 // ================================================================

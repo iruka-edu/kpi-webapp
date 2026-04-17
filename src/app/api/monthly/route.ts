@@ -19,14 +19,40 @@ import { NextResponse } from 'next/server';
 // GAS Monthly URL — biến env riêng, khác với GAS tuần
 const GAS_MONTHLY_URL = process.env.GOOGLE_APPS_SCRIPT_MONTHLY_URL || '';
 
-// ── GET: Lấy dữ liệu task tháng trước cho nhân viên ─────────
+// ── GET: Lấy dữ liệu task tháng trước hoặc danh sách đã nộp ─────────
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const action     = searchParams.get('action') || 'get';
   const name       = searchParams.get('name');
   const month      = searchParams.get('month');       // VD: "Tháng 4"
   const discordId  = searchParams.get('discord_id');
 
-  // Validate tối thiểu
+  // ── action=status: trả về danh sách ai đã nộp tháng này ──────
+  // Dùng bởi scheduler.js để build báo cáo và nhắc nhở
+  if (action === 'status') {
+    if (!month) {
+      return NextResponse.json({ error: 'Thiếu tham số month' }, { status: 400 });
+    }
+    if (!GAS_MONTHLY_URL) {
+      return NextResponse.json({ submitted_names: [], month }, { status: 200 });
+    }
+    try {
+      const gasUrl = new URL(GAS_MONTHLY_URL);
+      gasUrl.searchParams.set('action', 'status');
+      gasUrl.searchParams.set('month', month);
+      const resp = await fetch(gasUrl.toString(), { next: { revalidate: 0 } });
+      const data = await resp.json();
+      return NextResponse.json({
+        submitted_names: data.submitted_names || [],
+        month,
+      });
+    } catch (err: any) {
+      console.error('[/api/monthly GET status] Lỗi GAS:', err.message);
+      return NextResponse.json({ submitted_names: [], month });
+    }
+  }
+
+  // ── action=get (mặc định): Lấy task tháng trước cho nhân viên ──
   if (!name) {
     return NextResponse.json({ error: 'Thiếu tham số name trên URL' }, { status: 400 });
   }
