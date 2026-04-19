@@ -1,0 +1,183 @@
+# 🔍 Audit Toàn Luồng KPI Weekly — Kế Hoạch Fix (v2 — Đã Review)
+
+> Phiên bản: v2.0 | Ngày: 2026-04-19 | Đã đọc kỹ: `weekly.js`, `scheduler.js`, `page.tsx`, `ReportGrid.tsx`, `kpiStore.ts`, `useDraftSave.ts`, `Ma.gs`
+
+---
+
+## 🗺️ Sơ đồ toàn luồng (thực tế)
+
+```
+[Discord] NV gõ /weekly
+        ↓
+[Bot weekly.js] Kiểm tra khung giờ T7/CN (on_time) | T2-T5 (late) | T6 (chặn)
+        ↓
+[Bot] Lấy info NV từ members.json → tạo link + token 72h → gửi ephemeral DM
+        ↓
+NV bấm link → KPI WebApp mở
+        ↓
+[WebApp page.tsx] Verify token → fetch GAS (lấy KH tuần cũ + KH đã nộp tuần này)
+        ↓
+NV điền Bảng 1 (Báo cáo thực hiện) + Bảng 2 (Kế hoạch tuần tới)
+        ↓
+NV bấm "Nộp báo cáo"
+        ↓
+[GAS doPost] Xóa dữ liệu cũ cùng tuần → Ghi mới vào Sheet
+        ↓
+[WebApp] Hiện màn hình Success
+
+--- SAU ĐÓ (chạy nền mỗi 10 phút T7/CN/T2) ---
+
+[Bot scheduler.js - checkWeeklySubmissions] Polling GAS → phát hiện NV mới nộp
+        ↓ (lần đầu nộp)
+Bot DM cá nhân: "✅ Báo cáo của bạn đã được ghi nhận"
+        ↓
+Ghi tên NV vào weekly-reports.json
+
+--- NHẮC DEADLINE ---
+[CRON Chủ Nhật 20:00 - remindWeeklyDeadline] DM cá nhân ai chưa nộp
+
+--- SAU KHI SẾP DUYỆT ---
+[GAS onEdit] Gửi Webhook Discord → channel (không phải DM)
+```
+
+---
+
+## 🐛 Bug chính xác sau khi đọc kỹ code
+
+> **Đã bỏ:** BUG-02 (CEO xác nhận không cần), BUG-05 (KH bắt buộc nộp), BUG-08 (Scheduler đã có: `remindWeeklyDeadline` chạy CN 20:00 + `checkWeeklySubmissions` mỗi 10 phút T7/CN/T2)
+
+---
+
+### ❌ BUG-01 — Nộp lần 2 (sửa báo cáo): KHÔNG có DM thông báo cập nhật
+
+**Vị trí:** `scheduler.js` hàm `checkWeeklySubmissions` + `weekly-reports.json`
+
+**Nguyên nhân chính xác:**
+- Scheduler 10 phút check NV mới nộp bằng cách so sánh API vs `weekly-reports.json` local.
+- Khi NV nộp lần đầu → tên được ghi vào `weekly-reports.json` → Bot DM ✅.
+- Khi NV nộp lại lần 2 (sửa) → tên đã tồn tại trong `weekly-reports.json` → Bot **bỏ qua, không DM**.
+- NV không biết sửa có thành công không (trừ khi chú ý màn hình Success của WebApp).
+
+**Fix:** Không cần thêm cơ chế mới. Chỉ cần sửa `checkWeeklySubmissions` để phát hiện "nộp lại" dựa trên timestamp lần nộp trong GAS (so sánh `submitted_at` mới hơn thời điểm lần notify cuối) → DM "cập nhật thành công".
+
+---
+
+### ❌ BUG-NEW-01 — Nộp lại lần 2: Bảng 1 trống, NV phải điền lại thực hiện từ đầu
+
+**Vị trí:** `Ma.gs doGet` DEFAULT + `useDraftSave.ts` + `page.tsx` dòng 296–303
+
+**Nguyên nhân chính xác:**
+- GAS `doGet` luôn trả `thucHien = null` cho task cũ từ KH (dòng 206).
+- `useDraftSave` LƯU toàn bộ `tasks` (kể cả oldTasks có `thucHien` đã điền) vào localStorage.
+- NHƯNG `page.tsx` khi RESTORE chỉ lấy `draftNewTasks = draft.tasks.filter(t => !t.isNhiemVuCu)` → **bỏ qua mọi oldTask đã điền**.
+- Kết quả: NV điền Bảng 1 xong, đóng tab nhầm / reload → quay lại → phải điền lại toàn bộ cột "Thực hiện" từ đầu.
+- Tương tự khi NV gõ `/weekly` lần 2 để sửa → Bảng 1 load lại `thucHien = null` → phải nhập lại.
+
+**Fix gồm 2 phần:**
+1. `page.tsx` restore: bổ sung restore `thucHien` của oldTasks từ draft vào tasks vừa load từ server.
+2. `Ma.gs doGet`: khi NV đã có báo cáo nộp trước (có dòng `Báo cáo thực hiện` với `report_week = reqReportWeek`) → trả về `thucHien` đó thay vì `null`, giúp Bảng 1 tự điền lại số đã nộp.
+
+---
+
+### ❌ BUG-03 — Draft restore thiếu: mất `thucHien` khi reload
+
+**Vị trí:** `page.tsx` dòng 296–303
+
+**Nguyên nhân chính xác (đã xác nhận):**
+```js
+// Dòng hiện tại — CHỈ restore task mới (Bảng 2):
+const draftNewTasks = draft?.tasks.filter(t => !t.isNhiemVuCu && t.noiDung.trim() !== '');
+
+// Nhưng khi restore, lấy oldTasks từ SERVER (thucHien = null), bỏ qua oldTasks trong draft:
+const serverOldTasks = useKpiStore.getState().tasks.filter(t => t.isNhiemVuCu);
+initTasks([...serverOldTasks, ...draftNewTasks]); // ← serverOldTasks không có thucHien!
+```
+
+**Fix:** Khi restore, merge `thucHien` từ `draft.tasks` (oldTasks) vào `serverOldTasks` theo `id` hoặc `noiDung`.
+
+---
+
+### ❌ BUG-04 — Lần đầu dùng (isFirstTime): thiếu hướng dẫn, NV bối rối
+
+**Vị trí:** `ReportGrid.tsx` + `page.tsx`
+
+**Nguyên nhân chính xác:**
+- Chỉ có hint text nhỏ "Lần đầu: Tự điền kết quả từ Excel của bạn".
+- Không có banner giải thích phải làm gì, không có dòng mẫu điền sẵn.
+- NV mới nhìn vào bảng trống, không biết bắt đầu từ đâu.
+
+**Fix:** Thêm banner vàng nổi bật hướng dẫn: "Đây là lần đầu bạn dùng hệ thống. Hãy điền lại kết quả tuần trước từ Excel của bạn. Từ tuần sau, hệ thống sẽ tự động load kế hoạch lên giúp bạn." + 1 dòng điền mẫu có placeholder rõ ràng hơn.
+
+---
+
+### ❌ BUG-07 — Sếp duyệt: gửi Webhook vào channel, không phải DM cá nhân NV
+
+**Vị trí:** `Ma.gs onEdit` dòng 354–392
+
+**Nguyên nhân chính xác:**
+- GAS `onEdit` dùng `DISCORD_BOT_WEBHOOK` → gửi embed vào **1 channel cố định**.
+- NV chỉ nhận được nếu để ý channel đó.
+- Không có DM cá nhân riêng → NV bỏ lỡ thông báo kết quả duyệt.
+- Hơn nữa, webhook hiện không lưu `discord_id` của NV trong Sheet → không thể gửi DM.
+
+**Fix (2 bước):**
+1. `Ma.gs doPost`: Lưu `discord_id` vào cột R (hoặc thêm cột thứ 19) khi NV nộp.
+2. `Ma.gs onEdit`: Thay vì gọi Webhook channel, gọi API của Bot (`KPI_BOT_API_URL/dm?discord_id=xxx&message=yyy`) để Bot gửi DM riêng cho NV.
+3. `bot.js`: Thêm endpoint HTTP nhận request DM từ GAS.
+
+---
+
+## 📋 Kế hoạch Fix theo Scope
+
+### 🔴 Scope 1 — Fix P0: Mất dữ liệu khi nộp lại / reload (ảnh hưởng trực tiếp mỗi ngày)
+
+| # | Việc | File sửa |
+|---|---|---|
+| 1 | Restore `thucHien` oldTasks từ draft khi reload | `page.tsx` dòng 296–303 |
+| 2 | GAS trả về `thucHien` đã nộp trước (thay vì null) khi NV mở lại Form | `Ma.gs doGet` DEFAULT |
+| 3 | Bot DM "cập nhật thành công" khi NV nộp lại lần 2 | `scheduler.js` → `weekly-reports.json` thêm `updated_at` |
+
+### 🟡 Scope 2 — Fix P1 UX: Giao diện rõ ràng hơn
+
+| # | Việc | File sửa |
+|---|---|---|
+| 4 | Thêm banner hướng dẫn khi lần đầu (isFirstTime) | `ReportGrid.tsx` |
+| 5 | Sếp duyệt → Bot DM cá nhân NV thay vì channel | `Ma.gs onEdit` + `bot.js` (thêm HTTP endpoint) |
+
+### 🟢 Scope 3 — Cải tiến nhỏ (không cấp bách)
+
+| # | Việc | File sửa |
+|---|---|---|
+| 6 | Bot phân biệt gửi link "Nộp mới" vs "Sửa báo cáo" | `weekly.js` |
+
+---
+
+## 📁 Scope Lock — File sẽ sửa nếu anh duyệt
+
+**Scope 1:**
+- `kpi-webapp/src/app/weekly/page.tsx`
+- `kpi-webapp/docs/Ma.gs`
+- `discord-bot/services/scheduler.js`
+- `discord-bot/data/weekly-reports.json` (cấu trúc thêm `updated_at`)
+
+**Scope 2:**
+- `kpi-webapp/src/components/ReportGrid.tsx`
+- `kpi-webapp/docs/Ma.gs` (thêm lưu discord_id)
+- `discord-bot/bot.js` (thêm HTTP endpoint nhận DM request từ GAS)
+
+---
+
+## ✅ Test cases xác nhận sau fix
+
+| Tình huống | Kết quả mong đợi |
+|---|---|
+| NV điền Bảng 1 dở, reload trang | Restore lại đúng `thucHien` đã điền, không mất |
+| NV nộp lần 1 | Bot DM "Ghi nhận thành công" |
+| NV gõ `/weekly` lại, mở link sửa | Bảng 1 tự điền lại số Thực hiện đã nộp, Bảng 2 tự điền lại KH đã nộp |
+| NV nộp lần 2 (sửa) | Bot DM "Đã cập nhật báo cáo thành công" |
+| NV lần đầu | Thấy banner hướng dẫn rõ ràng |
+| Sếp duyệt trên Sheet | NV nhận DM riêng (không phải kênh chung) |
+
+---
+
+> **👉 Anh xác nhận thì em bắt đầu Scope 1 ngay.**
