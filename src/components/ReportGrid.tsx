@@ -4,13 +4,14 @@
  * Vai trò: Hiển thị 2 bảng hoàn toàn độc lập:
  *
  *   BẢNG 1 — BÁO CÁO TUẦN TRƯỚC (reportWeek):
- *     • Lần đầu (isFirstTime=true): Lưới trống, NV tự điền từ Excel (đủ cột)
- *     • Lần sau (isFirstTime=false): Load data server, chỉ cho điền cột "Thực hiện"
+ *     • Lần đầu (isFirstTime=true): Lưới trống, NV tự điền đủ cột
+ *     • Lần sau (isFirstTime=false): Load KH cũ từ server —
+ *         - Task từ KH cũ (isPhatSinh=false): khóa tên/đơn vị/KH/trọng số, chỉ điền Thực hiện, ẨN nút Xóa
+ *         - Task phát sinh (isPhatSinh=true): điền thoải mái, CÓ nút Xóa
+ *     • Luôn có nút "+ Thêm việc phát sinh" ở cuối Bảng 1 (kể cả isFirstTime=false)
  *
  *   BẢNG 2 — KẾ HOẠCH TUẦN NÀY (planWeek):
  *     • Luôn trống, NV điền tự do
- *
- *   Mỗi bảng có: Banner tiêu đề + Header cột riêng + Dữ liệu riêng
  */
 
 "use client";
@@ -24,39 +25,33 @@ type Props = {
   isSubmitting: boolean;
   reportWeek: string;       // VD: "Tuần 15" - tuần đang báo cáo (bảng 1)
   planWeek: string;         // VD: "Tuần 16" - tuần sắp tới (bảng 2)
-  invalidTaskIds: string[]; // IDs của task thiếu Thực hiện (highlight đỏ)
+  invalidTaskIds: string[]; // IDs của task thiếu trường bắt buộc (highlight đỏ)
   isFirstTime?: boolean;    // true = lần đầu dùng hệ thống, tự điền từ Excel
 };
 
 /**
  * Hàm tính khoảng ngày của 1 tuần ISO từ nhãn "Tuần 15"
- * → Trả về: "07/04 - 13/04" (Thứ Hai đến Chủ Nhật)
+ * → Trả về: "07/04 - 13/04"
  */
 function getWeekDateRange(weekLabel: string): string {
   const match = weekLabel.match(/\d+/);
   if (!match) return '';
   const weekNum = parseInt(match[0]);
   const year = new Date().getFullYear();
-
-  // ISO week: Tuần 1 chứa ngày 4/1, thứ Hai là ngày đầu tuần
   const jan4 = new Date(year, 0, 4);
-  const dayOfWeek = jan4.getDay() || 7; // Chuyển Chủ Nhật từ 0 → 7
+  const dayOfWeek = jan4.getDay() || 7;
   const week1Monday = new Date(jan4);
   week1Monday.setDate(jan4.getDate() - dayOfWeek + 1);
-
   const monday = new Date(week1Monday);
   monday.setDate(week1Monday.getDate() + (weekNum - 1) * 7);
-
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
-
   const fmt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
   return `${fmt(monday)} - ${fmt(sunday)}`;
 }
 
 /**
  * Header cột dùng chung cho cả 2 bảng
- * Mỗi bảng đều có dòng header: STT | Nội dung | Ghi chú | Đơn vị | Số lượng (KH) | Thực hiện | % HT | Trọng số | Đạt được | Xóa
  */
 function TableHeader() {
   return (
@@ -88,8 +83,7 @@ function TableHeader() {
 }
 
 /**
- * Banner tiêu đề nằm BÊN TRÊN mỗi bảng (không phải dòng trong tbody nữa)
- * Hiển thị: Icon | Label | Tuần X | Khoảng ngày
+ * Banner tiêu đề nằm BÊN TRÊN mỗi bảng
  */
 function SectionBanner({ icon, label, hint, colorClass }: {
   icon: string;
@@ -101,7 +95,7 @@ function SectionBanner({ icon, label, hint, colorClass }: {
     <div className={`w-full flex flex-wrap items-center gap-2 px-4 py-3 rounded-t-lg border border-b-0 border-gray-300 ${colorClass}`}>
       <span className="text-lg">{icon}</span>
       <span className="font-bold uppercase tracking-wide text-sm">{label}</span>
-      <div className="flex-1" /> {/* Đẩy hint về bên phải hoặc tạo khoảng trống */}
+      <div className="flex-1" />
       <span className="text-xs opacity-75 ml-auto italic">{hint}</span>
     </div>
   );
@@ -110,62 +104,69 @@ function SectionBanner({ icon, label, hint, colorClass }: {
 export default function ReportGrid({
   onSubmit, isSubmitting, reportWeek, planWeek, invalidTaskIds, isFirstTime = false
 }: Props) {
-  const { tasks, updateThucHien, addTask, addOldTask, updateTaskField, getTotalScore, removeTask } = useKpiStore();
+  const { tasks, updateThucHien, addTask, addOldTask, addPhatSinhTask, updateTaskField, getTotalScore, removeTask } = useKpiStore();
   const totalScore = getTotalScore();
   const oldTasks = tasks.filter(t => t.isNhiemVuCu);
   const newTasks = tasks.filter(t => !t.isNhiemVuCu);
 
-  // ── Tính toán số liệu tổng hợp (% KH gia quyền) ──────────
-  // Guard: trongSo có thể là '' (chưa điền) → tạm tính = 0
+  // Tính % KH gia quyền (chỉ từ task cũ đã có thực hiện)
   const totalWeight = oldTasks.reduce((sum, t) => sum + (t.trongSo === '' ? 0 : t.trongSo), 0);
   const percentage = totalWeight > 0 ? (totalScore / totalWeight) * 100 : 0;
 
-  // Tách số tuần từ "Tuần 15" -> "15"
   const weekNumMatch = reportWeek.match(/\d+/);
   const weekNum = weekNumMatch ? weekNumMatch[0] : '';
 
-  // Lần đầu: tự seed 1 dòng trống cho bảng 1
-  // → NV thấy ngay chỗ điền, không bị trống hoàn toàn
+  // Lần đầu: seed 1 dòng trống cho Bảng 1
   useEffect(() => {
     if (isFirstTime && oldTasks.length === 0) {
       addOldTask();
     }
-    // Chỉ chạy đúng 1 lần khi render đầu tiên
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFirstTime]);
 
   const reportDateRange = getWeekDateRange(reportWeek);
-  const planDateRange = getWeekDateRange(planWeek);
+  const planDateRange   = getWeekDateRange(planWeek);
 
   return (
     <div className="w-full overflow-x-auto pb-24 flex flex-col gap-8">
 
       {/* ══════════════════════════════════════════════════════
           BẢNG 1: BÁO CÁO TUẦN TRƯỚC
-          Banner tiêu đề nằm ngay bên trên bảng
       ══════════════════════════════════════════════════════ */}
       <div className="w-full">
-        {/* Banner tiêu đề bảng 1 */}
         <SectionBanner
           icon="📋"
-          label="Báo Cáo Tuần Trước"
-          hint={isFirstTime ? "Lần đầu: Tự điền kết quả từ Excel của bạn" : "Điền số vào cột Thực hiện để chốt kết quả"}
+          label={`Báo Cáo Tuần Trước — ${reportWeek} ${reportDateRange ? `(${reportDateRange})` : ''}`}
+          hint={isFirstTime
+            ? 'Lần đầu: Tự điền kết quả từ Excel của bạn'
+            : 'Điền số vào cột Thực hiện · Có việc phát sinh? Bấm + bên dưới'
+          }
           colorClass="bg-[#1e3a5f]/10 text-[#1e3a5f]"
         />
 
-        {/* Bảng 1 */}
         <table className="w-full border-collapse border border-gray-300 text-sm">
           <TableHeader />
           <tbody>
             {oldTasks.map((t, idx) => {
               const isInvalid = invalidTaskIds.includes(t.id);
-              return (
-                <tr key={t.id} className="bg-blue-50/20 hover:bg-blue-50/50 transition-colors">
-                  <td className="border border-gray-300 p-2 text-center text-black font-medium">{idx + 1}</td>
+              // Task kế hoạch cũ (load từ server): isPhatSinh=false → khóa tên, không xóa
+              // Task lần đầu (isFirstTime): cho điền tất cả, có xóa
+              // Task phát sinh: isPhatSinh=true → cho điền tất cả, có xóa
+              const isEditable = isFirstTime || (t.isPhatSinh === true);
 
-                  {/* NỘI DUNG — editable nếu lần đầu, read-only nếu lần sau */}
+              return (
+                <tr key={t.id} className={`transition-colors ${t.isPhatSinh ? 'bg-amber-50/30 hover:bg-amber-50/60' : 'bg-blue-50/20 hover:bg-blue-50/50'}`}>
+                  <td className="border border-gray-300 p-2 text-center text-black font-medium">
+                    {idx + 1}
+                    {/* Nhãn nhỏ đánh dấu task phát sinh */}
+                    {t.isPhatSinh && (
+                      <div className="text-[9px] font-bold text-amber-600 uppercase mt-0.5">phát sinh</div>
+                    )}
+                  </td>
+
+                  {/* NỘI DUNG */}
                   <td className="border border-gray-300 p-1">
-                    {isFirstTime ? (
+                    {isEditable ? (
                       <textarea
                         className={`w-full border-2 p-2 outline-none rounded-sm text-black font-medium min-h-[60px] bg-white resize-y transition
                           ${isInvalid && !t.noiDung.trim()
@@ -174,7 +175,7 @@ export default function ReportGrid({
                           }`}
                         value={t.noiDung}
                         onChange={e => updateTaskField(t.id, 'noiDung', e.target.value)}
-                        placeholder="Tên đầu việc tuần trước..."
+                        placeholder={t.isPhatSinh ? 'Tên việc phát sinh...' : 'Tên đầu việc tuần trước...'}
                       />
                     ) : (
                       <div className="p-2 text-black font-medium">{t.noiDung}</div>
@@ -183,21 +184,18 @@ export default function ReportGrid({
 
                   {/* GHI CHÚ */}
                   <td className="border border-gray-300 p-1">
-                    {isFirstTime ? (
-                      <textarea
-                        className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium min-h-[60px] bg-white resize-y"
-                        value={t.ghiChu}
-                        onChange={e => updateTaskField(t.id, 'ghiChu', e.target.value)}
-                        placeholder="Ghi chú..."
-                      />
-                    ) : (
-                      <div className="p-2 text-black font-medium">{t.ghiChu}</div>
-                    )}
+                    {/* Ghi chú luôn cho điền (kể cả task cũ — để ghi chú tình hình thực tế) */}
+                    <textarea
+                      className="w-full border border-gray-300 p-2 outline-none focus:border-blue-500 rounded-sm text-black font-medium min-h-[60px] bg-white resize-y"
+                      value={t.ghiChu}
+                      onChange={e => updateTaskField(t.id, 'ghiChu', e.target.value)}
+                      placeholder="Ghi chú tiến độ thực tế..."
+                    />
                   </td>
 
                   {/* ĐƠN VỊ */}
                   <td className="border border-gray-300 p-1">
-                    {isFirstTime ? (
+                    {isEditable ? (
                       <input
                         type="text"
                         className={`w-full text-center border-2 p-2 outline-none rounded-sm text-black font-medium bg-white transition
@@ -216,7 +214,7 @@ export default function ReportGrid({
 
                   {/* SỐ LƯỢNG KH */}
                   <td className="border border-gray-300 p-1">
-                    {isFirstTime ? (
+                    {isEditable ? (
                       <input
                         type="number" min="0" step="1"
                         className={`w-full text-center border-2 p-2 outline-none rounded-sm font-bold text-black bg-white transition
@@ -236,7 +234,7 @@ export default function ReportGrid({
                     )}
                   </td>
 
-                  {/* Ô THỰC HIỆN — luôn cho nhập, highlight đỏ nếu thiếu khi validate */}
+                  {/* Ô THỰC HIỆN — luôn cho nhập */}
                   <td className="border border-gray-300 p-1">
                     <input
                       type="number" min="0" step="0.5"
@@ -264,7 +262,7 @@ export default function ReportGrid({
 
                   {/* TRỌNG SỐ */}
                   <td className="border border-gray-300 p-1">
-                    {isFirstTime ? (
+                    {isEditable ? (
                       <select
                         className={`w-full text-center border-2 p-2 outline-none rounded-sm font-bold text-black bg-white transition
                           ${isInvalid && t.trongSo === ''
@@ -291,9 +289,9 @@ export default function ReportGrid({
                     </div>
                   </td>
 
-                  {/* XÓA — chỉ lần đầu mới cho xóa */}
+                  {/* XÓA — chỉ task phát sinh hoặc lần đầu mới được xóa */}
                   <td className="border border-gray-300 p-1 text-center">
-                    {isFirstTime ? (
+                    {isEditable ? (
                       <button
                         onClick={() => removeTask(t.id)}
                         className="text-red-400 hover:text-red-700 p-2 transition-colors"
@@ -309,10 +307,13 @@ export default function ReportGrid({
               );
             })}
 
-            {/* Nút thêm dòng cho bảng 1 — chỉ hiện lần đầu */}
-            {isFirstTime && (
-              <tr>
-                <td colSpan={10} className="border border-dashed border-blue-300 p-2 text-center bg-blue-50/20">
+            {/* Nút thêm đầu việc Bảng 1:
+                - isFirstTime: nút "Thêm đầu việc tuần trước" (nhập y chang từ Excel)
+                - isFirstTime=false: nút "Thêm việc phát sinh" (việc ngoài kế hoạch)
+            */}
+            <tr>
+              <td colSpan={10} className="border border-dashed border-blue-300 p-2 text-center bg-blue-50/20">
+                {isFirstTime ? (
                   <button
                     onClick={addOldTask}
                     className="text-[#1e3a5f] hover:text-blue-800 font-semibold flex items-center justify-center gap-2 w-full py-1 text-xs"
@@ -320,27 +321,32 @@ export default function ReportGrid({
                     <PlusCircle size={15} className="text-[#1e3a5f]" />
                     Thêm đầu việc tuần trước
                   </button>
-                </td>
-              </tr>
-            )}
+                ) : (
+                  <button
+                    onClick={addPhatSinhTask}
+                    className="text-amber-700 hover:text-amber-900 font-semibold flex items-center justify-center gap-2 w-full py-1 text-xs"
+                  >
+                    <PlusCircle size={15} className="text-amber-600" />
+                    + Thêm việc phát sinh (ngoài kế hoạch)
+                  </button>
+                )}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
       {/* ══════════════════════════════════════════════════════
           BẢNG 2: KẾ HOẠCH TUẦN NÀY
-          Banner tiêu đề nằm ngay bên trên bảng
       ══════════════════════════════════════════════════════ */}
       <div className="w-full">
-        {/* Banner tiêu đề bảng 2 */}
         <SectionBanner
           icon="🗓️"
-          label="Kế Hoạch Tuần Tới"
+          label={`Kế Hoạch Tuần Tới — ${planWeek} ${planDateRange ? `(${planDateRange})` : ''}`}
           hint="Đặt mục tiêu cho tuần tới — Điền đủ các cột"
           colorClass="bg-gray-200 text-black"
         />
 
-        {/* Bảng 2 */}
         <table className="w-full border-collapse border border-gray-300 text-sm">
           <TableHeader />
           <tbody>
@@ -398,17 +404,14 @@ export default function ReportGrid({
                       placeholder="VD: 5"
                     />
                   </td>
-                  {/* Ô Thực hiện (Bảng 2: Tuần sau mới chốt) */}
+                  {/* Thực hiện Bảng 2: Tuần sau mới chốt */}
                   <td className="border border-gray-300 p-1">
                     <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-500 italic text-[11px] font-medium leading-tight whitespace-nowrap">
                       Tuần sau chốt
                     </div>
                   </td>
-                  {/* % Hoàn Thành (Bảng 2: Tuần sau mới tính) */}
                   <td className="border border-gray-300 p-1">
-                    <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">
-                      —
-                    </div>
+                    <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">—</div>
                   </td>
                   <td className="border border-gray-300 p-1">
                     <select
@@ -427,9 +430,7 @@ export default function ReportGrid({
                     </select>
                   </td>
                   <td className="border border-gray-300 p-1">
-                    <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">
-                      —
-                    </div>
+                    <div className="bg-gray-100 border border-gray-200 rounded-sm py-2 text-center text-gray-400 font-bold">—</div>
                   </td>
                   <td className="border border-gray-300 p-1 text-center">
                     <button
@@ -444,7 +445,7 @@ export default function ReportGrid({
               );
             })}
 
-            {/* Nút thêm đầu việc bảng 2 */}
+            {/* Nút thêm đầu việc Bảng 2 */}
             <tr>
               <td colSpan={10} className="border border-dashed border-gray-300 p-3 text-center bg-gray-50/30">
                 <button
@@ -480,7 +481,6 @@ export default function ReportGrid({
                 : 'bg-gradient-to-br from-blue-500 to-[#1e3a5f] hover:from-blue-400 hover:to-blue-800 hover:scale-[1.05] active:scale-95 shadow-[0_10px_25px_rgba(59,130,246,0.6)] hover:shadow-[0_15px_35px_rgba(59,130,246,0.9)] border-b-[5px] border-blue-900 border-t border-blue-400/50'
               }`}
           >
-            {/* Vòng sáng nhấp nháy bên ngoài (Glow effect) để thu hút ánh nhìn */}
             {!isSubmitting && (
               <span className="absolute -inset-1 rounded-xl bg-blue-400 blur-lg opacity-50 animate-pulse -z-10" />
             )}
