@@ -68,34 +68,48 @@ interface HrInitFormProps {
 }
 
 export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFormProps) {
-  // Đọc token và hr_discord_id từ URL (khi HR mở link từ Discord bot)
-  const searchParams = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search)
-    : null;
-  const urlToken = searchParams?.get('token') || '';
-  const urlHrId  = searchParams?.get('hr_discord_id') || hrDiscordId;
+  // ── Đọc URL params bằng useSearchParams (Next.js App Router — đúng cách, tránh lỗi SSR) ──
+  const urlParams = useSearchParams();
+  const urlToken        = urlParams.get('token')          || '';
+  const urlHrId         = urlParams.get('hr_discord_id')  || hrDiscordId;
+  const preEmpDiscordId = urlParams.get('emp_discord_id') || '';
+  const preEmpName      = urlParams.get('emp_name')       || '';
+  const preEmpDept      = urlParams.get('emp_dept')       || '';
+  const preEmpJoined    = urlParams.get('emp_joined')     || '';
+  const preMgrName      = urlParams.get('mgr_name')       || '';
+  const preMgrDiscordId = urlParams.get('mgr_discord_id') || '';
 
-  // Đọc thông tin nhân viên pre-filled từ URL (Bot gửi khi HR chọn từ Discord dropdown)
-  const preEmpDiscordId = searchParams?.get('emp_discord_id') || '';
-  const preEmpName      = searchParams?.get('emp_name')       || '';
-  const preEmpDept      = searchParams?.get('emp_dept')       || '';
-  const preEmpJoined    = searchParams?.get('emp_joined')     || '';
-  const preMgrName      = searchParams?.get('mgr_name')       || '';
-  const preMgrDiscordId = searchParams?.get('mgr_discord_id') || '';
-
+  // Form state — khởi tạo rỗng, sẽ được fill bằng useEffect sau khi params sẵn sàng
   const [form, setForm] = useState<FormData>({
-    name: preEmpName,
-    discord_id: preEmpDiscordId,
-    dept: preEmpDept,
+    name: '',
+    discord_id: '',
+    dept: '',
     role: '',
-    manager_name: preMgrName || MANAGER_LIST[0].name,
-    manager_discord_id: preMgrDiscordId || MANAGER_LIST[0].discord_id,
-    trial_start: preEmpJoined ? preEmpJoined.slice(0, 10) : '',
+    manager_name: MANAGER_LIST[0].name,
+    manager_discord_id: MANAGER_LIST[0].discord_id,
+    trial_start: '',
     trial_end: '',
     eval_date: new Date().toISOString().slice(0, 10),
     hr_discord_id: hrDiscordId,
     criteria: [...DEFAULT_CRITERIA],
   });
+
+  // ── Sau khi component mount, fill form từ URL params (nếu có) ──
+  useEffect(() => {
+    if (preEmpName || preEmpDiscordId) {
+      setForm(prev => ({
+        ...prev,
+        name: preEmpName || prev.name,
+        discord_id: preEmpDiscordId || prev.discord_id,
+        dept: preEmpDept || prev.dept,
+        manager_name: preMgrName || prev.manager_name,
+        manager_discord_id: preMgrDiscordId || prev.manager_discord_id,
+        trial_start: preEmpJoined ? preEmpJoined.slice(0, 10) : prev.trial_start,
+      }));
+    }
+  // Chỉ chạy 1 lần sau mount — params từ URL không thay đổi
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preEmpName, preEmpDiscordId]);
 
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -103,18 +117,23 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
   // ── Employee Picker state ──────────────────────────────────────
   const [memberList, setMemberList] = useState<MemberOption[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
-  // Nếu đã có thông tin pre-filled từ URL → hiển thị luôn tên đó trong ô tìm kiếm
-  const [searchQuery, setSearchQuery] = useState(preEmpName);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
-  // Nếu đã pre-filled → coi như đã chọn (hiện badge thông tin bên dưới)
-  const [selectedMember, setSelectedMember] = useState<MemberOption | null>(
-    preEmpDiscordId ? {
-      name: preEmpName, username: '', discordId: preEmpDiscordId,
-      dept: preEmpDept, contractType: 'fulltime',
-      joinedAt: preEmpJoined || null,
-      managerName: preMgrName, managerDiscordId: preMgrDiscordId,
-    } : null
-  );
+  const [selectedMember, setSelectedMember] = useState<MemberOption | null>(null);
+
+  // Sau mount: set selectedMember và searchQuery từ URL params (nếu có)
+  useEffect(() => {
+    if (preEmpDiscordId) {
+      setSearchQuery(preEmpName);
+      setSelectedMember({
+        name: preEmpName, username: '', discordId: preEmpDiscordId,
+        dept: preEmpDept, contractType: 'fulltime',
+        joinedAt: preEmpJoined || null,
+        managerName: preMgrName, managerDiscordId: preMgrDiscordId,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preEmpDiscordId]);
   const pickerRef = useRef<HTMLDivElement>(null);
 
   // Load danh sách nhân viên từ /api/members khi form mount

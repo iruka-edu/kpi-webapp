@@ -11,6 +11,7 @@
 "use client";
 
 import React, { useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import HrInitForm from '@/components/evaluation/HrInitForm';
 import { Lock, ClipboardCheck } from 'lucide-react';
@@ -83,8 +84,15 @@ function LoginGate({ onLogin }: { onLogin: (pass: string, hrId: string) => void 
 }
 
 // ── Trang chính ───────────────────────────────────────────────────
-export default function EvaluationInitPage() {
-  const [auth, setAuth] = useState<{ pass: string; hrId: string } | null>(null);
+function EvaluationInitPageInner() {
+  const urlParams = useSearchParams();
+  const urlToken = urlParams.get('token') || '';
+  const urlHrId  = urlParams.get('hr_discord_id') || '';
+
+  // Nếu mở từ link Discord (có token + hr_discord_id) → bỏ qua màn đăng nhập
+  const autoAuth = urlToken && urlHrId ? { pass: urlToken, hrId: urlHrId } : null;
+
+  const [auth, setAuth] = useState<{ pass: string; hrId: string } | null>(autoAuth);
 
   if (!auth) {
     return (
@@ -154,5 +162,13 @@ export default function EvaluationInitPage() {
         />
       </main>
     </div>
+  );
+}
+// Wrapper bắt buộc — useSearchParams() yêu cầu Suspense trong Next.js App Router
+export default function EvaluationInitPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" /></div>}>
+      <EvaluationInitPageInner />
+    </Suspense>
   );
 }
