@@ -24,7 +24,6 @@
 
 import React, { useEffect, useState, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
 import EvalInfoForm from '@/components/evaluation/EvalInfoForm';
 import WorkSummaryTable from '@/components/evaluation/WorkSummaryTable';
 import EvalCriteriaTable from '@/components/evaluation/EvalCriteriaTable';
@@ -161,18 +160,18 @@ function EvaluationContent() {
 
   if (screen === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
-        <Loader2 size={40} className="animate-spin text-blue-400" />
+      <div className="flex items-center justify-center min-h-screen bg-[#f0f4f8]">
+        <Loader2 size={40} className="animate-spin text-blue-600" />
       </div>
     );
   }
 
   if (screen === 'token_expired') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <AlertTriangle size={56} className="text-yellow-400" />
-        <h1 className="text-2xl font-bold text-white">Link Đã Hết Hạn</h1>
-        <p className="text-slate-400 max-w-md">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-amber-500" />
+        <h1 className="text-2xl font-bold text-slate-900">Link Đã Hết Hạn</h1>
+        <p className="text-slate-500 max-w-md">
           Link đánh giá chỉ có hiệu lực trong 72 giờ. Vui lòng liên hệ HR hoặc Quản lý để nhận link mới.
         </p>
       </div>
@@ -181,20 +180,20 @@ function EvaluationContent() {
 
   if (screen === 'api_error') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <AlertTriangle size={56} className="text-red-400" />
-        <h1 className="text-2xl font-bold text-white">Lỗi Tải Phiếu Đánh Giá</h1>
-        <p className="text-slate-400 max-w-md">Không thể tải phiếu. Vui lòng thử lại hoặc liên hệ HR.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-red-500" />
+        <h1 className="text-2xl font-bold text-slate-900">Lỗi Tải Phiếu Đánh Giá</h1>
+        <p className="text-slate-500 max-w-md">Không thể tải phiếu. Vui lòng thử lại hoặc liên hệ HR.</p>
       </div>
     );
   }
 
   if (screen === 'already_submitted') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <Clock size={56} className="text-blue-400" />
-        <h1 className="text-2xl font-bold text-white">Đã Nộp Thành Công</h1>
-        <p className="text-slate-400 max-w-md">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <Clock size={56} className="text-blue-500" />
+        <h1 className="text-2xl font-bold text-slate-900">Đã Nộp Thành Công</h1>
+        <p className="text-slate-500 max-w-md">
           Bạn đã nộp phiếu tự đánh giá. Đang chờ Quản lý xem xét và chấm điểm.
         </p>
       </div>
@@ -203,10 +202,10 @@ function EvaluationContent() {
 
   if (screen === 'success') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <CheckCircle size={64} className="text-green-400" />
-        <h1 className="text-2xl font-bold text-white">Đã Nộp Thành Công!</h1>
-        <p className="text-slate-400 max-w-md">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <CheckCircle size={64} className="text-green-600" />
+        <h1 className="text-2xl font-bold text-slate-900">Đã Nộp Thành Công!</h1>
+        <p className="text-slate-500 max-w-md">
           Phiếu tự đánh giá đã được gửi cho Quản lý. HR cũng đã được CC thông báo.
           Bạn sẽ nhận kết quả qua Discord sau khi Quản lý và CEO hoàn tất duyệt.
         </p>
@@ -216,34 +215,53 @@ function EvaluationContent() {
 
   // ══════════════ FORM CHÍNH ══════════════
   return (
-    <div className="flex min-h-screen bg-[#0a1120] text-slate-100 font-sans">
-      <Sidebar />
-      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
-      <main className="flex-1 p-8 space-y-8 max-w-5xl mx-auto">
-
-        {/* Header */}
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center">
-              <ClipboardCheck size={22} className="text-blue-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Phiếu Tự Đánh Giá Thử Việc</h1>
-              <p className="text-sm text-slate-400">Bước 3/6 — Nhân viên tự đánh giá kết quả làm việc</p>
-            </div>
+    <div className="w-full">
+      {/* ── TAB NAV ─── */}
+      <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-6 flex items-stretch h-16">
+        <div className="flex items-center gap-3 pr-8 border-r border-slate-200">
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-md shadow-blue-500/20">
+            <img src="/logo-iruka.svg" alt="IruKa Logo" className="object-contain" />
           </div>
-          <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
-            {['HR tạo phiếu', 'Quản lý điền việc', 'NV tự đánh giá', 'Quản lý chấm điểm', 'CEO duyệt', 'Kết quả'].map((step, i) => (
+          <span className="font-bold text-lg text-slate-800 tracking-tight">IruKa<span className="text-blue-600">Life</span></span>
+        </div>
+        <div className="flex px-4 items-center font-semibold text-[15px] border-b-[3px] border-blue-600 text-blue-700 bg-blue-50/50 cursor-default">
+          📝 Tự Đánh Giá
+        </div>
+        <div className="flex px-4 items-center font-medium text-[15px] border-b-[3px] border-transparent text-slate-400 cursor-not-allowed">
+          📊 Quản Lý Đánh Giá
+        </div>
+        <div className="flex px-4 items-center font-medium text-[15px] border-b-[3px] border-transparent text-slate-400 cursor-not-allowed">
+          🎯 CEO Phê Duyệt
+        </div>
+      </div>
+
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      
+      <main className="max-w-[1200px] mx-auto p-4 md:p-8 space-y-8 pb-32">
+
+        {/* Header Content */}
+        <div className="flex items-start justify-between mt-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phiếu Tự Đánh Giá Thử Việc</h1>
+            <p className="text-sm text-slate-500 mt-1">Vui lòng điền đầy đủ thông tin thực tế công việc đã làm và tự đánh giá năng lực của mình.</p>
+          </div>
+          
+          <div className="hidden md:flex items-center gap-2">
+            {['HR tạo', 'QL điền', 'NV đánh giá', 'QL chấm', 'CEO duyệt'].map((step, i) => (
               <React.Fragment key={step}>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${
-                  i === 2 ? 'bg-blue-600 text-white' : i < 2 ? 'bg-green-600/20 text-green-400' : 'bg-slate-800 text-slate-400'
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap border ${
+                  i === 2 ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm' : 
+                  i < 2 ? 'bg-green-50 text-green-700 border-green-200' : 
+                  'bg-white text-slate-400 border-slate-200'
                 }`}>
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    i === 2 ? 'bg-white/20' : i < 2 ? 'bg-green-600/30' : 'bg-slate-700'
+                    i === 2 ? 'bg-blue-600 text-white' : 
+                    i < 2 ? 'bg-green-600 text-white' : 
+                    'bg-slate-200 text-slate-500'
                   }`}>{i + 1}</span>
                   {step}
                 </div>
-                {i < 5 && <span className="text-slate-600 shrink-0">›</span>}
+                {i < 4 && <span className="text-slate-300">›</span>}
               </React.Fragment>
             ))}
           </div>
@@ -251,9 +269,9 @@ function EvaluationContent() {
 
         {/* PHẦN 1: Thông tin chung */}
         {evalInfo && (
-          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-            <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-slate-700 flex items-center justify-center text-xs font-bold">1</span>
+          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h2 className="text-[15px] font-bold text-slate-800 mb-4 flex items-center gap-2 tracking-tight">
+              <span className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-600">1</span>
               Thông Tin Chung
             </h2>
             <EvalInfoForm info={evalInfo} />
@@ -353,8 +371,8 @@ function EvaluationContent() {
 export default function EvaluationPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
-        <Loader2 size={40} className="animate-spin text-blue-400" />
+      <div className="flex items-center justify-center min-h-screen bg-[#f0f4f8]">
+        <Loader2 size={40} className="animate-spin text-blue-600" />
       </div>
     }>
       <EvaluationContent />

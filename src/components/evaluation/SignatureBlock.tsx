@@ -29,30 +29,30 @@ export default function SignatureBlock({
   role, name, date, signed = false, onSign, canSign = false
 }: SignatureBlockProps) {
   return (
-    <div className="flex flex-col items-center text-center p-6 bg-slate-900/50 rounded-xl border border-slate-700/50 space-y-3 min-w-[200px]">
-      <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">{role}</div>
-      <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center">
+    <div className="flex flex-col items-center text-center p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-3 min-w-[200px]">
+      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{role}</div>
+      <div className="w-16 h-16 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center">
         {signed ? (
-          <CheckCircle size={32} className="text-green-400" />
+          <CheckCircle size={32} className="text-green-600" />
         ) : (
-          <PenLine size={32} className="text-slate-600" />
+          <PenLine size={32} className="text-slate-400" />
         )}
       </div>
-      <div className="text-white font-semibold">{name}</div>
+      <div className="text-slate-800 font-bold">{name}</div>
       {signed && date ? (
-        <div className="text-xs text-slate-500">
+        <div className="text-xs font-medium text-slate-500">
           Đã ký ngày {new Date(date).toLocaleDateString('vi-VN')}
         </div>
       ) : canSign ? (
         <button
           type="button"
           onClick={onSign}
-          className="mt-1 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-blue-600/20"
+          className="mt-1 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
         >
           Xác nhận & Ký
         </button>
       ) : (
-        <div className="text-xs text-slate-600 italic">Chờ xác nhận</div>
+        <div className="text-xs text-slate-500 italic">Chờ xác nhận</div>
       )}
     </div>
   );

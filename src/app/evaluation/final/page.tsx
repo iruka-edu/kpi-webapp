@@ -33,22 +33,22 @@ interface EvalResult {
 const DECISION_MAP: Record<string, { label: string; color: string; bg: string; icon: string; desc: string }> = {
   hire: {
     label: 'Tiếp nhận chính thức',
-    color: 'text-green-400',
-    bg: 'from-green-900/30 to-green-900/10 border-green-500/30',
+    color: 'text-green-700',
+    bg: 'from-green-50 to-white border-green-200',
     icon: '🎉',
     desc: 'Chúc mừng! Bạn đã hoàn thành thử việc xuất sắc.',
   },
   extend: {
     label: 'Gia hạn thử việc',
-    color: 'text-yellow-400',
-    bg: 'from-yellow-900/30 to-yellow-900/10 border-yellow-500/30',
+    color: 'text-amber-700',
+    bg: 'from-amber-50 to-white border-amber-200',
     icon: '⏳',
     desc: 'Công ty quyết định gia hạn thử việc thêm. Hãy tiếp tục cố gắng!',
   },
   reject: {
     label: 'Chấm dứt thử việc',
-    color: 'text-red-400',
-    bg: 'from-red-900/30 to-red-900/10 border-red-500/30',
+    color: 'text-red-700',
+    bg: 'from-red-50 to-white border-red-200',
     icon: '📋',
     desc: 'Rất tiếc, công ty quyết định không tiếp tục sau thử việc.',
   },
@@ -133,8 +133,8 @@ function FinalContent() {
   // ── Loading ───────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a1120] flex items-center justify-center">
-        <Loader2 size={36} className="animate-spin text-blue-400" />
+      <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center">
+        <Loader2 size={36} className="animate-spin text-blue-600" />
       </div>
     );
   }
@@ -142,11 +142,11 @@ function FinalContent() {
   // ── Lỗi ──────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0a1120] flex flex-col items-center justify-center text-center space-y-4 p-8">
-        <AlertTriangle size={56} className="text-red-400" />
-        <h1 className="text-xl font-bold text-white">Không thể xem kết quả</h1>
-        <p className="text-slate-400 max-w-md">{error}</p>
-        <p className="text-slate-500 text-sm">Vui lòng liên hệ HR nếu cần hỗ trợ.</p>
+      <div className="min-h-screen bg-[#f0f4f8] flex flex-col items-center justify-center text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-red-500" />
+        <h1 className="text-xl font-bold text-slate-900">Không thể xem kết quả</h1>
+        <p className="text-slate-500 max-w-md">{error}</p>
+        <p className="text-slate-400 text-sm">Vui lòng liên hệ HR nếu cần hỗ trợ.</p>
       </div>
     );
   }
@@ -154,10 +154,10 @@ function FinalContent() {
   // ── Đã xác nhận ──────────────────────────────────────────────────
   if (ackStatus === 'confirmed') {
     return (
-      <div className="min-h-screen bg-[#0a1120] flex flex-col items-center justify-center text-center space-y-4 p-8">
-        <CheckCircle size={64} className="text-green-400" />
-        <h1 className="text-2xl font-bold text-white">Đã Xác Nhận Nhận Kết Quả!</h1>
-        <p className="text-slate-400 max-w-md">
+      <div className="min-h-screen bg-[#f0f4f8] flex flex-col items-center justify-center text-center space-y-4 p-8">
+        <CheckCircle size={64} className="text-green-600" />
+        <h1 className="text-2xl font-bold text-slate-900">Đã Xác Nhận Nhận Kết Quả!</h1>
+        <p className="text-slate-500 max-w-md">
           Cảm ơn bạn đã xem kết quả đánh giá thử việc.<br />
           Nếu có thắc mắc, vui lòng liên hệ trực tiếp với Quản lý hoặc HR.
         </p>
@@ -166,23 +166,42 @@ function FinalContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1120] text-slate-100">
-      {/* Header banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-blue-950/50 to-slate-900 border-b border-slate-800 px-6 py-5">
-        <div className="max-w-3xl mx-auto flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-600/20 rounded-2xl flex items-center justify-center text-2xl">📋</div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Kết Quả Đánh Giá Thử Việc</h1>
-            <p className="text-sm text-slate-400">IruKa Edu — Hệ thống đánh giá nhân sự</p>
+    <div className="w-full">
+      {/* ── TAB NAV ─── */}
+      <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-6 flex items-stretch h-16">
+        <div className="flex items-center gap-3 pr-8 border-r border-slate-200">
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-md shadow-blue-500/20">
+            <img src="/logo-iruka.svg" alt="IruKa Logo" className="object-contain" />
           </div>
+          <span className="font-bold text-lg text-slate-800 tracking-tight">IruKa<span className="text-blue-600">Life</span></span>
+        </div>
+        <div className="flex px-4 items-center font-medium text-[15px] border-b-[3px] border-transparent text-slate-400 cursor-not-allowed">
+          📝 Tự Đánh Giá
+        </div>
+        <div className="flex px-4 items-center font-medium text-[15px] border-b-[3px] border-transparent text-slate-400 cursor-not-allowed">
+          📊 Quản Lý Đánh Giá
+        </div>
+        <div className="flex px-4 items-center font-semibold text-[15px] border-b-[3px] border-blue-600 text-blue-700 bg-blue-50/50 cursor-default">
+          🎯 Kết Quả Đánh Giá
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-[1200px] mx-auto p-4 md:p-8 space-y-8 pb-32">
+        {/* Header Content */}
+        <div className="flex items-start justify-between mt-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Kết Quả Đánh Giá Thử Việc</h1>
+            <p className="text-sm text-slate-500 mt-1">Chi tiết điểm đánh giá và quyết định cuối cùng từ Ban Giám Đốc.</p>
+          </div>
+        </div>
 
         {/* Thông tin NV */}
         {evalData && (
-          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
+          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h2 className="text-[15px] font-bold text-slate-800 mb-4 flex items-center gap-2 tracking-tight">
+              <span className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-600">i</span>
+              Thông Tin Chung
+            </h2>
             <div className="grid grid-cols-2 gap-4">
               {[
                 ['Nhân viên', evalData.info.name],
@@ -191,9 +210,11 @@ function FinalContent() {
                 ['Ngày bắt đầu', evalData.info.start_date],
                 ['Quản lý trực tiếp', evalData.info.manager_name],
               ].map(([label, value]) => (
-                <div key={label}>
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</div>
-                  <div className="text-white font-medium mt-0.5">{value || '—'}</div>
+                <div key={label} className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <div>
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">{label}</div>
+                    <div className="text-slate-800 font-semibold">{value || '—'}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -204,15 +225,15 @@ function FinalContent() {
         {evalData && (
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Bạn tự chấm', avg: selfAvg, color: 'text-blue-400' },
-              { label: 'Quản lý chấm', avg: mgrAvg, color: 'text-purple-400' },
-              { label: 'Điểm chung', avg: combined, color: getVerdictColor(combined) },
+              { label: 'Bạn tự chấm', avg: selfAvg, color: 'text-blue-600' },
+              { label: 'Quản lý chấm', avg: mgrAvg, color: 'text-purple-600' },
+              { label: 'Điểm chung', avg: combined, color: getVerdictColor(combined).replace('400', '600') },
             ].map(({ label, avg, color }) => (
-              <div key={label} className="bg-slate-800/60 rounded-2xl p-5 border border-slate-700/50 text-center space-y-2">
-                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</div>
+              <div key={label} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm text-center space-y-2">
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</div>
                 <div className={`text-4xl font-bold ${color}`}>{avg > 0 ? avg.toFixed(1) : '—'}</div>
                 {label === 'Điểm chung' && avg > 0 && (
-                  <div className={`text-sm font-semibold ${color}`}>{getVerdictLabel(avg)}</div>
+                  <div className={`text-sm font-bold ${color} mt-1`}>{getVerdictLabel(avg)}</div>
                 )}
               </div>
             ))}
@@ -221,25 +242,28 @@ function FinalContent() {
 
         {/* Chi tiết tiêu chí */}
         {evalData && (
-          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-            <h2 className="text-base font-bold text-slate-300 mb-4 flex items-center gap-2">
-              <Star size={16} className="text-yellow-400" /> Chi Tiết Từng Tiêu Chí
+          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h2 className="text-[15px] font-bold text-slate-800 mb-4 flex items-center gap-2 tracking-tight">
+              <span className="w-6 h-6 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center">
+                <Star size={14} className="text-blue-600" />
+              </span>
+              Chi Tiết Từng Tiêu Chí
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {evalData.criteria.map((c, i) => (
-                <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center bg-slate-900/50 rounded-xl px-4 py-3 border border-slate-700/40">
-                  <div className="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-400">{i + 1}</div>
+                <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center bg-slate-50 rounded-xl px-4 py-4 border border-slate-200">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-500 shadow-sm">{i + 1}</div>
                   <div>
-                    <div className="text-white font-medium text-sm">{c.name}</div>
-                    {c.expectation && <div className="text-slate-500 text-xs mt-0.5">{c.expectation}</div>}
+                    <div className="text-slate-800 font-semibold text-sm">{c.name}</div>
+                    {c.expectation && <div className="text-slate-600 text-sm mt-1 leading-relaxed">{c.expectation}</div>}
                   </div>
-                  <div className="text-center">
-                    <div className="text-[10px] font-bold text-blue-400/70 uppercase mb-0.5">Tự chấm</div>
-                    <div className="text-xl font-bold text-blue-400">{c.self_score || '—'}</div>
+                  <div className="text-center px-2">
+                    <div className="text-[10px] font-bold text-blue-500 uppercase mb-1">Tự chấm</div>
+                    <div className="text-2xl font-bold text-blue-600">{c.self_score || '—'}</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-[10px] font-bold text-purple-400/70 uppercase mb-0.5">QL chấm</div>
-                    <div className="text-xl font-bold text-purple-400">{c.mgr_score || '—'}</div>
+                  <div className="text-center px-2">
+                    <div className="text-[10px] font-bold text-purple-500 uppercase mb-1">QL chấm</div>
+                    <div className="text-2xl font-bold text-purple-600">{c.mgr_score || '—'}</div>
                   </div>
                 </div>
               ))}
@@ -249,27 +273,30 @@ function FinalContent() {
 
         {/* Nhận xét QL */}
         {evalData?.mgr_comment && (
-          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-            <h2 className="text-base font-bold text-slate-300 mb-3 flex items-center gap-2">
-              <MessageSquare size={16} className="text-slate-400" /> Nhận Xét Của Quản Lý
+          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h2 className="text-[15px] font-bold text-slate-800 mb-3 flex items-center gap-2 tracking-tight">
+              <span className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center">
+                <MessageSquare size={14} className="text-slate-600" />
+              </span>
+              Nhận Xét Của Quản Lý
             </h2>
-            <p className="text-slate-300 leading-relaxed whitespace-pre-wrap text-sm">{evalData.mgr_comment}</p>
+            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm p-4 bg-slate-50 rounded-xl border border-slate-200">{evalData.mgr_comment}</p>
           </section>
         )}
 
         {/* Ghi chú CEO */}
         {evalData?.ceo_comment && (
-          <section className="bg-amber-500/5 rounded-2xl p-6 border border-amber-500/20">
-            <h2 className="text-base font-bold text-amber-400/80 mb-3 flex items-center gap-2">👑 Ghi Chú Của CEO</h2>
-            <p className="text-slate-300 leading-relaxed whitespace-pre-wrap text-sm">{evalData.ceo_comment}</p>
+          <section className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
+            <h2 className="text-[15px] font-bold text-amber-600 mb-3 flex items-center gap-2">👑 Ghi Chú Của CEO</h2>
+            <p className="text-amber-900 leading-relaxed whitespace-pre-wrap text-sm">{evalData.ceo_comment}</p>
           </section>
         )}
 
         {/* Lời nhắn QL */}
         {evalData?.mgr_note && (
-          <section className="bg-blue-500/5 rounded-2xl p-6 border border-blue-500/20">
-            <h2 className="text-base font-bold text-blue-400/80 mb-3">💬 Lời Nhắn Từ Quản Lý</h2>
-            <p className="text-slate-300 leading-relaxed whitespace-pre-wrap text-sm">{evalData.mgr_note}</p>
+          <section className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+            <h2 className="text-[15px] font-bold text-blue-700 mb-3">💬 Lời Nhắn Từ Quản Lý</h2>
+            <p className="text-blue-900 leading-relaxed whitespace-pre-wrap text-sm">{evalData.mgr_note}</p>
           </section>
         )}
 
@@ -278,7 +305,7 @@ function FinalContent() {
           <section className={`rounded-2xl p-6 border bg-gradient-to-br ${decision.bg}`}>
             <div className="text-3xl mb-3">{decision.icon}</div>
             <h2 className={`text-2xl font-bold mb-2 ${decision.color}`}>{decision.label}</h2>
-            <p className="text-slate-300">{decision.desc}</p>
+            <p className="text-slate-600">{decision.desc}</p>
           </section>
         )}
 
@@ -301,7 +328,7 @@ function FinalContent() {
             )}
           </button>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
@@ -309,8 +336,8 @@ function FinalContent() {
 export default function FinalPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0a1120] flex items-center justify-center">
-        <Loader2 size={36} className="animate-spin text-blue-400" />
+      <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center">
+        <Loader2 size={36} className="animate-spin text-blue-600" />
       </div>
     }>
       <FinalContent />

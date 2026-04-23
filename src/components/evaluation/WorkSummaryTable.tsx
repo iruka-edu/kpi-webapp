@@ -38,22 +38,22 @@ export default function WorkSummaryTable({ rows, onChange, readonly = false }: W
 
   if (rows.length === 0) {
     return (
-      <div className="text-center py-10 text-slate-500 text-sm border-2 border-dashed border-slate-700 rounded-xl">
+      <div className="text-center py-10 text-slate-500 text-sm border-2 border-dashed border-slate-300 rounded-lg">
         Quản lý chưa điền đầu việc. Vui lòng chờ Quản lý hoàn thành bước 2.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-700/50">
+    <div className="overflow-x-auto rounded-lg border border-slate-200">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-slate-800/80 border-b border-slate-700/50">
-            <th className="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wide w-10">#</th>
-            <th className="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wide w-1/4">Mảng Công Việc</th>
-            <th className="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wide w-1/3">Chi Tiết Nhiệm Vụ</th>
-            <th className="px-4 py-3 text-left text-xs font-bold text-blue-400 uppercase tracking-wide">
-              Kết Quả Thực Tế {!readonly && <span className="text-blue-400/60 normal-case font-normal">(NV điền)</span>}
+          <tr className="bg-slate-50 border-b border-slate-200">
+            <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide w-10">#</th>
+            <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide w-1/4">Mảng Công Việc</th>
+            <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wide w-1/3">Chi Tiết Nhiệm Vụ</th>
+            <th className="px-4 py-3 text-left text-xs font-bold text-blue-600 uppercase tracking-wide">
+              Kết Quả Thực Tế {!readonly && <span className="text-blue-500/80 normal-case font-normal ml-1">(NV điền)</span>}
             </th>
           </tr>
         </thead>
@@ -61,24 +61,24 @@ export default function WorkSummaryTable({ rows, onChange, readonly = false }: W
           {rows.map((row, i) => (
             <tr
               key={i}
-              className="border-b border-slate-700/30 hover:bg-slate-800/30 transition-colors"
+              className="border-b border-slate-200 last:border-b-0"
             >
-              <td className="px-4 py-3 text-slate-500 text-center font-mono">{row.stt}</td>
+              <td className="px-4 py-4 text-slate-500 font-mono align-top">{row.stt}</td>
               {/* Mảng việc — Quản lý đã điền, readonly */}
-              <td className="px-4 py-3 text-slate-300 font-medium">{row.area}</td>
+              <td className="px-4 py-4 text-slate-800 font-semibold align-top">{row.area}</td>
               {/* Chi tiết — Quản lý đã điền, readonly */}
-              <td className="px-4 py-3 text-slate-400 leading-relaxed">{row.detail}</td>
+              <td className="px-4 py-4 text-slate-600 leading-relaxed align-top">{row.detail}</td>
               {/* Kết quả — NV điền */}
-              <td className="px-4 py-3">
+              <td className="px-4 py-4 align-top">
                 {readonly ? (
-                  <span className="text-slate-300">{row.result || <span className="text-slate-600 italic">Chưa điền</span>}</span>
+                  <span className="text-slate-700 leading-relaxed block">{row.result || <span className="text-slate-400 italic">Chưa điền</span>}</span>
                 ) : (
                   <textarea
                     rows={2}
                     value={row.result}
                     onChange={e => updateResult(i, e.target.value)}
                     placeholder="Điền kết quả thực tế bạn đã đạt được..."
-                    className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none text-sm transition"
+                    className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-y min-h-[40px] text-sm transition"
                   />
                 )}
               </td>
