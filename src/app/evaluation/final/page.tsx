@@ -11,7 +11,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Loader2, AlertTriangle, Star, MessageSquare } from 'lucide-react';
 
@@ -54,7 +54,7 @@ const DECISION_MAP: Record<string, { label: string; color: string; bg: string; i
   },
 };
 
-export default function FinalPage() {
+function FinalContent() {
   const searchParams = useSearchParams();
   const evalId = searchParams.get('id') || '';
   const discordId = searchParams.get('discord_id') || '';
@@ -303,5 +303,17 @@ export default function FinalPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FinalPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a1120] flex items-center justify-center">
+        <Loader2 size={36} className="animate-spin text-blue-400" />
+      </div>
+    }>
+      <FinalContent />
+    </Suspense>
   );
 }

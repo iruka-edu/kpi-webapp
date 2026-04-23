@@ -15,7 +15,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import {
@@ -65,7 +65,7 @@ interface StatusData {
   eval_date: string;
 }
 
-export default function EvaluationStatusPage() {
+function EvaluationStatusContent() {
   const searchParams = useSearchParams();
 
   // Lấy params từ URL (bot gửi) hoặc để trống
@@ -301,5 +301,17 @@ export default function EvaluationStatusPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function EvaluationStatusPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen bg-[#0a1120] items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-blue-400" />
+      </div>
+    }>
+      <EvaluationStatusContent />
+    </Suspense>
   );
 }
