@@ -97,35 +97,53 @@ export default function EvaluationInitPage() {
   return (
     <div className="flex min-h-screen bg-[#f0f4f8] text-slate-800 font-sans">
       <Sidebar />
-      <main className="flex-1 p-8 space-y-8 max-w-4xl mx-auto">
+      <main className="flex-1 p-8 space-y-8 max-w-[1200px] mx-auto w-full">
         {/* Header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-              <ClipboardCheck size={22} className="text-blue-600" />
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/2"></div>
+          
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-[#1e3a5f] rounded-[18px] flex items-center justify-center text-3xl shadow-lg shadow-[#1e3a5f]/20">
+              📋
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Tạo Phiếu Đánh Giá Thử Việc</h1>
-              <p className="text-sm text-slate-500">
-                Điền thông tin nhân viên → Bot sẽ gửi form cho Quản lý trực tiếp
+              <h1 className="text-[26px] font-black text-[#1e3a5f] tracking-tight mb-1">
+                Đánh Giá Nhân Viên Sau Thử Việc
+              </h1>
+              <p className="text-[13px] text-slate-500 font-medium">
+                Màn hình Khởi tạo (HR)
               </p>
             </div>
           </div>
-          {/* Luồng overview */}
-          <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-1">
-            {['HR tạo phiếu', 'Quản lý điền việc', 'NV tự đánh giá', 'Quản lý chấm điểm', 'CEO duyệt', 'Kết quả'].map((step, i) => (
-              <React.Fragment key={step}>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${
-                  i === 0 ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    i === 0 ? 'bg-white/20' : 'bg-slate-300'
-                  }`}>{i + 1}</span>
-                  {step}
-                </div>
-                {i < 5 && <span className="text-slate-300 shrink-0">›</span>}
-              </React.Fragment>
-            ))}
+
+          <div className="flex gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-[#dbeafe] text-[#1e40af] uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>
+              Khởi Tạo Phiếu
+            </span>
+          </div>
+        </div>
+
+        {/* Luồng overview */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mt-4">
+          <div className="flex items-center gap-1.5 font-bold text-[12px]">
+            <span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#1e3a5f] text-white">1</span>
+            <span className="text-[#374151]">Thông tin chung</span>
+          </div>
+          <span className="text-[#d1d5db] text-base px-1">›</span>
+          <div className="flex items-center gap-1.5 font-bold text-[12px]">
+            <span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#d1d5db] text-white">2</span>
+            <span className="text-[#374151]">Tự đánh giá</span>
+          </div>
+          <span className="text-[#d1d5db] text-base px-1">›</span>
+          <div className="flex items-center gap-1.5 font-bold text-[12px]">
+            <span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#d1d5db] text-white">3</span>
+            <span className="text-[#374151]">Quản lý đánh giá</span>
+          </div>
+          <span className="text-[#d1d5db] text-base px-1">›</span>
+          <div className="flex items-center gap-1.5 font-bold text-[12px]">
+            <span className="w-6 h-6 rounded-full flex items-center justify-center bg-[#d1d5db] text-white">4</span>
+            <span className="text-[#374151]">Kết luận & Ký duyệt</span>
           </div>
         </div>
 
