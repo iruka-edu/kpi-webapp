@@ -1,0 +1,297 @@
+# 📋 PLAN — Trang Đánh Giá Nhân Sự Sau Thử Việc
+> **Dự án:** `kpi-webapp` | **Workflow:** `/2-plan-from-mockup`
+> **Cập nhật:** 2026-04-23 | **Trạng thái:** 🟡 Chờ duyệt
+
+---
+
+## 🔍 BƯỚC 1 — PHÂN TÍCH
+
+### 1A. User Flow CHUẨN (6 bước)
+
+```
+BƯỚC 1 — HR TẠO PHIẾU
+HR vào Discord → gõ /start-evaluation
+  ↓ Bot gửi link /evaluation/init cho HR
+HR điền:
+  • Thông tin NV: tên, bộ phận, vị trí, ngày thử việc
+  • Quản lý trực tiếp (CEO / Tùng / Inh)
+  • Ngày đánh giá
+  • Tiêu chí mẫu (optional): HR có thể điền sẵn 9 tiêu chí mẫu
+    → Nếu không điền, Quản lý sẽ điền ở bước 2
+HR Submit → Bot gửi đến Quản lý trực tiếp + CC CEO
+  (CEO biết có phiếu đánh giá thử việc mới — status: INIT → MGR_PENDING)
+
+BƯỚC 2 — QUẢN LÝ ĐIỀN CÔNG VIỆC & TIÊU CHÍ
+Quản lý nhận link → mở form
+Quản lý điền:
+  • Toàn bộ công việc đã giao cho NV (từng mảng, chi tiết)
+  • Kỳ vọng về tinh thần, thái độ làm việc
+  • 9 tiêu chí đánh giá (sửa tiêu chí HR đã điền mẫu, hoặc điền mới)
+    → Quản lý có thể sửa/xóa tự do
+Quản lý Submit → Bot gửi đến NV + CC HR
+  (HR nắm được tiến trình — status: MGR_PENDING → NV_PENDING)
+
+BƯỚC 3 — NHÂN VIÊN TỰ ĐÁNH GIÁ
+NV nhận link → mở form:
+  • Thông tin chung: HR điền (readonly)
+  • Công việc được giao: Quản lý đã điền → NV điền kết quả thực tế
+  • 9 tiêu chí: Quản lý đã điền tên + kỳ vọng
+    → NV tự chấm điểm (1-5)
+    → NV có thể THÊM tiêu chí mới
+    → NV KHÔNG được xóa tiêu chí đã có
+  • Đề xuất: lương kỳ vọng, đào tạo, phản hồi
+NV Submit → Bot gửi đến Quản lý + CC HR
+  (HR nắm được NV đã nộp — status: NV_PENDING → SUBMITTED)
+
+BƯỚC 4 — QUẢN LÝ ĐÁNH GIÁ & CHẤM ĐIỂM
+Quản lý mở form:
+  • Chấm điểm cột "Quản lý" cho từng tiêu chí (1-5)
+  • Chọn Quyết định: Thông qua / Gia hạn / Chấm dứt
+  • Ghi chú nhận xét
+Quản lý Submit → Bot gửi đến CEO + CC HR
+  (HR nắm được Quản lý đã chấm xong — status: UNDER_REVIEW → PENDING_CEO)
+
+BƯỚC 5 — CEO PHÊ DUYỆT
+CEO mở form → xem toàn bộ (điểm NV + Quản lý + quyết định)
+CEO chọn:
+  ✅ Phê duyệt
+  🔄 Yêu cầu xem lại → form về Quản lý, Quản lý sửa lại
+  ❌ Từ chối (bắt buộc điền ghi chú)
+CEO Submit → Bot gửi đến Quản lý + CC HR
+  (HR nắm được CEO đã duyệt — status: PENDING_CEO → COMPLETED)
+
+BƯỚC 6 — QUẢN LÝ GỬI KẾT QUẢ CHO NV
+Quản lý xem kết quả CEO đã duyệt trên Dashboard
+Quản lý nhấn "Gửi kết quả cho Nhân viên"
+  ↓ Bot gửi link kết quả đến NV + CC CEO
+  (CEO biết kết quả đã được trao cho NV)
+  (status: COMPLETED → RESULT_SENT)
+NV xem kết quả + nhấn "Đã xem"
+  (status: RESULT_SENT → ACKNOWLEDGED)
+```
+
+### 1B. Quy tắc 9 tiêu chí đánh giá
+
+| Ai | Quyền với tiêu chí |
+|----|-------------------|
+| HR | Điền mẫu (optional) — Có thể xóa tự do |
+| Quản lý | Sửa / Thêm / Xóa tự do (kể cả tiêu chí HR điền) |
+| NV | Chỉ được **Thêm** tiêu chí mới — **KHÔNG xóa** |
+
+### 1C. Thông báo Discord — Ai nhận gì
+
+| Bước | Người nhận | CC |
+|------|-----------|-----|
+| 1. HR tạo phiếu | Quản lý trực tiếp | **CEO** |
+| 2. QL gửi NV | Nhân viên | **HR** |
+| 3. NV nộp | Quản lý trực tiếp | **HR** |
+| 4. QL gửi CEO | CEO | **HR** |
+| 5. CEO duyệt | Quản lý trực tiếp | **HR** |
+| 6. QL gửi kết quả | Nhân viên | **CEO** |
+
+### 1D. Phân Cấp Quản Lý (13-15 người)
+
+```
+CEO (Mr. Đào) — quản lý trực tiếp phần lớn
+├── Tùng — Quản lý nhóm 1
+└── Inh  — Quản lý nhóm 2
+```
+
+Field `manager_discord_id` trong `staff_directory` để bot routing đúng người.
+
+### 1E. Component cần tạo
+
+```
+HrInitForm         — HR điền thông tin NV + tiêu chí mẫu (optional)
+MgrWorkSummary     — Quản lý điền công việc giao + kỳ vọng + chỉnh tiêu chí
+EvalInfoForm       — Thông tin chung readonly (NV xem)
+WorkSummaryTable   — NV điền kết quả thực tế theo đầu việc QL đã giao
+EvalCriteriaTable  — 9 tiêu chí: NV tự chấm + thêm mới (không xóa)
+EmployeeProposal   — 3 ô đề xuất (lương, đào tạo, phản hồi)
+ScoreSummaryBar    — Tổng điểm auto-tính (2 cột: NV + Quản lý)
+ManagerScorePanel  — Quản lý chấm cột điểm + quyết định + ghi chú
+ManagerResultSend  — Nút "Gửi kết quả cho NV" (hiện sau CEO duyệt)
+CeoApprovalPanel   — CEO: 3 nút + ô ghi chú bắt buộc khi từ chối
+SignatureBlock      — 4 khối ký xác nhận
+```
+
+### 1F. Status Flow
+
+```
+INIT
+  ↓ HR Submit
+MGR_PENDING
+  ↓ Quản lý Submit
+NV_PENDING
+  ↓ NV Submit
+SUBMITTED
+  ↓ Quản lý mở
+UNDER_REVIEW
+  ↓ Quản lý Submit
+PENDING_CEO
+  ↓ CEO Phê duyệt          ↓ CEO Yêu cầu xem lại
+COMPLETED              UNDER_REVIEW (Quản lý sửa lại)
+  ↓ Quản lý gửi NV
+RESULT_SENT
+  ↓ NV xem + xác nhận
+ACKNOWLEDGED
+
+Nhắc tự động:
+  MGR_PENDING  > 3 ngày → nhắc Quản lý
+  NV_PENDING   > 3 ngày → nhắc NV
+  PENDING_CEO  > 3 ngày → nhắc CEO
+```
+
+### 1G. Dữ liệu lưu trong Google Sheet
+
+```
+staff_directory:
+  name | discord_id | dept | role | manager_name | manager_discord_id
+
+trial_evaluations:
+  id | name | discord_id | dept | role
+  manager_name | manager_discord_id | hr_discord_id
+  trial_start | trial_end | eval_date
+  status | decision | manager_comment | ceo_comment
+  timestamps: init_at | mgr_pending_at | nv_pending_at
+              submitted_at | mgr_reviewed_at | ceo_reviewed_at
+
+trial_work_summary:
+  eval_id | stt | area | detail(QL điền) | result(NV điền)
+
+trial_criteria:
+  eval_id | stt | name | expectation | self_score | mgr_score | note
+  source (hr_template / mgr / nv_added)
+
+trial_proposals:
+  eval_id | salary_expectation | training_request | feedback
+```
+
+---
+
+## 🔑 BƯỚC 2 — PHÂN QUYỀN
+
+| Quyền | HR | Quản lý | CEO | NV |
+|-------|----|---------|-----|----|
+| Tạo phiếu | ✅ | ❌ | ❌ | ❌ |
+| Điền tiêu chí mẫu | ✅ | ❌ | ❌ | ❌ |
+| Sửa/xóa tiêu chí | ✅ | ✅ (tự do) | ❌ | ❌ |
+| Điền đầu việc + kỳ vọng | ❌ | ✅ (team mình) | ❌ | ❌ |
+| Điền kết quả + tự chấm | ❌ | ❌ | ❌ | ✅ |
+| Thêm tiêu chí mới | ❌ | ✅ | ❌ | ✅ |
+| Xóa tiêu chí | ✅ | ✅ | ❌ | ❌ (khóa cứng) |
+| Chấm điểm cột Quản lý | ❌ | ✅ (team mình) | ❌ | ❌ |
+| Phê duyệt cuối | ❌ | ❌ | ✅ | ❌ |
+| Gửi kết quả cho NV | ❌ | ✅ (sau CEO duyệt) | ❌ | ❌ |
+| Xem tất cả form | ✅ | ✅ (team) | ✅ | ❌ |
+| Xem form bản thân | ✅ | ✅ | ✅ | ✅ |
+
+---
+
+## 📦 BƯỚC 3 — CHIA SCOPE TRIỂN KHAI
+
+### 🔵 SCOPE 1 — HR Tạo + Quản Lý Điền + NV Tự Đánh Giá (Tuần 1)
+
+**Kế thừa:** `verifyToken()`, `useDraftSave`, `Toast`, `Sidebar`
+
+**File tạo mới:**
+```
+src/app/evaluation/init/page.tsx               ← HR tạo phiếu
+src/app/evaluation/mgr-fill/[id]/page.tsx      ← QL điền đầu việc + tiêu chí
+src/app/evaluation/page.tsx                    ← NV tự đánh giá
+src/components/evaluation/HrInitForm.tsx
+src/components/evaluation/MgrWorkSummary.tsx
+src/components/evaluation/EvalInfoForm.tsx
+src/components/evaluation/WorkSummaryTable.tsx
+src/components/evaluation/EvalCriteriaTable.tsx
+src/components/evaluation/EmployeeProposal.tsx
+src/components/evaluation/ScoreSummaryBar.tsx
+src/components/evaluation/SignatureBlock.tsx
+src/app/api/evaluation/init/route.ts
+src/app/api/evaluation/mgr-fill/route.ts
+src/app/api/evaluation/route.ts
+```
+
+**PASS khi:**
+- HR Submit → Bot gửi QL + CC CEO (đúng)
+- QL điền đầu việc/tiêu chí → Submit → Bot gửi NV (không CC)
+- NV thấy đúng nội dung QL đã điền, tự chấm + thêm tiêu chí được, không xóa được
+- NV Submit → Bot gửi QL (không CC)
+
+### 🟢 SCOPE 2 — Quản Lý Chấm + CEO Duyệt (Tuần 2)
+
+**File tạo mới:**
+```
+src/app/evaluation/review/[id]/page.tsx        ← QL chấm điểm
+src/app/evaluation/ceo/[id]/page.tsx           ← CEO phê duyệt
+src/components/evaluation/ManagerScorePanel.tsx
+src/components/evaluation/ManagerResultSend.tsx
+src/components/evaluation/CeoApprovalPanel.tsx
+src/app/api/evaluation/review/route.ts
+src/app/api/evaluation/ceo-approve/route.ts
+src/app/api/evaluation/send-result/route.ts
+src/app/api/evaluation/list/route.ts
+```
+
+**PASS khi:**
+- QL chấm + Submit → Bot gửi CEO (không CC)
+- CEO duyệt → Bot gửi QL (không CC)
+- QL nhấn "Gửi kết quả" → Bot gửi NV + CC CEO (đúng)
+
+### 🔴 SCOPE 3 — NV Xem Kết Quả + Nhắc Tự Động (Tuần 3)
+
+**File tạo mới:**
+```
+src/app/evaluation/result/[id]/page.tsx
+src/app/evaluation/status/page.tsx
+src/app/api/evaluation/status/route.ts
+src/app/api/evaluation/acknowledge/route.ts
+```
+
+---
+
+## ⚠️ BƯỚC 4 — RỦI RO & XỬ LÝ
+
+| # | Rủi ro | Xử lý |
+|---|--------|-------|
+| 1 | NV mất draft | ✅ `useDraftSave` localStorage |
+| 2 | Link token hết hạn 72h | ✅ `verifyToken()` + màn hình hướng dẫn |
+| 3 | QL chưa điền tiêu chí, NV nhận form trống | Validate bắt buộc QL phải điền ≥1 tiêu chí |
+| 4 | NV xóa tiêu chí | Khóa cứng nút xóa với tiêu chí QL/HR điền |
+| 5 | Điểm chênh lệch ≥2 | Badge cam, bắt buộc điền nhận xét |
+| 6 | GAS lỗi khi submit | try/catch + Toast + giữ draft + retry |
+| 7 | CEO không duyệt kịp | Bot nhắc sau 3 ngày |
+| 8 | CEO từ chối không rõ | Bắt buộc điền ghi chú khi từ chối/xem lại |
+
+---
+
+## 🌐 BƯỚC 5 — API ENDPOINTS
+
+| Method | Endpoint | Ai gọi | Bot báo |
+|--------|----------|--------|---------|
+| `POST` | `/api/evaluation/init` | HR | → QL + **CC CEO** |
+| `GET/POST` | `/api/evaluation/mgr-fill` | Quản lý | → NV + **CC HR** |
+| `GET` | `/api/evaluation?id=&token=` | NV | — |
+| `POST` | `/api/evaluation` | NV | → QL + **CC HR** |
+| `GET` | `/api/evaluation/review` | Quản lý | — |
+| `POST` | `/api/evaluation/review` | Quản lý | → CEO + **CC HR** |
+| `POST` | `/api/evaluation/send-result` | Quản lý | → NV + **CC CEO** |
+| `GET/POST` | `/api/evaluation/ceo-approve` | CEO | → QL + **CC HR** |
+| `POST` | `/api/evaluation/acknowledge` | NV | — |
+| `GET` | `/api/evaluation/list` | Dashboard | — |
+| `GET` | `/api/evaluation/status` | NV | — |
+
+---
+
+## 📁 BƯỚC 6 — FILE CẦN SỬA
+
+```
+src/components/Sidebar.tsx      ← Thêm "Đánh Giá Nhân Sự"
+src/app/dashboard/page.tsx      ← Thêm tab "Đánh Giá Thử Việc"
+.env.example                    ← Thêm GOOGLE_APPS_SCRIPT_EVALUATION_URL
+discord-bot/                    ← Thêm lệnh /start-evaluation
+```
+
+---
+
+> **Anh duyệt plan → Em bắt đầu Scope 1**

@@ -3,15 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileSpreadsheet, FileBarChart, BookOpen, Settings, HelpCircle } from "lucide-react";
+import { LayoutDashboard, FileSpreadsheet, FileBarChart, BookOpen, Settings, HelpCircle, ClipboardCheck } from "lucide-react";
 
 // Dữ liệu tĩnh của Sidebar
 const navItems = [
   { name: "Dashboard", href: "/", icon: <LayoutDashboard size={20} className="shrink-0" /> },
   { name: "Báo Cáo Tuần", href: "/weekly", icon: <FileSpreadsheet size={20} className="shrink-0" /> },
   { name: "Báo Cáo Tháng", href: "/monthly", icon: <FileBarChart size={20} className="shrink-0" /> },
+  { name: "Đánh Giá Nhân Sự", href: "/evaluation/dashboard", icon: <ClipboardCheck size={20} className="shrink-0" /> },
   { name: "Quy Định & Nội Quy", href: "/rules", icon: <BookOpen size={20} className="shrink-0" /> },
 ];
+
 
 export default function Sidebar() {
   const pathname = usePathname();
