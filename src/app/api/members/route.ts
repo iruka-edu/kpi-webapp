@@ -1,19 +1,23 @@
 /**
- * API /api/members — Trả danh sách nhân viên active từ Discord Bot
+ * API /api/members — Trả danh sách nhân viên active
  * -----------------------------------------------------------------
- * Luồng:
- *   GET /api/members (header: x-dashboard-auth)
- *   → Đọc MEMBERS_JSON_PATH (file discord-bot/data/members.json)
- *   → Trả [{name, username, discordId, dept, joinedAt, managerName, managerDiscordId}]
+ * Luồng (ưu tiên theo thứ tự):
+ *   1. BOT_MEMBERS_API_URL có → gọi Discord Bot API trên GCP (real-time)
+ *   2. Fallback → đọc MEMBERS_JSON_PATH (local file, dev only)
  *
- * Bảo mật: Yêu cầu x-dashboard-auth khớp DASHBOARD_PASSWORD trong .env
- * Chỉ trả nhân viên đang active (active !== false)
+ * Auth (vào route này):
+ *   - x-dashboard-auth header khớp DASHBOARD_PASSWORD
+ *   - HOẶC token + hr_discord_id trên URL (link từ Discord bot)
+ *
+ * Auth (gọi ra Bot API):
+ *   - Header x-api-key: BOT_MEMBERS_API_KEY (shared secret với discord-bot)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac } from 'crypto';
 import fs from 'fs';
 
-// Cấu trúc 1 record nhân viên trong members.json
+// ── Cấu trúc nhân viên trả về ─────────────────────────────────
 interface MemberRecord {
   username: string;
   discordId: string;
@@ -28,9 +32,7 @@ interface MemberRecord {
   _meta?: boolean;
 }
 
-import { createHmac } from 'crypto';
-
-// Kiểm tra token eval hợp lệ (dùng cùng logic với discord-bot/commands/evaluation.js)
+// ── Xác thực token eval từ link Discord bot ───────────────────
 function isValidEvalToken(token: string | null, discordId: string | null): boolean {
   if (!token || !discordId) return false;
   const secret = process.env.EVALUATION_TOKEN_SECRET || process.env.KPI_TOKEN_SECRET || '';
@@ -39,8 +41,47 @@ function isValidEvalToken(token: string | null, discordId: string | null): boole
   return token === expected;
 }
 
+// ── Đọc file members.json local (fallback cho dev) ────────────
+function loadFromFile(): { members: object[] } | null {
+  const membersPath = process.env.MEMBERS_JSON_PATH;
+  if (!membersPath) return null;
+
+  try {
+    const rawData: Record<string, MemberRecord> = JSON.parse(fs.readFileSync(membersPath, 'utf8'));
+
+    const members = Object.values(rawData)
+      .filter((m): m is MemberRecord => !!m.discordId && m.active !== false && !m._meta)
+      .map((m) => {
+        let managerName      = m.managerName      || '';
+        let managerDiscordId = m.managerDiscordId || '';
+
+        if (m.managerUsername && !managerDiscordId) {
+          const mgr = Object.values(rawData).find(x => x.username === m.managerUsername);
+          if (mgr) {
+            managerName      = mgr.name      || m.managerUsername;
+            managerDiscordId = mgr.discordId || '';
+          }
+        }
+
+        return {
+          name: m.name || '', username: m.username || '',
+          discordId: m.discordId, dept: m.dept || '',
+          contractType: m.contractType || 'fulltime',
+          joinedAt: m.joinedAt || null,
+          managerName, managerDiscordId,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+
+    return { members };
+  } catch {
+    return null;
+  }
+}
+
+// ── Main handler ──────────────────────────────────────────────
 export async function GET(req: NextRequest) {
-  // ── Xác thực: chấp nhận Dashboard Password HOẶC Eval Token ────
+  // Xác thực inbound (ai được gọi route này)
   const auth      = req.headers.get('x-dashboard-auth');
   const evalToken = req.nextUrl.searchParams.get('token') || req.headers.get('x-eval-token');
   const hrId      = req.nextUrl.searchParams.get('hr_discord_id');
@@ -52,64 +93,40 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // ── Ưu tiên 1: Gọi Discord Bot API trên GCP (real-time) ──────
+  const botApiUrl = process.env.BOT_MEMBERS_API_URL;   // VD: http://34.28.61.240:3101
+  const botApiKey = process.env.BOT_MEMBERS_API_KEY;
 
-  // ── Kiểm tra biến môi trường đường dẫn file ───────────────────
-  const membersPath = process.env.MEMBERS_JSON_PATH;
-  if (!membersPath) {
-    return NextResponse.json(
-      { error: 'MEMBERS_JSON_PATH chưa được cấu hình trong .env.local' },
-      { status: 500 }
-    );
-  }
+  if (botApiUrl && botApiKey) {
+    try {
+      const res = await fetch(`${botApiUrl}/members`, {
+        headers: { 'x-api-key': botApiKey },
+        // Timeout 5s — nếu GCP chậm thì fallback xuống file
+        signal: AbortSignal.timeout(5000),
+      });
 
-  // ── Đọc và parse members.json ──────────────────────────────────
-  let rawData: Record<string, MemberRecord>;
-  try {
-    const raw = fs.readFileSync(membersPath, 'utf8');
-    rawData = JSON.parse(raw);
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json(
-      { error: `Không thể đọc file nhân viên: ${msg}` },
-      { status: 500 }
-    );
-  }
-
-  // ── Lọc + map sang format phản hồi ────────────────────────────
-  const members = Object.values(rawData)
-    .filter(
-      (m): m is MemberRecord =>
-        !!m.discordId && // có Discord ID
-        m.active !== false && // đang active
-        !m._meta // không phải metadata
-    )
-    .map((m) => {
-      // Tra cứu thông tin quản lý nếu chỉ có managerUsername
-      let managerName = m.managerName || '';
-      let managerDiscordId = m.managerDiscordId || '';
-
-      if (m.managerUsername && !managerDiscordId) {
-        const mgr = Object.values(rawData).find(
-          (x) => x.username === m.managerUsername
-        );
-        if (mgr) {
-          managerName = mgr.name || m.managerUsername;
-          managerDiscordId = mgr.discordId || '';
-        }
+      if (res.ok) {
+        const data = await res.json();
+        // Đánh dấu source để debug
+        return NextResponse.json({ ...data, _source: 'bot-api' });
       }
+      // Bot trả lỗi → fallback xuống file
+      console.warn(`[/api/members] Bot API trả ${res.status} → fallback file`);
+    } catch (e) {
+      // Timeout hoặc network lỗi → fallback
+      console.warn('[/api/members] Bot API timeout/error → fallback file:', (e as Error).message);
+    }
+  }
 
-      return {
-        name: m.name || '',
-        username: m.username || '',
-        discordId: m.discordId,
-        dept: m.dept || '',
-        contractType: m.contractType || 'fulltime',
-        joinedAt: m.joinedAt || null, // null nếu chưa có dữ liệu
-        managerName,
-        managerDiscordId,
-      };
-    })
-    .sort((a, b) => a.name.localeCompare(b.name, 'vi')); // Sắp xếp theo tên tiếng Việt
+  // ── Ưu tiên 2: Fallback đọc file local ───────────────────────
+  const fileData = loadFromFile();
+  if (fileData) {
+    return NextResponse.json({ ...fileData, _source: 'local-file' });
+  }
 
-  return NextResponse.json({ members });
+  // ── Không có nguồn nào ────────────────────────────────────────
+  return NextResponse.json(
+    { error: 'Không thể lấy dữ liệu nhân viên. Cấu hình BOT_MEMBERS_API_URL hoặc MEMBERS_JSON_PATH.' },
+    { status: 503 }
+  );
 }
