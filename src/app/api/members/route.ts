@@ -28,12 +28,30 @@ interface MemberRecord {
   _meta?: boolean;
 }
 
+import { createHmac } from 'crypto';
+
+// Kiểm tra token eval hợp lệ (dùng cùng logic với discord-bot/commands/evaluation.js)
+function isValidEvalToken(token: string | null, discordId: string | null): boolean {
+  if (!token || !discordId) return false;
+  const secret = process.env.EVALUATION_TOKEN_SECRET || process.env.KPI_TOKEN_SECRET || '';
+  if (!secret) return false;
+  const expected = createHmac('sha256', secret).update(discordId).digest('hex');
+  return token === expected;
+}
+
 export async function GET(req: NextRequest) {
-  // ── Xác thực bằng Dashboard Password ──────────────────────────
-  const auth = req.headers.get('x-dashboard-auth');
-  if (!auth || auth !== process.env.DASHBOARD_PASSWORD) {
+  // ── Xác thực: chấp nhận Dashboard Password HOẶC Eval Token ────
+  const auth      = req.headers.get('x-dashboard-auth');
+  const evalToken = req.nextUrl.searchParams.get('token') || req.headers.get('x-eval-token');
+  const hrId      = req.nextUrl.searchParams.get('hr_discord_id');
+
+  const validDashboard = auth && auth === process.env.DASHBOARD_PASSWORD;
+  const validEvalToken = isValidEvalToken(evalToken, hrId);
+
+  if (!validDashboard && !validEvalToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
 
   // ── Kiểm tra biến môi trường đường dẫn file ───────────────────
   const membersPath = process.env.MEMBERS_JSON_PATH;

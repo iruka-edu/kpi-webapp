@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, Loader2, Plus, Send } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 const MANAGER_LIST = [
   { name: 'CEO (Mr. Đào)', discord_id: process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '' },
@@ -67,6 +68,12 @@ interface HrInitFormProps {
 }
 
 export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFormProps) {
+  // Đọc token và hr_discord_id từ URL (khi HR mở link từ Discord bot)
+  const searchParams = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search)
+    : null;
+  const urlToken = searchParams?.get('token') || '';
+  const urlHrId  = searchParams?.get('hr_discord_id') || hrDiscordId;
   const [form, setForm] = useState<FormData>({
     name: '',
     discord_id: '',
@@ -93,19 +100,24 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
   const pickerRef = useRef<HTMLDivElement>(null);
 
   // Load danh sách nhân viên từ /api/members khi form mount
+  // Ưu tiên auth bằng token URL (mở từ Discord), fallback sang dashboardPassword
   useEffect(() => {
-    if (!dashboardPassword) return;
     setLoadingMembers(true);
-    fetch('/api/members', {
-      headers: { 'x-dashboard-auth': dashboardPassword },
-    })
+    const fetchUrl = urlToken && urlHrId
+      ? `/api/members?token=${encodeURIComponent(urlToken)}&hr_discord_id=${encodeURIComponent(urlHrId)}`
+      : '/api/members';
+    const headers: Record<string, string> = {};
+    if (!urlToken && dashboardPassword) headers['x-dashboard-auth'] = dashboardPassword;
+
+    fetch(fetchUrl, { headers })
       .then(r => r.json())
       .then(data => {
         if (data.members) setMemberList(data.members);
       })
-      .catch(() => { /* Không block form nếu load lỗi */ })
+      .catch(() => {})
       .finally(() => setLoadingMembers(false));
-  }, [dashboardPassword]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -238,103 +250,7 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
         </div>
       )}
 
-      {/* ── EMPLOYEE PICKER — Chọn nhân viên từ Discord ─────────── */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#3b82f6]/30 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#eff6ff] to-[#f8fafc] px-5 py-3 border-b border-[#3b82f6]/20 flex items-center gap-2">
-          <span className="text-lg">🔍</span>
-          <span className="text-[15px] font-black text-[#1e3a5f] uppercase tracking-wide">Chọn Nhân Viên</span>
-          {loadingMembers && <Loader2 size={14} className="animate-spin text-blue-500 ml-1" />}
-          {memberList.length > 0 && !loadingMembers && (
-            <span className="ml-auto text-[11px] text-slate-400 font-medium">{memberList.length} nhân viên active</span>
-          )}
-        </div>
-        <div className="p-5">
-          <p className="text-[12px] text-slate-500 mb-3">
-            Chọn nhân viên từ hệ thống Discord — thông tin sẽ tự động điền vào form bên dưới.
-          </p>
-          <div ref={pickerRef} className="relative">
-            {/* Search input */}
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true); }}
-                onFocus={() => setShowDropdown(true)}
-                placeholder={loadingMembers ? 'Đang tải danh sách...' : 'Tìm kiếm tên nhân viên...'}
-                disabled={loadingMembers}
-                className="w-full font-sans text-[13px] border-[1.5px] border-[#d1d5db] rounded-[8px] px-[12px] py-[10px] pr-[36px] outline-none text-[#111] font-medium bg-white focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 transition-all disabled:opacity-60"
-              />
-              {selectedMember && (
-                <button
-                  type="button"
-                  onClick={() => { setSelectedMember(null); setSearchQuery(''); setForm(prev => ({ ...prev, name: '', discord_id: '', dept: '', trial_start: '' })); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-400 transition-colors text-lg"
-                  title="Xóa chọn"
-                >×</button>
-              )}
-            </div>
 
-            {/* Dropdown list */}
-            {showDropdown && !loadingMembers && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-[#d1d5db] rounded-[8px] shadow-lg max-h-56 overflow-y-auto">
-                {memberList
-                  .filter(m =>
-                    !searchQuery ||
-                    m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    m.dept.toLowerCase().includes(searchQuery.toLowerCase())
-                  )
-                  .map(member => (
-                    <button
-                      key={member.discordId}
-                      type="button"
-                      onClick={() => selectEmployee(member)}
-                      className="w-full text-left px-4 py-3 hover:bg-[#eff6ff] transition-colors border-b border-[#f1f5f9] last:border-0 flex items-center gap-3"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center text-[#1e3a5f] font-black text-[12px] shrink-0">
-                        {member.name.split(' ').pop()?.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-semibold text-slate-800 truncate">{member.name}</div>
-                        <div className="text-[11px] text-slate-400 flex gap-2">
-                          <span className="bg-[#e0f2fe] text-[#0369a1] px-1.5 py-0.5 rounded font-medium">{member.dept}</span>
-                          {member.managerName && <span>QL: {member.managerName}</span>}
-                        </div>
-                      </div>
-                      {member.joinedAt && (
-                        <div className="text-[10px] text-slate-400 shrink-0">
-                          {new Date(member.joinedAt).toLocaleDateString('vi-VN')}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                {memberList.filter(m =>
-                  !searchQuery ||
-                  m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  m.dept.toLowerCase().includes(searchQuery.toLowerCase())
-                ).length === 0 && (
-                  <div className="px-4 py-3 text-[13px] text-slate-400 text-center">Không tìm thấy nhân viên</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Preview thông tin đã chọn */}
-          {selectedMember && (
-            <div className="mt-3 bg-[#f0f9ff] border border-[#bae6fd] rounded-[8px] px-4 py-3 flex flex-wrap gap-4 text-[12px]">
-              <span className="text-slate-600">✅ <strong className="text-[#1e3a5f]">{selectedMember.name}</strong></span>
-              <span className="text-slate-500">🏢 {selectedMember.dept}</span>
-              {selectedMember.managerName && <span className="text-slate-500">👤 QL: {selectedMember.managerName}</span>}
-              {selectedMember.joinedAt && <span className="text-slate-500">📅 Ngày vào: {new Date(selectedMember.joinedAt).toLocaleDateString('vi-VN')}</span>}
-            </div>
-          )}
-
-          {memberList.length === 0 && !loadingMembers && (
-            <p className="text-[11px] text-amber-600 mt-2">
-              ⚠️ Không tải được danh sách nhân viên. Vui lòng điền thông tin thủ công bên dưới.
-            </p>
-          )}
-        </div>
-      </div>
 
       {/* ── 1. THÔNG TIN CHUNG ── */}
       <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
@@ -344,9 +260,84 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
         </div>
         <div className="p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-[#6b7280] uppercase tracking-[0.04em]">Họ và tên NV <span className="text-[#dc2626]">*</span></label>
-              <input type="text" required value={form.name} onChange={e => setField('name', e.target.value)} placeholder="VD: Nguyễn Văn A" className="font-sans text-[13px] border-[1.5px] border-[#d1d5db] rounded-[6px] px-[10px] py-[8px] outline-none text-[#111] font-medium bg-white focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 transition-all w-full" />
+            {/* ── Ô Họ và Tên NV — tích hợp Employee Picker ── */}
+            <div className="flex flex-col gap-1.5" ref={pickerRef}>
+              <label className="text-[11px] font-bold text-[#6b7280] uppercase tracking-[0.04em] flex items-center gap-1.5">
+                Họ và tên NV <span className="text-[#dc2626]">*</span>
+                {loadingMembers && <Loader2 size={11} className="animate-spin text-blue-400" />}
+                {memberList.length > 0 && !loadingMembers && (
+                  <span className="ml-auto text-[10px] text-slate-400 font-normal normal-case tracking-normal">{memberList.length} nhân viên</span>
+                )}
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={searchQuery || form.name}
+                  onChange={e => { setSearchQuery(e.target.value); setForm(prev => ({ ...prev, name: e.target.value })); setShowDropdown(true); }}
+                  onFocus={() => { if (memberList.length > 0) setShowDropdown(true); }}
+                  placeholder={loadingMembers ? 'Đang tải danh sách...' : 'Gõ tên hoặc chọn từ danh sách...'}
+                  className="font-sans text-[13px] border-[1.5px] border-[#d1d5db] rounded-[6px] px-[10px] py-[8px] pr-[28px] outline-none text-[#111] font-medium bg-white focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 transition-all w-full"
+                />
+                {selectedMember && (
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedMember(null); setSearchQuery(''); setForm(prev => ({ ...prev, name: '', discord_id: '', dept: '', trial_start: '' })); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-400 transition-colors text-base leading-none"
+                    title="Xóa chọn"
+                  >×</button>
+                )}
+                {/* Dropdown danh sách nhân viên */}
+                {showDropdown && !loadingMembers && memberList.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-[#d1d5db] rounded-[8px] shadow-lg max-h-52 overflow-y-auto">
+                    {memberList
+                      .filter(m =>
+                        !searchQuery ||
+                        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        m.dept.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map(member => (
+                        <button
+                          key={member.discordId}
+                          type="button"
+                          onClick={() => selectEmployee(member)}
+                          className="w-full text-left px-3 py-2.5 hover:bg-[#eff6ff] transition-colors border-b border-[#f1f5f9] last:border-0 flex items-center gap-2.5"
+                        >
+                          <div className="w-7 h-7 rounded-full bg-[#1e3a5f]/10 flex items-center justify-center text-[#1e3a5f] font-black text-[11px] shrink-0">
+                            {member.name.split(' ').pop()?.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[13px] font-semibold text-slate-800 truncate">{member.name}</div>
+                            <div className="text-[11px] text-slate-400 flex gap-1.5">
+                              <span className="bg-[#e0f2fe] text-[#0369a1] px-1.5 py-0.5 rounded font-medium">{member.dept}</span>
+                              {member.managerName && <span>QL: {member.managerName}</span>}
+                            </div>
+                          </div>
+                          {member.joinedAt && (
+                            <div className="text-[10px] text-slate-400 shrink-0">
+                              {new Date(member.joinedAt).toLocaleDateString('vi-VN')}
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    {memberList.filter(m =>
+                      !searchQuery ||
+                      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      m.dept.toLowerCase().includes(searchQuery.toLowerCase())
+                    ).length === 0 && (
+                      <div className="px-4 py-3 text-[13px] text-slate-400 text-center">Không tìm thấy nhân viên</div>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Preview mini khi đã chọn */}
+              {selectedMember && (
+                <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 mt-0.5">
+                  <span className="bg-[#f0f9ff] border border-[#bae6fd] rounded px-2 py-0.5">🏢 {selectedMember.dept}</span>
+                  {selectedMember.managerName && <span className="bg-[#f0f9ff] border border-[#bae6fd] rounded px-2 py-0.5">👤 {selectedMember.managerName}</span>}
+                  {selectedMember.joinedAt && <span className="bg-[#f0f9ff] border border-[#bae6fd] rounded px-2 py-0.5">📅 {new Date(selectedMember.joinedAt).toLocaleDateString('vi-VN')}</span>}
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[#6b7280] uppercase tracking-[0.04em]">Discord ID <span className="text-[#dc2626]">*</span></label>
