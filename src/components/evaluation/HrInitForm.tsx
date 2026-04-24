@@ -424,8 +424,13 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-dashed border-[#d1d5db] undefined text-[#6b7280] italic flex items-center gap-1.5">
-            <span>📅 Ngày thực hiện đánh giá:</span>
-            <strong className="text-[#1e3a5f] not-italic">{form.eval_date}</strong>
+            <span>📅 Ngày khởi tạo đánh giá:</span>
+            <strong className="text-[#1e3a5f] not-italic">
+              {form.eval_date ? (() => {
+                const [y, m, d] = form.eval_date.split('-');
+                return `Ngày ${d} tháng ${m} năm ${y}`;
+              })() : '--'}
+            </strong>
           </div>
         </div>
       </div>
