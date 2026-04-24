@@ -483,7 +483,7 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
                     />
                   </td>
                   <td className="border border-[#d1d5db] p-[6px] bg-[#f9fafb]">
-                    <div className="text-[11px] text-[#9ca3af] italic px-1">Nhân viên tự điền...</div>
+                    <div className="text-[11px] text-[#9ca3af] italic px-1">Nhân viên tự đánh giá, cho thang điểm và giải thích...</div>
                   </td>
                   <td className="border border-[#d1d5db] p-[6px] text-center">
                     <button
