@@ -822,17 +822,17 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
       </div>
 
       {/* ── BOTTOM BAR (FIXED) ── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-[2px] border-[#1e3a5f] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] px-6 py-3 flex justify-between items-center z-50">
-        <div className="hidden md:flex items-center gap-4 undefined text-[#6b7280]">
-          <div>Đang khởi tạo: <strong className="text-[#1e3a5f] undefined">{form.name || '(Chưa nhập tên)'}</strong></div>
+      <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-white border-t-[2px] border-[#1e3a5f] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] px-6 py-3 flex justify-end items-center gap-8 z-50 transition-all duration-300">
+        <div className="hidden md:flex items-center gap-4 text-sm text-[#6b7280] bg-[#f8fafc] px-4 py-1.5 rounded-full border border-[#e2e8f0]">
+          <div>Đang khởi tạo: <strong className="text-[#1e3a5f] text-sm">{form.name || '(Chưa nhập tên)'}</strong></div>
           <div className="w-[4px] h-[4px] rounded-full bg-[#d1d5db]"></div>
-          <div>Bộ phận: <strong className="text-[#1e3a5f]">{form.dept || '--'}</strong></div>
+          <div>Bộ phận: <strong className="text-[#1e3a5f] text-sm">{form.dept || '--'}</strong></div>
         </div>
         <div className="flex gap-2 w-full md:w-auto justify-end">
           <button
             type="submit"
             disabled={status === 'submitting'}
-            className="w-full md:w-auto px-8 py-2.5 bg-gradient-to-br from-[#3b82f6] to-[#1e3a5f] text-white rounded-[10px] font-black undefined border-b-[4px] border-[#1e3a5f] shadow-[0_8px_20px_rgba(59,130,246,0.5)] hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
+            className="w-full md:w-auto px-8 py-2.5 bg-gradient-to-br from-[#3b82f6] to-[#1e3a5f] text-white rounded-[10px] font-black text-[15px] border-b-[4px] border-[#1e3a5f] shadow-[0_8px_20px_rgba(59,130,246,0.5)] hover:scale-[1.03] active:scale-[0.98] transition-all disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
           >
             {status === 'submitting' ? (
               <><Loader2 size={18} className="animate-spin" /> Đang xử lý...</>
