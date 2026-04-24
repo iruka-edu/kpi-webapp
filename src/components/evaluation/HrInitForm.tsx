@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CheckCircle, Loader2, PlusCircle, Send, Trash2 } from 'lucide-react';
+import { CheckCircle, Loader2, Plus, PlusCircle, Send, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 const MANAGER_LIST = [
