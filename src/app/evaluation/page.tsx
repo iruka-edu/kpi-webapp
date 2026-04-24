@@ -99,7 +99,12 @@ function EvaluationContent() {
         }
 
         setEvalInfo(data.info);
-        setWorkRows(data.work_items || []);
+        const workItems: WorkRow[] = data.work_items || [];
+        // Khi luồng rút gọn (MGR=CEO) mà HR chưa điền sẵn → tạo 1 dòng trống để NV bắt đầu
+        setWorkRows(isCeoDirect && workItems.length === 0
+          ? [{ stt: 1, area: '', detail: '', result: '' } as WorkRow]
+          : workItems
+        );
         setCriteria(data.criteria || []);
         setScreen('form');
       } catch (err: any) {
@@ -126,6 +131,10 @@ function EvaluationContent() {
     const missingScores = criteria.filter((_, i) => !selfScores[i]);
     if (missingScores.length > 0) {
       showToast(`Vui lòng chấm điểm cho tất cả ${criteria.length} tiêu chí`, 'error');
+      return;
+    }
+    if (isCeoDirect && workRows.length === 0) {
+      showToast('Vui lòng thêm ít nhất 1 công việc đã làm', 'error');
       return;
     }
     const missingWork = workRows.filter(r => !r.result.trim());
@@ -290,8 +299,18 @@ function EvaluationContent() {
           <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
             <span className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-xs font-bold">2</span>
             Tổng Kết Công Việc
-            <span className="text-xs font-normal text-slate-400 ml-1">— Điền kết quả thực tế bạn đã làm được</span>
+            <span className="text-xs font-normal text-slate-400 ml-1">
+              {isCeoDirect ? '— Điền công việc đã làm + kết quả thực tế' : '— Điền kết quả thực tế bạn đã làm được'}
+            </span>
           </h2>
+          {isCeoDirect && (
+            <p className="text-xs text-amber-300 mb-3 flex items-center gap-1.5">
+              <span>ℹ️</span>
+              {workRows.some(r => (r as any).detail?.trim())
+                ? 'HR đã điền sẵn danh sách công việc — bạn điền kết quả thực tế vào cột cuối.'
+                : 'Quản lý trực tiếp của bạn là CEO — bạn cần tự điền công việc đã làm trong thời gian thử việc.'}
+            </p>
+          )}
           <WorkSummaryTable
             rows={workRows}
             onChange={setWorkRows}

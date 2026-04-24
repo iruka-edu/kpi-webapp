@@ -194,21 +194,24 @@ function now()     { return new Date().toISOString(); }
 
 // ============================================================
 //  ACTION 1: init_evaluation — HR tạo phiếu mới
-//  Status: (new) → INIT → MGR_PENDING
-//  Notify: Quản lý nhận link mgr-fill + CC CEO
+//  Status: (new) → MGR_PENDING  |  hoặc NV_PENDING khi is_ceo_direct
+//  Notify: QL nhận link mgr-fill  |  hoặc NV nhận link trực tiếp
 // ============================================================
 function initEvaluation(d) {
   var evalId = generateId();
   var sh = getSheet(SHEET_EVAL);
   var ts = now();
+  var ceoId = prop('CEO_DISCORD_ID');
+  // Luồng rút gọn khi Quản lý trực tiếp chính là CEO
+  var isCeoDirect = !!(d.manager_discord_id && ceoId && d.manager_discord_id === ceoId);
 
   // Ghi row chính
   sh.appendRow([
     evalId, d.name, d.discord_id, d.dept, d.role,
     d.manager_name, d.manager_discord_id, d.hr_discord_id,
     d.trial_start, d.trial_end || '', d.eval_date,
-    'MGR_PENDING', '', '', '', '',
-    ts, ts, '', '', '', '', '', ''
+    isCeoDirect ? 'NV_PENDING' : 'MGR_PENDING', '', '', '', '',
+    ts, isCeoDirect ? '' : ts, isCeoDirect ? ts : '', '', '', '', '', ''
   ]);
 
   // Ghi tiêu chí mẫu HR điền (nếu có)
@@ -219,19 +222,42 @@ function initEvaluation(d) {
     });
   }
 
-  // Thông báo QL
-  var link = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
-  var embed = makeEmbed(
-    '📋 Phiếu Đánh Giá Thử Việc Mới',
-    '**' + d.name + '** (' + d.dept + ' — ' + d.role + ')\nNgày đánh giá: ' + d.eval_date,
-    0x3B82F6,
-    [{ name: 'HR tạo', value: '<@' + d.hr_discord_id + '>', inline: true }],
-    link, 'Điền công việc & tiêu chí'
-  );
-  notifyDiscord(d.manager_discord_id, embed, d.hr_discord_id);
-  // CC CEO — lấy CEO_DISCORD_ID từ script property
-  var ceoId = prop('CEO_DISCORD_ID');
-  if (ceoId) notifyDiscord(ceoId, makeEmbed('📋 [CC] Phiếu mới: ' + d.name, 'HR vừa tạo phiếu đánh giá thử việc cho **' + d.name + '**. Quản lý đang điền công việc.', 0x94A3B8), null);
+  // Ghi công việc HR điền sẵn trong luồng rút gọn (nếu có)
+  if (isCeoDirect && d.work_summary && d.work_summary.length > 0) {
+    var wsh = getSheet(SHEET_WORK);
+    d.work_summary.forEach(function(w, i) {
+      wsh.appendRow([evalId, i+1, w.area||'', w.detail||'', '']);
+    });
+  }
+
+  if (isCeoDirect) {
+    // Luồng rút gọn: skip MGR-fill, gửi link tự đánh giá thẳng cho NV
+    var nvLink = buildLink('/evaluation', evalId, d.discord_id) + '&is_ceo_direct=1';
+    notifyDiscord(d.discord_id,
+      makeEmbed('📝 Bạn Có Phiếu Tự Đánh Giá',
+        'HR vừa tạo phiếu đánh giá thử việc cho bạn.\nVui lòng vào form điền công việc đã làm và tự đánh giá.',
+        0xF59E0B, [], nvLink, 'Tự đánh giá ngay'),
+      d.hr_discord_id);
+    if (ceoId) notifyDiscord(ceoId,
+      makeEmbed('📋 [CC] Phiếu mới: ' + d.name,
+        '**' + d.name + '** vừa nhận link tự đánh giá. Bạn sẽ được thông báo khi NV nộp xong.',
+        0x94A3B8), null);
+  } else {
+    // Luồng thường: thông báo QL điền công việc
+    var link = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
+    var embed = makeEmbed(
+      '📋 Phiếu Đánh Giá Thử Việc Mới',
+      '**' + d.name + '** (' + d.dept + ' — ' + d.role + ')\nNgày đánh giá: ' + d.eval_date,
+      0x3B82F6,
+      [{ name: 'HR tạo', value: '<@' + d.hr_discord_id + '>', inline: true }],
+      link, 'Điền công việc & tiêu chí'
+    );
+    notifyDiscord(d.manager_discord_id, embed, d.hr_discord_id);
+    if (ceoId) notifyDiscord(ceoId,
+      makeEmbed('📋 [CC] Phiếu mới: ' + d.name,
+        'HR vừa tạo phiếu đánh giá thử việc cho **' + d.name + '**. Quản lý đang điền công việc.',
+        0x94A3B8), null);
+  }
 
   return { success: true, eval_id: evalId };
 }
@@ -277,47 +303,68 @@ function mgrFill(d) {
 // ============================================================
 //  ACTION 3: nv_submit — NV nộp tự đánh giá
 //  Status: NV_PENDING → SUBMITTED
-//  Notify: QL nhận thông báo + CC HR
+//  Notify: QL nhận thông báo  |  hoặc CEO nhận link ceo-review
 // ============================================================
 function nvSubmit(d) {
   var evalId = d.eval_id;
+  var ceoId  = prop('CEO_DISCORD_ID');
+  var evalObj = getEvalObj(evalId);
+  var isCeoDirect = !!(evalObj && ceoId && evalObj.manager_discord_id === ceoId);
 
-  // Cập nhật kết quả thực tế vào work_summary
+  // ── Work summary ──────────────────────────────────────────────
   var wsh = getSheet(SHEET_WORK);
-  var wRows = wsh.getDataRange().getValues();
-  var wHeaders = wRows[0];
-  (d.work_summary || []).forEach(function(w) {
-    for (var i = 1; i < wRows.length; i++) {
-      if (wRows[i][wHeaders.indexOf('eval_id')] === evalId &&
-          wRows[i][wHeaders.indexOf('stt')]     === w.stt) {
-        wsh.getRange(i+1, wHeaders.indexOf('result')+1).setValue(w.result);
+  if (isCeoDirect) {
+    // NV tự điền toàn bộ công việc từ đầu → xóa cũ + insert mới
+    deleteRowsByEvalId(SHEET_WORK, evalId);
+    (d.work_summary || []).forEach(function(w, i) {
+      wsh.appendRow([evalId, i+1, w.area||'', w.detail||'', w.result||'']);
+    });
+  } else {
+    // Luồng thường: chỉ cập nhật cột result
+    var wRows = wsh.getDataRange().getValues();
+    var wHeaders = wRows[0];
+    (d.work_summary || []).forEach(function(w) {
+      for (var i = 1; i < wRows.length; i++) {
+        if (wRows[i][wHeaders.indexOf('eval_id')] === evalId &&
+            wRows[i][wHeaders.indexOf('stt')]     === w.stt) {
+          wsh.getRange(i+1, wHeaders.indexOf('result')+1).setValue(w.result);
+        }
       }
-    }
-  });
+    });
+  }
 
-  // Cập nhật điểm tự chấm + thêm tiêu chí NV thêm mới
+  // ── Criteria ──────────────────────────────────────────────────
   var csh = getSheet(SHEET_CRITERIA);
-  var cRows = csh.getDataRange().getValues();
-  var cHeaders = cRows[0];
-  (d.criteria_scores || []).forEach(function(cs) {
-    for (var i = 1; i < cRows.length; i++) {
-      if (cRows[i][cHeaders.indexOf('eval_id')] === evalId &&
-          cRows[i][cHeaders.indexOf('stt')]     === cs.stt) {
-        csh.getRange(i+1, cHeaders.indexOf('self_score')+1).setValue(cs.self_score);
-        if (cs.note) csh.getRange(i+1, cHeaders.indexOf('note')+1).setValue(cs.note);
+  var existingCriteria = findByEvalId(SHEET_CRITERIA, evalId);
+  if (isCeoDirect && existingCriteria.length === 0) {
+    // HR chưa điền tiêu chí trước → NV tự điền toàn bộ
+    (d.criteria_scores || []).forEach(function(cs, i) {
+      csh.appendRow([evalId, i+1, cs.name||'', cs.expectation||'', cs.self_score||0, '', cs.note||'', 'nv_fill']);
+    });
+  } else {
+    // Luồng thường: cập nhật điểm tự chấm
+    var cRows = csh.getDataRange().getValues();
+    var cHeaders = cRows[0];
+    (d.criteria_scores || []).forEach(function(cs) {
+      for (var i = 1; i < cRows.length; i++) {
+        if (cRows[i][cHeaders.indexOf('eval_id')] === evalId &&
+            cRows[i][cHeaders.indexOf('stt')]     === cs.stt) {
+          csh.getRange(i+1, cHeaders.indexOf('self_score')+1).setValue(cs.self_score);
+          if (cs.note) csh.getRange(i+1, cHeaders.indexOf('note')+1).setValue(cs.note);
+        }
       }
-    }
-  });
-  // Tiêu chí NV thêm mới
-  var existingStts = cRows.slice(1)
-    .filter(function(r) { return r[cHeaders.indexOf('eval_id')] === evalId; })
-    .map(function(r) { return r[cHeaders.indexOf('stt')]; });
-  var maxStt = existingStts.length > 0 ? Math.max.apply(null, existingStts) : 0;
-  (d.criteria_new || []).forEach(function(cn, i) {
-    csh.appendRow([evalId, maxStt+i+1, cn.name, cn.expectation||'', cn.self_score||'', '', '', 'nv_added']);
-  });
+    });
+    // Tiêu chí NV thêm mới
+    var existingStts = cRows.slice(1)
+      .filter(function(r) { return r[cHeaders.indexOf('eval_id')] === evalId; })
+      .map(function(r) { return r[cHeaders.indexOf('stt')]; });
+    var maxStt = existingStts.length > 0 ? Math.max.apply(null, existingStts) : 0;
+    (d.criteria_new || []).forEach(function(cn, i) {
+      csh.appendRow([evalId, maxStt+i+1, cn.name, cn.expectation||'', cn.self_score||'', '', '', 'nv_added']);
+    });
+  }
 
-  // Đề xuất NV
+  // ── Đề xuất NV ───────────────────────────────────────────────
   if (d.proposals) {
     deleteRowsByEvalId(SHEET_PROPOSAL, evalId);
     getSheet(SHEET_PROPOSAL).appendRow([evalId, d.proposals.salary_expectation||'', d.proposals.training_request||'', d.proposals.feedback||'']);
@@ -325,11 +372,24 @@ function nvSubmit(d) {
 
   updateRow(SHEET_EVAL, 'id', evalId, { status: 'SUBMITTED', nv_pending_at: now(), submitted_at: now() });
 
-  var evalObj = getEvalObj(evalId);
-  var mgrLink = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
-  notifyDiscord(evalObj.manager_discord_id,
-    makeEmbed('✅ NV Đã Nộp Phiếu Tự Đánh Giá', '**' + evalObj.name + '** đã hoàn thành tự đánh giá. Vui lòng chấm điểm và đưa ra quyết định.', 0x8B5CF6, [], mgrLink, 'Chấm điểm & Quyết định'),
-    evalObj.hr_discord_id);
+  // ── Thông báo ─────────────────────────────────────────────────
+  if (isCeoDirect) {
+    // Luồng rút gọn: gửi CEO link ceo-review (HMAC token)
+    var ceoLink = buildLink('/evaluation/ceo', evalId, ceoId);
+    notifyDiscord(ceoId,
+      makeEmbed('✅ NV Đã Nộp Phiếu Tự Đánh Giá',
+        '**' + evalObj.name + '** đã hoàn thành tự đánh giá.\nVui lòng xem xét và phê duyệt.',
+        0x8B5CF6, [], ceoLink, 'Xem & Phê duyệt'),
+      evalObj.hr_discord_id);
+  } else {
+    // Luồng thường: gửi QL link mgr-review
+    var mgrLink = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
+    notifyDiscord(evalObj.manager_discord_id,
+      makeEmbed('✅ NV Đã Nộp Phiếu Tự Đánh Giá',
+        '**' + evalObj.name + '** đã hoàn thành tự đánh giá. Vui lòng chấm điểm và đưa ra quyết định.',
+        0x8B5CF6, [], mgrLink, 'Chấm điểm & Quyết định'),
+      evalObj.hr_discord_id);
+  }
 
   return { success: true };
 }
@@ -391,16 +451,35 @@ function ceoReview(d) {
   });
 
   var evalObj = getEvalObj(evalId);
-  var mgrLink = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
-  var title   = newStatus === 'COMPLETED' ? '✅ CEO Đã Phê Duyệt' : '🔄 CEO Yêu Cầu Xem Lại';
-  var desc    = newStatus === 'COMPLETED'
-    ? 'Phiếu của **' + evalObj.name + '** đã được CEO phê duyệt. Vui lòng gửi kết quả cho nhân viên.'
-    : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||'');
-  var color   = newStatus === 'COMPLETED' ? 0x22C55E : 0xF59E0B;
+  var ceoId   = prop('CEO_DISCORD_ID');
+  var isCeoDirect = !!(evalObj && ceoId && evalObj.manager_discord_id === ceoId);
 
-  notifyDiscord(evalObj.manager_discord_id,
-    makeEmbed(title, desc, color, [], mgrLink, 'Xem phiếu'),
-    evalObj.hr_discord_id);
+  if (isCeoDirect) {
+    // Luồng rút gọn: CEO đã đánh giá → notify HR + CC NV
+    var isApproved = (newStatus === 'PENDING_HR');
+    notifyDiscord(evalObj.hr_discord_id,
+      makeEmbed(
+        isApproved ? '✅ CEO Đã Đánh Giá Xong' : '🔄 CEO Yêu Cầu Xem Lại',
+        isApproved
+          ? 'CEO đã đánh giá xong phiếu **' + evalObj.name + '**. Vui lòng gửi kết quả cho nhân viên.'
+          : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||''),
+        isApproved ? 0x22C55E : 0xF59E0B, [], prop('WEBAPP_URL'), 'Xem dashboard'
+      ), null);
+    notifyDiscord(evalObj.discord_id,
+      makeEmbed('⏳ Phiếu Đang Chờ HR Xử Lý',
+        'CEO đã xem xét phiếu của bạn. HR sẽ gửi kết quả sớm.', 0x94A3B8), null);
+  } else {
+    // Luồng thường: notify QL
+    var mgrLink = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
+    var title   = newStatus === 'COMPLETED' ? '✅ CEO Đã Phê Duyệt' : '🔄 CEO Yêu Cầu Xem Lại';
+    var desc    = newStatus === 'COMPLETED'
+      ? 'Phiếu của **' + evalObj.name + '** đã được CEO phê duyệt. Vui lòng gửi kết quả cho nhân viên.'
+      : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||'');
+    var color   = newStatus === 'COMPLETED' ? 0x22C55E : 0xF59E0B;
+    notifyDiscord(evalObj.manager_discord_id,
+      makeEmbed(title, desc, color, [], mgrLink, 'Xem phiếu'),
+      evalObj.hr_discord_id);
+  }
 
   return { success: true, new_status: newStatus };
 }

@@ -1,1 +1,1 @@
-@AGENTS.md
+/Users/mr.dao/Desktop/WorkSpace/cong-nghe/CLAUDE.md
