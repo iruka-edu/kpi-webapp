@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // Validate các trường bắt buộc
-    const required = ['name', 'discord_id', 'dept', 'role', 'manager_name', 'manager_discord_id', 'trial_start', 'eval_date', 'hr_discord_id'];
+    const required = ['name', 'dept', 'manager_name', 'manager_discord_id', 'trial_start', 'eval_date', 'hr_discord_id'];
     for (const field of required) {
       if (!body[field]) {
         return NextResponse.json({ error: `Thiếu trường bắt buộc: ${field}` }, { status: 400 });

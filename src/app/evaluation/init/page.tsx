@@ -118,9 +118,6 @@ function EvaluationInitPageInner() {
               <h1 className="text-[26px] font-black text-[#1e3a5f] tracking-tight mb-1">
                 Đánh Giá Nhân Viên Sau Thử Việc
               </h1>
-              <p className="text-[13px] text-slate-500 font-medium">
-                Màn hình Khởi tạo (HR)
-              </p>
             </div>
           </div>
 

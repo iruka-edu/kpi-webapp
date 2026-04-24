@@ -345,10 +345,6 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-[13px] font-semibold text-slate-800 truncate">{member.name}</div>
-                            <div className="text-[11px] text-slate-400 flex gap-1.5">
-                              <span className="bg-[#e0f2fe] text-[#0369a1] px-1.5 py-0.5 rounded font-medium">{member.dept}</span>
-                              {member.managerName && <span>QL: {member.managerName}</span>}
-                            </div>
                           </div>
                           {member.joinedAt && (
                             <div className="text-[10px] text-slate-400 shrink-0">
@@ -370,23 +366,14 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
               {/* Preview mini khi đã chọn */}
               {selectedMember && (
                 <div className="flex flex-wrap gap-2 text-[11px] text-slate-500 mt-0.5">
-                  <span className="bg-[#f0f9ff] border border-[#bae6fd] rounded px-2 py-0.5">🏢 {selectedMember.dept}</span>
-                  {selectedMember.managerName && <span className="bg-[#f0f9ff] border border-[#bae6fd] rounded px-2 py-0.5">👤 {selectedMember.managerName}</span>}
                   {selectedMember.joinedAt && <span className="bg-[#f0f9ff] border border-[#bae6fd] rounded px-2 py-0.5">📅 {new Date(selectedMember.joinedAt).toLocaleDateString('vi-VN')}</span>}
                 </div>
               )}
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-[#6b7280] uppercase tracking-[0.04em]">Discord ID <span className="text-[#dc2626]">*</span></label>
-              <input type="text" required value={form.discord_id} onChange={e => setField('discord_id', e.target.value)} placeholder="123456789012345678" className="font-sans text-[13px] border-[1.5px] border-[#d1d5db] rounded-[6px] px-[10px] py-[8px] outline-none text-[#111] font-medium bg-white focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 transition-all w-full" />
-            </div>
+            {/* Discord ID và Vị trí đã được ẩn theo yêu cầu */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[#6b7280] uppercase tracking-[0.04em]">Bộ phận <span className="text-[#dc2626]">*</span></label>
               <input type="text" required value={form.dept} onChange={e => setField('dept', e.target.value)} placeholder="Kỹ thuật / Marketing / HCNS..." className="font-sans text-[13px] border-[1.5px] border-[#d1d5db] rounded-[6px] px-[10px] py-[8px] outline-none text-[#111] font-medium bg-white focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 transition-all w-full" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-bold text-[#6b7280] uppercase tracking-[0.04em]">Vị trí <span className="text-[#dc2626]">*</span></label>
-              <input type="text" required value={form.role} onChange={e => setField('role', e.target.value)} placeholder="Frontend Developer / Content..." className="font-sans text-[13px] border-[1.5px] border-[#d1d5db] rounded-[6px] px-[10px] py-[8px] outline-none text-[#111] font-medium bg-white focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 transition-all w-full" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-bold text-[#6b7280] uppercase tracking-[0.04em]">Ngày bắt đầu thử việc <span className="text-[#dc2626]">*</span></label>
