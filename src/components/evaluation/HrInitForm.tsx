@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CheckCircle, Loader2, Plus, Send } from 'lucide-react';
+import { CheckCircle, Loader2, PlusCircle, Send, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 const MANAGER_LIST = [
@@ -36,6 +36,13 @@ interface Criteria {
   group: string;
 }
 
+// Cấu trúc 1 đầu việc trong mục "Tổng kết công việc"
+interface WorkItem {
+  task: string;      // Mảng việc lớn
+  details: string;   // Chi tiết các đầu việc nhỏ
+  result: string;    // Kết quả tự đánh giá (NV điền sau)
+}
+
 interface FormData {
   name: string;
   discord_id: string;
@@ -48,6 +55,7 @@ interface FormData {
   eval_date: string;
   hr_discord_id: string;
   criteria: Criteria[];
+  work_items: WorkItem[];
 }
 
 // Cấu trúc 1 nhân viên từ /api/members
@@ -92,6 +100,10 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
     eval_date: new Date().toISOString().slice(0, 10),
     hr_discord_id: hrDiscordId,
     criteria: [...DEFAULT_CRITERIA],
+    work_items: [
+      { task: 'Nghiên cứu & nắm bắt sản phẩm', details: 'Tìm hiểu toàn bộ sản phẩm IruKa, quy trình nội bộ, công cụ AI sử dụng hàng ngày', result: '' },
+      { task: 'Thực hiện task được giao', details: 'Hoàn thành các đầu công việc được phân công trong giai đoạn thử việc', result: '' },
+    ],
   });
 
   // ── Sau khi component mount, fill form từ URL params (nếu có) ──
@@ -225,6 +237,25 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
     setForm(prev => ({
       ...prev,
       criteria: prev.criteria.map((c, i) => i === index ? { ...c, [field]: value } : c),
+    }));
+  };
+
+  // ── Hàm xử lý bảng Đầu Việc (Mục 2) ──────────────────────────
+  const addWorkItem = () => {
+    setForm(prev => ({ ...prev, work_items: [...prev.work_items, { task: '', details: '', result: '' }] }));
+  };
+
+  const removeWorkItem = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      work_items: prev.work_items.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateWorkItem = (index: number, field: keyof WorkItem, value: string) => {
+    setForm(prev => ({
+      ...prev,
+      work_items: prev.work_items.map((w, i) => i === index ? { ...w, [field]: value } : w),
     }));
   };
 
@@ -409,29 +440,82 @@ export default function HrInitForm({ hrDiscordId, dashboardPassword }: HrInitFor
         <span className="inline-flex items-center gap-1.5 text-[12px] font-bold"><span className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[11px] font-black text-white bg-[#16a34a]">5</span><span className="text-[#374151]">Xuất sắc</span></span>
       </div>
 
-      {/* ── 2. TỔNG KẾT CÔNG VIỆC (PREVIEW) ── */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden opacity-80 cursor-not-allowed grayscale-[20%]">
+      {/* ── 2. TỔNG KẾT CÔNG VIỆC — HR/Quản lý có thể thêm/sửa/xóa ── */}
+      <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
         <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
-          <span className="text-lg">🗂️</span>
-          <span className="text-[15px] font-black text-[#1e3a5f] uppercase tracking-wide">2. Tổng Kết Công Việc Thời Gian Thử Việc</span>
-          <span className="text-[11px] font-medium text-[#6b7280] ml-2">(Quản lý và Nhân viên điền phần này)</span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🗂️</span>
+            <span className="text-[15px] font-black text-[#1e3a5f] uppercase tracking-wide">2. Tổng Kết Công Việc Thời Gian Thử Việc</span>
+            <span className="text-[11px] font-medium text-[#6b7280] ml-2">(HR điền sẵn, Quản lý &amp; Nhân viên bổ sung sau)</span>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr>
                 <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[40px] text-center">STT</th>
-                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left">Mảng việc lớn</th>
-                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left">Chi tiết các đầu việc nhỏ</th>
-                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left">Kết quả tự đánh giá</th>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[200px]">Mảng việc lớn</th>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[260px]">Chi tiết các đầu việc nhỏ</th>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[160px] opacity-70">Kết quả tự đánh giá</th>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[44px] text-center">Xóa</th>
               </tr>
             </thead>
             <tbody>
+              {form.work_items.map((item, index) => (
+                <tr key={index} className="hover:bg-[#eff6ff] transition-colors">
+                  <td className="border border-[#d1d5db] p-[6px] text-center font-bold text-[#6b7280] w-[40px]">{index + 1}</td>
+                  <td className="border border-[#d1d5db] p-[6px]">
+                    <textarea
+                      rows={2}
+                      value={item.task}
+                      onChange={e => updateWorkItem(index, 'task', e.target.value)}
+                      placeholder="Nhập mảng việc lớn..."
+                      className="w-full font-sans text-[13px] border border-transparent hover:border-[#d1d5db] focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 rounded-[6px] p-[6px] outline-none text-[#111] font-bold bg-transparent focus:bg-white resize-y min-h-[44px] transition-all"
+                    />
+                  </td>
+                  <td className="border border-[#d1d5db] p-[6px]">
+                    <textarea
+                      rows={2}
+                      value={item.details}
+                      onChange={e => updateWorkItem(index, 'details', e.target.value)}
+                      placeholder="Ghi chi tiết các đầu việc nhỏ..."
+                      className="w-full font-sans text-[12px] border border-transparent hover:border-[#d1d5db] focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 rounded-[6px] p-[6px] outline-none text-[#111] bg-transparent focus:bg-white resize-y min-h-[44px] transition-all leading-relaxed"
+                    />
+                  </td>
+                  <td className="border border-[#d1d5db] p-[6px] bg-[#f9fafb]">
+                    <div className="text-[11px] text-[#9ca3af] italic px-1">Nhân viên tự điền...</div>
+                  </td>
+                  <td className="border border-[#d1d5db] p-[6px] text-center">
+                    <button
+                      type="button"
+                      onClick={() => removeWorkItem(index)}
+                      className="text-red-400 hover:text-red-700 p-2 transition-colors"
+                      title="Xóa đầu việc"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {form.work_items.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-slate-400 text-sm italic border border-[#d1d5db]">
+                    Chưa có đầu việc nào. Nhấn &quot;Thêm đầu việc&quot; để bắt đầu.
+                  </td>
+                </tr>
+              )}
+              {/* Nút thêm cuối bảng — đồng bộ với ReportGrid */}
               <tr>
-                <td className="border border-[#d1d5db] p-2 text-center font-bold text-[#6b7280] bg-[#f9fafb]">1</td>
-                <td className="border border-[#d1d5db] p-2 bg-[#f9fafb]"><div className="text-[#9ca3af] italic text-[12px]">Quản lý sẽ khởi tạo mảng việc...</div></td>
-                <td className="border border-[#d1d5db] p-2 bg-[#f9fafb]"><div className="text-[#9ca3af] italic text-[12px]">...</div></td>
-                <td className="border border-[#d1d5db] p-2 bg-[#f9fafb]"><div className="text-[#9ca3af] italic text-[12px]">Nhân viên tự điền...</div></td>
+                <td colSpan={5} className="border border-dashed border-blue-300 p-2 text-center bg-blue-50/20">
+                  <button
+                    type="button"
+                    onClick={addWorkItem}
+                    className="text-[#1e3a5f] hover:text-blue-800 font-semibold flex items-center justify-center gap-2 w-full py-1 text-xs"
+                  >
+                    <PlusCircle size={15} className="text-[#1e3a5f]" />
+                    Thêm đầu việc
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
