@@ -1,0 +1,270 @@
+# 🔍 AUDIT REPORT — Luồng Đánh Giá Nhân Sự (KPI Webapp)
+
+> **Ngày audit:** 2026-04-24 | **Auditor:** Antigravity  
+> **Module:** Toàn bộ luồng 6 bước (`/evaluation`, `/api/evaluation/*`)  
+> **Mục tiêu:** Phát hiện lỗi logic, edge case, phân quyền sai, và đề xuất sửa
+
+---
+
+## 1. Tổng Quan Module
+
+**Module làm gì:**  
+Hệ thống đánh giá nhân viên sau thử việc 6 bước: HR tạo phiếu → Quản lý điền công việc → NV tự đánh giá → Quản lý chấm → CEO duyệt → Gửi kết quả.
+
+**Actors:** HR | Quản lý (MGR) | Nhân viên (NV) | CEO
+
+**Phụ thuộc:**
+- `src/app/api/evaluation/init/route.ts` — HR tạo phiếu
+- `src/app/api/evaluation/mgr-fill/route.ts` — QL điền công việc
+- `src/app/api/evaluation/route.ts` — NV tự đánh giá (GET + POST)
+- `src/app/api/evaluation/mgr-review/route.ts` — QL chấm điểm
+- `src/components/evaluation/HrInitForm.tsx` — UI HR
+- `src/app/evaluation/page.tsx` — UI NV tự đánh giá
+- Google Apps Script (GAS) + Discord Bot — Lưu trữ và trigger thông báo
+
+---
+
+## 2. Sơ Đồ Luồng
+
+```mermaid
+sequenceDiagram
+    participant HR
+    participant MGR as Quản Lý
+    participant NV as Nhân Viên
+    participant CEO
+    participant BOT as Discord Bot
+    participant GAS as Google Sheet
+
+    HR->>GAS: POST /api/evaluation/init
+    GAS->>BOT: Trigger gửi link MGR + CC CEO
+    BOT-->>MGR: DM link mgr-fill
+    BOT-->>CEO: CC thông báo phiếu mới
+    Note over MGR: ⚠️ CASE: MGR = CEO → CEO nhận 2 DM trùng
+    
+    MGR->>GAS: POST /api/evaluation/mgr-fill
+    GAS->>BOT: Trigger gửi link NV + CC HR
+    BOT-->>NV: DM link evaluation + HMAC token
+    Note over NV: ⚠️ CASE: NV có role HR → Bot có thể không gửi
+    
+    NV->>GAS: POST /api/evaluation (tự đánh giá)
+    GAS->>BOT: Trigger gửi link mgr-review cho MGR + CC HR
+    
+    MGR->>GAS: POST /api/evaluation/mgr-review
+    GAS->>BOT: Trigger gửi link ceo-review cho CEO + CC HR
+    Note over CEO: ⚠️ CASE: MGR = CEO → CEO tự duyệt chính mình!
+    
+    CEO->>GAS: POST /api/evaluation/ceo-review
+    GAS->>BOT: Trigger gửi kết quả cho MGR + CC HR
+    MGR->>GAS: POST send-result
+    GAS->>BOT: Trigger gửi NV + CC CEO
+```
+
+---
+
+## 3. Bảng Liệt Kê Toàn Bộ Flow
+
+| # | Tên flow | Loại | Actor | Kết quả dự kiến | Code thực tế | Có vấn đề? |
+|---|---|---|---|---|---|---|
+| 1 | HR tạo phiếu bình thường | Happy | HR | Phiếu tạo, bot báo MGR + CC CEO | `init/route.ts:38-43` | ✅ OK |
+| 2 | NV điền tự đánh giá | Happy | NV | Form load, NV điền, submit → báo MGR | `evaluation/route.ts:36-71` | ✅ OK |
+| 3 | **HR bị đánh giá — HR = NV** | Edge | HR/NV | HR nhận link tự đánh giá | Không có xử lý đặc biệt | 🔴 Vấn đề |
+| 4 | **NV có role HR mở link đánh giá** | Edge | NV(HR) | NV vào form `/evaluation?token=` | `evaluation/page.tsx:90` | 🔴 Vấn đề |
+| 5 | **Quản lý trực tiếp = CEO** | Edge | CEO(MGR) | CEO làm cả bước MGR lẫn CEO duyệt | `HrInitForm.tsx:13-17` | 🔴 Vấn đề |
+| 6 | Token NV hết hạn 72h | Edge | NV | Thông báo "Link hết hạn" | `evaluation/route.ts:26-33` | ✅ OK |
+| 7 | QL submit không có tiêu chí | Error | MGR | Lỗi 400 | `mgr-fill/route.ts:66-68` | ✅ OK |
+| 8 | NV submit không điền đầy đủ | Error | NV | Toast cảnh báo | `evaluation/page.tsx:123-133` | ✅ OK |
+| 9 | NV vào khi đã SUBMITTED | Edge | NV | Màn "Đã nộp thành công" | `evaluation/page.tsx:94-96` | ✅ OK |
+| 10 | GAS trả lỗi khi submit | Error | Any | Toast + giữ draft | `evaluation/route.ts:112-118` | ✅ OK |
+| 11 | **CEO nhận 2 DM trùng khi là MGR** | Concurrency | CEO | CEO nhận CC + link MGR-fill | Không deduplicate | 🟡 Cần xem |
+| 12 | QL/CEO dùng mật khẩu chung | Edge | MGR/CEO | Không cá nhân hóa, không hết hạn | `mgr-fill/route.ts:19-22` | 🟡 Cần xem |
+| 13 | Không validate MGR ≠ NV | Edge | HR | HR có thể chọn chính NV làm MGR | `HrInitForm.tsx:380-425` | 🟡 Cần xem |
+| 14 | NV thiếu nút xác nhận kết quả | Missing | NV | Status RESULT_SENT không chuyển ACKNOWLEDGED | `result/[id]/page.tsx` | 🟢 Backlog |
+
+---
+
+## 4. Chi Tiết Các Vấn Đề
+
+---
+
+### ❌ VẤN ĐỀ #1 (🔴 CRITICAL): NV có role HR không thể tự đánh giá
+
+**Đây chính xác là bug anh đã test.**
+
+Trang `/evaluation?id=&discord_id=&token=` không có đoạn code nào trong `kpi-webapp` chặn người có role HR. Form hoàn toàn mở cho mọi người nếu có token đúng. Nhưng Mr. Test không điền được → nguyên nhân nằm ở **Discord Bot**.
+
+**Nguyên nhân khả năng cao nhất:**  
+Discord Bot khi gửi link NV tự đánh giá có logic kiểm tra role của người nhận. Nếu người nhận có role "HR" → Bot bỏ qua, không gửi DM. Mục đích ban đầu có thể là để HR không "chen" vào tự đánh giá các phiếu mình tạo. Nhưng logic này **sai hoàn toàn** khi HR chính là NV được đánh giá trong phiếu đó.
+
+📍 **Vị trí cần kiểm tra:** Discord Bot — hàm tạo HMAC và gửi DM NV sau khi MGR fill xong.
+
+💥 **Hậu quả:** Không thể đánh giá bất kỳ nhân viên nào có role HR. Luồng tắc hoàn toàn ở Bước 3.
+
+🔗 **Logic ảnh hưởng chéo:** Toàn bộ Bước 3-6 không chạy được.
+
+**✅ Phương án sửa:**
+```
+Trong Discord Bot, khi gửi link NV:
+- KHÔNG check role của người nhận
+- Link đã có HMAC cá nhân hóa (discord_id + eval_id) → đủ bảo mật
+- Hoặc: nếu vẫn muốn check, thêm điều kiện:
+  if (recipient.id === eval.discord_id) → luôn gửi, bất kể role
+```
+
+---
+
+### ❌ VẤN ĐỀ #2 (🔴 CRITICAL): MGR = CEO → CEO tự duyệt chính mình
+
+**Mô tả:** Hầu hết nhân viên IruKa do CEO quản lý trực tiếp (xác nhận trong `plan.resolved` dòng 95-98). Luồng khi chọn MGR = CEO:
+
+1. HR tạo → Bot gửi MGR-fill cho **CEO** + CC CEO → **CEO nhận 2 DM cùng lúc**
+2. CEO điền công việc (đóng vai MGR)
+3. NV tự đánh giá → Bot gửi MGR-review cho CEO + CC HR
+4. CEO chấm điểm (đóng vai MGR)  
+5. Bot gửi CEO-review cho **CEO** → **CEO tự duyệt phiếu mình đã chấm** ❌
+
+📍 **Vị trí:** `HrInitForm.tsx:13-17` (MANAGER_LIST) + GAS trigger logic.
+
+💥 **Hậu quả:** Mất hoàn toàn tính kiểm soát của bước CEO phê duyệt. CEO duyệt phiếu của chính mình — vô nghĩa.
+
+**✅ Phương án sửa (GAS side):**
+```
+Khi action = 'mgr_review' và manager_discord_id == CEO_DISCORD_ID:
+  → Không trigger gửi link ceo-review
+  → Tự chuyển status PENDING_CEO → COMPLETED ngay lập tức
+  → Gửi thông báo HR: "Phiếu [tên] đã hoàn tất (MGR = CEO)"
+```
+
+---
+
+### ❌ VẤN ĐỀ #3 (🔴 CRITICAL): Không có luồng tạo phiếu đánh giá HR
+
+**Mô tả:** Khi CEO cần đánh giá người có role HR:
+- Trang `/evaluation/init` yêu cầu đăng nhập bằng Dashboard password.
+- HR không thể tự tạo phiếu cho chính mình.
+- CEO có Dashboard password nhưng form này được thiết kế cho HR, không có cơ chế phân biệt "ai đang tạo".
+
+Thực ra `LoginGate` (`init/page.tsx:20-84`) chỉ check `pass + hrId` — không validate `hrId` có phải là HR thật không. CEO hoàn toàn có thể dùng password dashboard và điền Discord ID của mình → vào được form → tạo phiếu cho HR person.
+
+**Nhưng vấn đề vẫn là:** Sau khi phiếu tạo xong, Bot vẫn bị lỗi #1 (không gửi link cho NV có role HR).
+
+📍 **Root cause cuối cùng:** Vẫn là **Bot filter role** ở bước gửi link NV.
+
+**✅ Phương án sửa:** Sửa #1 là giải quyết được #3.
+
+---
+
+### ⚠️ VẤN ĐỀ #4 (🟡): Xác thực không đồng nhất
+
+Hai cơ chế auth song song:
+- **NV link:** HMAC-SHA256 cá nhân hóa, hết hạn 72h → ✅ Bảo mật tốt
+- **MGR/CEO dashboard:** Mật khẩu chung `DASHBOARD_PASSWORD`, không hết hạn, không cá nhân → ⚠️ Bất kỳ ai biết password đều submit được mọi phiếu
+
+📍 **Vị trí:** `mgr-fill/route.ts:19-22`, `mgr-review/route.ts:23-27`
+
+**Phương án:** Thêm HMAC token cá nhân hóa cho MGR/CEO (tương tự NV).
+
+---
+
+### ⚠️ VẤN ĐỀ #5 (🟡): CEO nhận 2 DM trùng
+
+Khi MGR = CEO: Bước 1 gửi link MGR-fill cho CEO **và** CC thông báo cho CEO → 2 DM.
+
+**Phương án (GAS):** `if (manager_discord_id == ceo_discord_id) → skip CC`
+
+---
+
+### ⚠️ VẤN ĐỀ #6 (🟡): Không validate "MGR ≠ NV"
+
+Form `HrInitForm.tsx` không ngăn HR chọn chính NV làm Quản lý của họ. Edge case hiếm nhưng sẽ tạo vòng lặp kỳ lạ.
+
+---
+
+## 5. Phân Tích UX
+
+| Flow | HR thấy gì | MGR/CEO thấy gì | NV thấy gì | Đủ thông tin? |
+|---|---|---|---|---|
+| Tạo phiếu cho NV là HR person | Submit thành công | CEO nhận link mgr-fill | **Không nhận được link** | ❌ |
+| CEO = MGR đánh giá NV | Submit OK | CEO nhận 2 DM trùng | Nhận link đúng | ⚠️ |
+| NV đã SUBMITTED vào lại form | — | — | "Đã nộp - đang chờ QL" | ✅ |
+| Token hết hạn 72h | — | — | "Link hết hạn - liên hệ HR" | ✅ |
+
+---
+
+## 6. Bảng Đề Xuất Sửa Đổi
+
+| # | Vấn đề | Nơi sửa | Mức độ | Phương án |
+|---|---|---|---|---|
+| 1 | Bot không gửi link NV có role HR | `discord-bot` — hàm gửi DM NV | 🔴 | Bỏ check role; link HMAC đã đủ bảo mật |
+| 2 | MGR=CEO tự duyệt chính mình | GAS trigger logic | 🔴 | Nếu MGR=CEO → skip bước 5, PENDING_CEO→COMPLETED ngay |
+| 3 | Không tạo được phiếu cho HR | Giải quyết bằng #1 | 🔴 | Sửa #1 là xong |
+| 4 | Auth MGR/CEO không cá nhân hóa | `mgr-fill/route.ts`, `mgr-review/route.ts` | 🟡 | Thêm HMAC token cá nhân cho MGR/CEO |
+| 5 | CEO nhận 2 DM trùng | GAS trigger | 🟡 | Skip CC nếu MGR=CEO |
+| 6 | Validate MGR ≠ NV | `HrInitForm.tsx:380-425` | 🟡 | Filter dropdown bỏ tên NV đang được tạo phiếu |
+| 7 | NV thiếu nút xác nhận kết quả | `result/[id]/page.tsx` | 🟢 | Thêm nút "Đã xem kết quả" → gọi `/api/evaluation/acknowledge` |
+
+---
+
+## 7. Phân Loại Ưu Tiên
+
+### 🔴 Nhóm 1 — Làm ngay
+
+1. **#1 — Bot filter role khi gửi link NV** → bug đang block toàn bộ luồng đánh giá HR
+2. **#2 — MGR=CEO tự duyệt** → sai logic với hầu hết nhân viên trong công ty
+3. **#3 — Tạo phiếu cho HR** → giải quyết khi #1 xong
+
+*Ước tính: 1-2 giờ (chủ yếu sửa Discord Bot và GAS)*
+
+### 🟡 Nhóm 2 — Sprint tiếp theo
+
+4. **#4 — Auth MGR/CEO không cá nhân hóa**
+5. **#5 — CEO nhận DM trùng**
+6. **#6 — Validate MGR ≠ NV**
+
+### 🟢 Nhóm 3 — Backlog
+
+7. **#7 — Nút xác nhận kết quả NV**
+
+---
+
+## 8. Hướng Dẫn Test Thủ Công Sau Sửa
+
+### Test A — NV có role HR tự đánh giá (bug anh đã test)
+
+```
+1. CEO vào /evaluation/init → tạo phiếu cho Mr. Test (role HR), MGR = CEO
+   → Kỳ vọng: Phiếu tạo, bot gửi link mgr-fill cho CEO
+
+2. CEO điền công việc + tiêu chí → Submit
+   → Kỳ vọng: Mr. Test nhận DM từ Bot kèm link tự đánh giá
+
+3. Mr. Test mở link → Vào form tự đánh giá → Điền và Submit
+   → Kỳ vọng: Submit thành công, status → SUBMITTED
+
+✅ PASS khi: Mr. Test submit được, không bị block
+```
+
+### Test B — CEO là Quản lý trực tiếp (no middle manager)
+
+```
+1. HR tạo phiếu cho NV bất kỳ, chọn MGR = CEO
+   → Kỳ vọng: CEO chỉ nhận 1 DM (link mgr-fill), không nhận DM CC
+
+2. CEO điền công việc → Submit
+3. NV tự đánh giá → Submit
+4. CEO chấm điểm (mgr-review) → Submit
+   → Kỳ vọng: Hệ thống KHÔNG gửi link ceo-review cho CEO
+             Status tự chuyển sang COMPLETED
+             HR nhận thông báo phiếu hoàn tất
+
+✅ PASS khi: CEO không phải tự duyệt phiếu mình đã chấm
+```
+
+---
+
+## 9. Kết Luận — Root Cause
+
+**Bug anh test (CEO gửi form cho Mr. Test HR → không điền được):**
+
+> Discord Bot đang **filter/skip gửi DM** cho người có role HR khi gửi link NV tự đánh giá. Logic này sai khi HR = NV trong phiếu cụ thể đó. Link HMAC đã cá nhân hóa — không có rủi ro bảo mật nếu gửi.
+
+**Fix nhanh nhất:** Trong Discord Bot, tìm hàm gửi link NV sau khi MGR fill xong → xóa/sửa điều kiện check role `HR`. Chỉ cần check `discord_id` của người nhận khớp với `discord_id` trong phiếu là đủ.

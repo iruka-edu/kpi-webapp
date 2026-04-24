@@ -1,0 +1,220 @@
+# 📋 KẾ HOẠCH SỬA — Luồng Đánh Giá Nhân Sự (Sau Audit)
+
+> **Cập nhật:** 2026-04-24 | **Trạng thái:** 🟡 Chờ duyệt Scope 1  
+> **Căn cứ:** Audit report + Ý kiến phản biện CEO
+
+---
+
+## Tóm Tắt Thay Đổi So Với Audit Gốc
+
+| Issue | Phân tích ban đầu | Quyết định CEO | Trạng thái |
+|---|---|---|---|
+| ~~#1 — HR tự đánh giá~~ | ~~Sửa Bot filter role~~ | ❌ **Bỏ qua** — Công ty ổn định, không cần | 🚫 Đã bỏ |
+| #2 — MGR = CEO | Sửa GAS skip bước CEO review | **Đổi luồng hoàn toàn** khi MGR = CEO | 🟡 Đã confirm luồng |
+| #4 — HMAC MGR/CEO | Đề xuất tăng bảo mật | ✅ **Duyệt** — Triển khai | 🟢 Làm ngay |
+
+---
+
+
+
+## ISSUE #2 — Luồng Khi MGR = CEO (Đã Đổi Phương Án)
+
+### Ý kiến CEO (Phản biện + Bổ sung)
+
+> *"Không nên sửa GAS, mà sửa luồng. Nếu quản lý là CEO, thì luồng chỉ có: HR gửi phiếu cho nhân viên → NV điền và gửi lại cho CEO + CC HR → CEO đánh giá → gửi lại cho HR → HR xem và gửi cho NV"*
+
+> *"HR cũng có thể điền trước thông tin gửi cho nhân viên bình thường trong luồng này"*
+
+> *"CEO đánh giá gửi lại nhân sự, nhân sự gửi cho nhân viên và CC cho CEO"*
+
+### Phân Tích — Em Đồng Ý Hoàn Toàn
+
+Phương án đổi luồng **đúng hơn** vì:
+- HR vẫn có thể điền trước công việc + tiêu chí (tùy chọn) trước khi gửi NV — giống vai trò MGR-fill
+- CEO chỉ đóng vai CEO: chấm điểm + ra quyết định → không tự duyệt chính mình
+- Bước cuối rõ ràng: CEO → HR → HR gửi NV + CC CEO (đúng quy trình, HR vẫn nắm kết quả)
+
+### Luồng Mới — Khi MGR = CEO (5 Bước)
+
+```
+LUỒNG THƯỜNG (MGR ≠ CEO) — 6 Bước:
+HR → MGR-fill → NV → MGR-review → CEO review → HR gửi NV
+
+LUỒNG RÚT GỌN (MGR = CEO) — 5 Bước:
+HR (tùy chọn điền công việc) → NV tự đánh giá → CEO đánh giá → HR gửi NV + CC CEO
+```
+
+Chi tiết:
+
+```
+BƯỚC 1 — HR TẠO PHIẾU + ĐIỀN CÔNG VIỆC (Tùy chọn, mới)
+HR tạo phiếu → chọn Quản lý = CEO
+→ HR có thể điền sẵn:
+  • Danh sách công việc đã giao cho NV
+  • 9 tiêu chí đánh giá (mẫu)
+→ Nếu không điền → NV sẽ tự điền ở bước 2
+→ Bot gửi link NV tự đánh giá TRỰC TIẾP (skip MGR-fill)
+→ CC CEO: "Có phiếu mới — NV đang tự đánh giá"
+  (status: INIT → NV_PENDING)
+
+BƯỚC 2 — NV TỰ ĐÁNH GIÁ
+NV nhận link → Form cho phép NV:
+  • Nếu HR đã điền công việc: NV điền kết quả thực tế (giống luồng thường)
+  • Nếu HR chưa điền: NV tự điền luôn công việc + kết quả
+  • Tự chấm điểm tiêu chí
+  • Đề xuất (lương, đào tạo, phản hồi)
+NV Submit → Bot gửi toàn bộ form cho CEO + CC HR
+  (status: NV_PENDING → SUBMITTED)
+
+BƯỚC 3 — CEO ĐÁNH GIÁ
+CEO mở form → xem đầy đủ thông tin NV đã điền
+CEO chấm điểm từng tiêu chí + ghi nhận xét + ra quyết định
+CEO Submit → Bot gửi về cho HR + CC NV
+  (status: SUBMITTED → PENDING_HR)
+
+BƯỚC 4 — HR XEM VÀ GỬI KẾT QUẢ CHO NV
+HR nhận thông báo "CEO đã đánh giá xong phiếu [tên NV]"
+HR xem lại toàn bộ phiếu + nhấn "Gửi kết quả cho nhân viên"
+→ Bot gửi link kết quả cho NV + CC CEO
+  (status: PENDING_HR → RESULT_SENT → ACKNOWLEDGED)
+```
+
+### Sơ Đồ Luồng Rút Gọn
+
+```mermaid
+sequenceDiagram
+    participant HR
+    participant NV as Nhân Viên
+    participant CEO
+    participant BOT as Discord Bot
+    participant GAS as Google Sheet
+
+    HR->>GAS: POST init (manager=CEO) + tùy chọn điền công việc/tiêu chí
+    GAS->>BOT: Nhận biết MGR=CEO → skip MGR-fill, gửi NV ngay
+    BOT->>NV: DM link tự đánh giá (HMAC token)
+    BOT->>CEO: CC "Phiếu [tên NV] đang được NV điền..."
+
+    NV->>GAS: Điền kết quả công việc + tự chấm + đề xuất + Submit
+    GAS->>BOT: Trigger gửi full form cho CEO + CC HR
+    BOT->>CEO: DM link chấm điểm + đánh giá
+    BOT->>HR: CC "NV đã nộp phiếu, chờ CEO đánh giá"
+
+    CEO->>GAS: Chấm điểm + nhận xét + quyết định + Submit
+    GAS->>BOT: Trigger gửi kết quả về HR + CC NV
+    BOT->>HR: DM "CEO đã đánh giá xong — Anh gửi kết quả cho NV nhé"
+    BOT->>NV: CC "Phiếu đánh giá đã được CEO duyệt, chờ HR thông báo"
+
+    HR->>GAS: Xem phiếu + nhấn "Gửi kết quả cho nhân viên"
+    GAS->>BOT: Trigger
+    BOT->>NV: DM kết quả đầy đủ
+    BOT->>CEO: CC "Đã gửi kết quả cho [tên NV]"
+```
+
+### Files Cần Tạo/Sửa — Issue #2
+
+| File | Thay đổi |
+|---|---|
+| `src/app/api/evaluation/init/route.ts` | Thêm flag `is_ceo_direct` khi `manager_discord_id = CEO_DISCORD_ID` |
+| GAS script | Khi `is_ceo_direct = true` → gửi link NV trực tiếp (skip MGR-fill) |
+| `src/app/evaluation/page.tsx` | Khi `is_ceo_direct = true` → hiện thêm phần "Tự điền công việc" (không chờ MGR) |
+| `src/app/api/evaluation/ceo-review/route.ts` | Khi `is_ceo_direct = true` → CEO chấm xong → status → COMPLETED (skip gửi lại CEO) |
+
+> **Quy tắc nhận biết:** `manager_discord_id == process.env.NEXT_PUBLIC_CEO_DISCORD_ID` → kích hoạt luồng rút gọn.
+
+---
+
+## ISSUE #4 — HMAC Token Cho MGR/CEO (Đã Duyệt)
+
+### Phương Án Triển Khai
+
+Hiện tại MGR và CEO dùng `DASHBOARD_PASSWORD` chung → bất kỳ ai biết password đều submit được mọi phiếu. Sau khi duyệt, thêm HMAC token cá nhân hóa giống NV.
+
+**Cơ chế mới:**
+```
+Token = HMAC-SHA256(secret, "{discord_id}:{eval_id}:{72h_window}")
+
+→ Bot Discord tạo token khi gửi link MGR/CEO
+→ API validate token thay vì validate DASHBOARD_PASSWORD
+→ Link hết hạn 72h, cá nhân hóa theo từng người + từng phiếu
+```
+
+### Files Cần Sửa — Issue #4
+
+| File | Thay đổi |
+|---|---|
+| `src/app/api/evaluation/mgr-fill/route.ts` | Thay `x-dashboard-auth` → verify HMAC token |
+| `src/app/api/evaluation/mgr-review/route.ts` | Thay `x-dashboard-auth` → verify HMAC token |
+| `src/app/api/evaluation/ceo-review/route.ts` | Thay `x-dashboard-auth` → verify HMAC token |
+| `discord-bot/` — hàm gửi DM | Thêm tạo HMAC token khi gửi link cho MGR/CEO |
+
+---
+
+## Bảng Scope Triển Khai
+
+| Scope | Nội dung | Độ phức tạp | Ưu tiên |
+|---|---|---|---|
+| **Scope 1** | HMAC token MGR/CEO (Issue #4) — đã duyệt | Thấp | 🟢 Làm ngay |
+| **Scope 2** | Luồng rút gọn MGR=CEO (Issue #2) — đã confirm | Trung bình | 🟡 Làm sau Scope 1 |
+
+---
+
+## Câu Hỏi Còn Lại Cần Confirm
+
+### Về Issue #2 — Luồng MGR = CEO
+
+> [!NOTE]
+> **Đã xác nhận:** HR có thể điền sẵn công việc/tiêu chí (tùy chọn) — NV điền kết quả thực tế nếu HR điền trước, hoặc tự điền nếu HR bỏ qua.
+
+> [!NOTE]
+> **Đã xác nhận:** Bước cuối — CEO submit → HR nhận → HR gửi NV + CC CEO.
+
+> [!IMPORTANT]
+> **Câu hỏi còn lại duy nhất:** Khi CEO đánh giá (luồng MGR=CEO), CEO có quyền "Yêu cầu NV bổ sung/làm lại" không? Hay CEO chỉ có 2 lựa chọn: **Phê duyệt** hoặc **Từ chối**?
+
+---
+
+## Phương Án Các Issue Khác (Giữ Nguyên)
+
+| # | Vấn đề | Mức | Phương án |
+|---|---|---|---|
+| #5 | CEO nhận 2 DM trùng khi MGR=CEO | 🟡 | Tự giải quyết khi sửa luồng #2 |
+| #6 | Validate MGR ≠ NV trong HrInitForm | 🟡 | Filter dropdown |
+| #7 | Nút xác nhận kết quả cho NV | 🟢 | Thêm vào result page |
+
+---
+
+## Hướng Dẫn Test Thủ Công Sau Sửa
+
+### Test A — Scope 1: HMAC MGR/CEO
+
+```
+1. HR tạo phiếu → MGR nhận link trong Discord
+2. MGR nhấp link cũ (>72h) → Kỳ vọng: "Link hết hạn"
+3. MGR nhấp link mới → Điền form → Submit → OK
+✅ PASS khi: Link hết hạn đúng 72h, link đúng người đúng phiếu
+```
+
+### Test B — Scope 2: Luồng rút gọn MGR=CEO
+
+```
+1. HR tạo phiếu chọn MGR = CEO
+   → HR có thể điền sẵn danh sách công việc + tiêu chí (tùy chọn)
+   → Kỳ vọng: Bot gửi link tự đánh giá THẲNG cho NV (không gửi MGR-fill cho CEO)
+   → CEO chỉ nhận 1 CC thông báo "Phiếu đang được NV điền"
+
+2. NV điền form → Submit
+   → Kỳ vọng: CEO nhận link chấm điểm + HR nhận CC
+
+3. CEO chấm điểm + quyết định → Submit
+   → Kỳ vọng: HR nhận DM "CEO đã đánh giá xong — Anh gửi kết quả cho NV nhé"
+   → NV nhận CC thông báo đang chờ HR
+   → CEO KHÔNG nhận link duyệt lại chính mình
+
+4. HR xem phiếu → nhấn "Gửi kết quả cho nhân viên"
+   → Kỳ vọng: NV nhận kết quả đầy đủ
+   → CEO nhận CC "Đã gửi kết quả cho [tên NV]"
+
+✅ PASS khi: HR vẫn là người chốt gửi kết quả, CEO không tự duyệt chính mình
+```
+
+
