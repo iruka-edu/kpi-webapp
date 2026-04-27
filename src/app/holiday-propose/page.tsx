@@ -72,6 +72,10 @@ function HolidayProposeContent() {
   const nameParam = searchParams.get('name') || '';
   const discordIdParam = searchParams.get('discord_id') || '';
   const roleParam = searchParams.get('role') || '';
+  const deptParam = searchParams.get('dept') || '';
+
+  // Ưu tiên hiển thị dept (phòng ban) — chỉ fallback về role nếu không có dept
+  const displayLabel = deptParam || roleParam;
 
   // ── Form state ──
   const [name, setName] = useState('');
@@ -154,6 +158,7 @@ function HolidayProposeContent() {
           discord_id: discordIdParam,
           name: nameParam,
           role: roleParam,
+          dept: deptParam,
         },
       };
 
@@ -215,7 +220,7 @@ function HolidayProposeContent() {
         }}>
           <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>🏖️ Đề xuất ngày nghỉ mới</div>
           <div style={{ fontSize: 13, opacity: 0.9 }}>
-            Chào <b>{nameParam || 'bạn'}</b>{roleParam && ` (${roleParam})`} — điền form rồi gửi để CEO duyệt
+            Chào <b>{nameParam || 'bạn'}</b>{displayLabel && ` (${displayLabel})`} — điền form rồi gửi để CEO duyệt
           </div>
         </div>
 
