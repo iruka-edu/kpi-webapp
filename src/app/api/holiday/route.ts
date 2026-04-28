@@ -27,6 +27,9 @@ type HolidayProposalPayload = {
   reason: string;
   decision_file_name: string | null;
   decision_file_size: number | null;
+  // Optional — file binary (base64) để bot save + đính kèm DM CEO
+  decision_file_mime?: string | null;
+  decision_file_base64?: string | null;
   proposed_by: {
     discord_id: string;
     name: string;

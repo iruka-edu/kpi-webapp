@@ -44,6 +44,21 @@ function expandRange(start: string, end: string): string[] {
   return dates;
 }
 
+/** File → base64 string (không có prefix data:..., chỉ raw base64). */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // result dạng "data:<mime>;base64,XXXX" — tách lấy phần XXXX
+      const idx = result.indexOf(',');
+      resolve(idx >= 0 ? result.slice(idx + 1) : result);
+    };
+    reader.onerror = () => reject(new Error('Không đọc được file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 // ── Sub-components ────────────────────────────────────────────
 function FullScreenCard({
   icon, title, desc,
@@ -144,6 +159,15 @@ function HolidayProposeContent() {
     setSubmitting(true);
     try {
       const days_detail = dates.map(d => ({ date: d, type: dayDetails[d] || 'full' }));
+
+      // Convert file → base64 để bot lưu được binary, đính kèm DM CEO sau
+      let fileBase64: string | null = null;
+      let fileMime: string | null = null;
+      if (file) {
+        fileBase64 = await fileToBase64(file);
+        fileMime = file.type || 'application/octet-stream';
+      }
+
       const payload = {
         name: name.trim(),
         type,
@@ -154,6 +178,8 @@ function HolidayProposeContent() {
         reason: reason.trim(),
         decision_file_name: file?.name || null,
         decision_file_size: file?.size || null,
+        decision_file_mime: fileMime,
+        decision_file_base64: fileBase64,
         proposed_by: {
           discord_id: discordIdParam,
           name: nameParam,
