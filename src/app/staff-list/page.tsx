@@ -289,7 +289,7 @@ function StaffListContent() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '24px 12px', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ maxWidth: 'min(1800px, 98vw)', margin: '0 auto' }}>
 
         {/* Header */}
         <div style={{
