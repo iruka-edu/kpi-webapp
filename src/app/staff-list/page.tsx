@@ -51,6 +51,59 @@ function fmtVN(iso?: string | null): string {
   return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
 }
 
+/** Parse "X năm Y tháng Z ngày" → tổng số ngày (cho sort cột Đã làm) */
+function parseDurationDays(s?: string): number {
+  if (!s) return 0;
+  let total = 0;
+  const yearMatch = s.match(/(\d+)\s*năm/);
+  const monthMatch = s.match(/(\d+)\s*tháng/);
+  const dayMatch = s.match(/(\d+)\s*ngày/);
+  if (yearMatch)  total += parseInt(yearMatch[1], 10) * 365;
+  if (monthMatch) total += parseInt(monthMatch[1], 10) * 30;
+  if (dayMatch)   total += parseInt(dayMatch[1], 10);
+  return total;
+}
+
+/** Lấy giá trị 1 cột để sort/filter — KHÔNG động data gốc */
+function getCellValue(s: Staff, key: ColumnKey): string | number {
+  switch (key) {
+    case 'name':         return s.name || s.username || '';
+    case 'dept':         return s.dept || '';
+    case 'position':     return s.position || '';
+    case 'phone':        return s.phone || '';
+    case 'email':        return s.email || '';
+    case 'dateOfBirth':  return s.dateOfBirth || '';     // ISO YYYY-MM-DD sort được trực tiếp
+    case 'numerology':   return s.numerology ?? -1;       // -1 để trống đẩy xuống cuối khi asc
+    case 'joinedAt':     return s.joinedAt || '';         // ISO sort
+    case 'workingDur':   return parseDurationDays(s.workingDuration); // số ngày
+    case 'active':       return s.active === false ? 0 : 1;
+    default:             return '';
+  }
+}
+
+type ColumnKey = 'name' | 'dept' | 'position' | 'phone' | 'email' | 'dateOfBirth' | 'numerology' | 'joinedAt' | 'workingDur' | 'active';
+type SortDir = 'asc' | 'desc' | null;
+
+type ColumnDef = {
+  key: ColumnKey;
+  label: string;
+  width?: number;
+  filterPlaceholder?: string;
+};
+
+const COLUMNS: ColumnDef[] = [
+  { key: 'name',        label: '👤 Họ tên',       filterPlaceholder: 'tên...' },
+  { key: 'dept',        label: '🏢 Phòng ban',    filterPlaceholder: 'dept...' },
+  { key: 'position',    label: '💼 Vị trí',        filterPlaceholder: 'vị trí...' },
+  { key: 'phone',       label: '📞 SĐT',           filterPlaceholder: 'SĐT...' },
+  { key: 'email',       label: '📧 Email',         filterPlaceholder: 'email...' },
+  { key: 'dateOfBirth', label: '🎂 Ngày sinh',    filterPlaceholder: '01-01...' },
+  { key: 'numerology',  label: '🔢 Thần số',       filterPlaceholder: '1-9, 11, 22...' },
+  { key: 'joinedAt',    label: '📅 Bắt đầu làm',  filterPlaceholder: '2017-03...' },
+  { key: 'workingDur',  label: '⏱️ Đã làm',         filterPlaceholder: 'năm/tháng...' },
+  { key: 'active',      label: '🟢 Trạng thái',   filterPlaceholder: 'active/inactive' },
+];
+
 const DEPT_EMOJI: Record<string, string> = {
   Dev: '👨‍💻', Design: '🎨', Content: '✍️', QC: '🔍',
   HR: '👥', Edu: '📚', Mentor: '🎓', 'HĐQT': '👔', Tester: '🧪', CEO: '👑',
@@ -113,6 +166,11 @@ function StaffListContent() {
     })();
   }, [sessionToken]);
 
+  // [NEW] Per-column sort + filter
+  const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [colFilters, setColFilters] = useState<Partial<Record<ColumnKey, string>>>({});
+
   // Tính depts unique từ list
   const depts = useMemo(() => {
     const set = new Set<string>();
@@ -120,9 +178,11 @@ function StaffListContent() {
     return Array.from(set).sort();
   }, [data]);
 
-  // Filter
+  // Filter + Sort (per-column)
   const filtered = useMemo(() => {
     let list = data.list || [];
+
+    // Global filters (giữ nguyên — dropdown dept + checkbox inactive + global search)
     if (filterDept) list = list.filter(s => s.dept === filterDept);
     if (!showInactive) list = list.filter(s => s.active !== false);
     if (search) {
@@ -136,8 +196,73 @@ function StaffListContent() {
         (s.phone || '').toLowerCase().includes(q)
       );
     }
+
+    // Per-column filters (string contain — case insensitive — dùng giá trị HIỂN THỊ cho ngày)
+    for (const [colKey, filterVal] of Object.entries(colFilters)) {
+      if (!filterVal || !filterVal.trim()) continue;
+      const q = filterVal.toLowerCase().trim();
+      const key = colKey as ColumnKey;
+      list = list.filter(s => {
+        // Cột date hiển thị dạng dd-mm-yyyy → match cả 2 format
+        if (key === 'dateOfBirth' || key === 'joinedAt') {
+          const iso = (s[key as 'dateOfBirth' | 'joinedAt'] || '').toString().toLowerCase();
+          const vn = fmtVN(s[key as 'dateOfBirth' | 'joinedAt']).toLowerCase();
+          return iso.includes(q) || vn.includes(q);
+        }
+        // Cột active: keyword "active"/"inactive"
+        if (key === 'active') {
+          const status = s.active === false ? 'inactive' : 'active';
+          return status.includes(q);
+        }
+        // Cột workingDur: filter theo string hiển thị
+        if (key === 'workingDur') {
+          return (s.workingDuration || '').toLowerCase().includes(q);
+        }
+        // Cột numerology: số → string
+        if (key === 'numerology') {
+          return (s.numerology != null ? String(s.numerology) : '').includes(q);
+        }
+        // String column khác
+        return String(getCellValue(s, key) || '').toLowerCase().includes(q);
+      });
+    }
+
+    // Sort (per-column)
+    if (sortKey && sortDir) {
+      const sorted = [...list].sort((a, b) => {
+        const va = getCellValue(a, sortKey);
+        const vb = getCellValue(b, sortKey);
+        let cmp = 0;
+        if (typeof va === 'number' && typeof vb === 'number') {
+          cmp = va - vb;
+        } else {
+          // String compare — locale Việt để sort tên có dấu
+          cmp = String(va).localeCompare(String(vb), 'vi', { sensitivity: 'base' });
+        }
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+      list = sorted;
+    }
+
     return list;
-  }, [data, filterDept, showInactive, search]);
+  }, [data, filterDept, showInactive, search, colFilters, sortKey, sortDir]);
+
+  // Click header → toggle sort: asc → desc → none
+  function toggleSort(key: ColumnKey) {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir('asc');
+    } else if (sortDir === 'asc') {
+      setSortDir('desc');
+    } else {
+      setSortKey(null);
+      setSortDir(null);
+    }
+  }
+
+  function setColFilter(key: ColumnKey, value: string) {
+    setColFilters(prev => ({ ...prev, [key]: value }));
+  }
 
   // Open edit page in new tab
   function openEdit(s: Staff) {
@@ -227,26 +352,60 @@ function StaffListContent() {
           </span>
         </div>
 
+        {/* Hint sort/filter */}
+        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>
+          💡 Click tiêu đề cột để <b>sắp xếp</b> (asc → desc → tắt). Gõ ô nhỏ dưới mỗi cột để <b>lọc</b> riêng cột đó. Nhiều bộ lọc có thể chạy cùng lúc.
+        </div>
+
         {/* Table */}
         <div style={{ background: '#fff', borderRadius: 10, overflow: 'auto', border: '1px solid #e5e7eb' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
+              {/* Row 1: header sortable */}
               <tr style={{ background: '#f9fafb', textAlign: 'left' }}>
-                <th style={thStyle}>STT</th>
-                <th style={thStyle}>👤 Họ tên</th>
-                <th style={thStyle}>🏢 Phòng ban</th>
-                <th style={thStyle}>💼 Vị trí</th>
-                <th style={thStyle}>📞 SĐT</th>
-                <th style={thStyle}>📧 Email</th>
-                <th style={thStyle}>🎂 Ngày sinh</th>
-                <th style={thStyle}>📅 Bắt đầu làm</th>
-                <th style={thStyle}>⏱️ Đã làm</th>
-                <th style={thStyle}>🟢 Trạng thái</th>
+                <th style={{ ...thStyle, cursor: 'default' }}>STT</th>
+                {COLUMNS.map(col => (
+                  <th
+                    key={col.key}
+                    style={{ ...thStyle, cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => toggleSort(col.key)}
+                    title="Click để sắp xếp"
+                  >
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      {col.label}
+                      <span style={{ fontSize: 10, color: sortKey === col.key ? '#3b82f6' : '#cbd5e1' }}>
+                        {sortKey === col.key
+                          ? (sortDir === 'asc' ? '▲' : sortDir === 'desc' ? '▼' : '⇅')
+                          : '⇅'}
+                      </span>
+                    </span>
+                  </th>
+                ))}
+              </tr>
+              {/* Row 2: filter inputs */}
+              <tr style={{ background: '#fafbfc' }}>
+                <th style={{ ...thStyle, padding: '4px 6px' }}></th>
+                {COLUMNS.map(col => (
+                  <th key={`f_${col.key}`} style={{ ...thStyle, padding: '4px 6px', fontWeight: 400 }}>
+                    <input
+                      type="text"
+                      value={colFilters[col.key] || ''}
+                      onChange={(e) => setColFilter(col.key, e.target.value)}
+                      placeholder={col.filterPlaceholder || '...'}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        width: '100%', padding: '4px 8px', fontSize: 11,
+                        border: '1px solid #e5e7eb', borderRadius: 4,
+                        outline: 'none', color: '#374151', background: '#fff',
+                      }}
+                    />
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={10} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>
+                <tr><td colSpan={COLUMNS.length + 1} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>
                   _Không có nhân viên nào khớp filter_
                 </td></tr>
               ) : (
@@ -280,7 +439,12 @@ function StaffListContent() {
                     <td style={tdStyle}>{s.position || '—'}</td>
                     <td style={tdStyle}>{s.phone || '—'}</td>
                     <td style={tdStyle}>{s.email || '—'}</td>
-                    <td style={tdStyle}>{fmtVN(s.dateOfBirth) || '—'}{s.numerology != null ? ` · 🔢${s.numerology}` : ''}</td>
+                    <td style={tdStyle}>{fmtVN(s.dateOfBirth) || '—'}</td>
+                    <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 600 }}>
+                      {s.numerology != null ? (
+                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 10px', borderRadius: 12, fontSize: 12 }}>{s.numerology}</span>
+                      ) : '—'}
+                    </td>
                     <td style={tdStyle}>{fmtVN(s.joinedAt) || '—'}</td>
                     <td style={tdStyle}>{s.workingDuration || '—'}</td>
                     <td style={tdStyle}>
