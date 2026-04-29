@@ -123,9 +123,18 @@ function buildLink(path, evalId, discordId) {
 // WebApp expose POST /api/discord/notify → bot gửi DM
 function notifyDiscord(targetDiscordId, embedData, ccDiscordId) {
   var webappUrl = prop('WEBAPP_URL');
-  if (!webappUrl) return;
+  if (!webappUrl) {
+    Logger.log('notifyDiscord: WEBAPP_URL chưa cấu hình — skip DM');
+    return;
+  }
+  if (!targetDiscordId) {
+    Logger.log('notifyDiscord: targetDiscordId rỗng — skip DM');
+    return;
+  }
   try {
-    UrlFetchApp.fetch(webappUrl + '/api/discord/notify', {
+    // FIX BUG #10: muteHttpExceptions: true vẫn để (không throw GAS lỗi),
+    //             nhưng đọc response code + body để log rõ khi lỗi → dễ debug.
+    var resp = UrlFetchApp.fetch(webappUrl + '/api/discord/notify', {
       method: 'post',
       contentType: 'application/json',
       muteHttpExceptions: true,
@@ -136,8 +145,13 @@ function notifyDiscord(targetDiscordId, embedData, ccDiscordId) {
         embed: embedData
       })
     });
+    var code = resp.getResponseCode();
+    if (code < 200 || code >= 300) {
+      Logger.log('notifyDiscord: HTTP ' + code + ' — to=' + targetDiscordId
+        + ' body=' + resp.getContentText().slice(0, 500));
+    }
   } catch(e) {
-    Logger.log('notifyDiscord error: ' + e);
+    Logger.log('notifyDiscord exception: to=' + targetDiscordId + ' err=' + e);
   }
 }
 
@@ -244,7 +258,8 @@ function initEvaluation(d) {
         0x94A3B8), null);
   } else {
     // Luồng thường: thông báo QL điền công việc
-    var link = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
+    // FIX BUG #2: dùng buildLink để có HMAC token (trước đây link không có token → 403)
+    var link = buildLink('/evaluation/mgr-fill', evalId, d.manager_discord_id);
     var embed = makeEmbed(
       '📋 Phiếu Đánh Giá Thử Việc Mới',
       '**' + d.name + '** (' + d.dept + ' — ' + d.role + ')\nNgày đánh giá: ' + d.eval_date,
@@ -277,11 +292,32 @@ function mgrFill(d) {
     wsh.appendRow([evalId, i+1, w.area, w.detail, '']);
   });
 
-  // Xóa criteria cũ (source = mgr) rồi ghi mới
+  // FIX BUG #7: Preserve tiêu chí có source='hr_template' khi QL submit
+  //            Trước đây xóa toàn bộ → mất audit trail nguồn gốc tiêu chí HR.
+  //            Bây giờ: backup HR template trước, xóa hết, ghi lại HR rồi mới ghi QL.
+  var hrTemplateBackup = findByEvalId(SHEET_CRITERIA, evalId)
+    .filter(function(r) { return r.source === 'hr_template'; });
+
   deleteRowsByEvalId(SHEET_CRITERIA, evalId);
   var csh = getSheet(SHEET_CRITERIA);
+
+  // Ghi lại HR template (giữ source gốc)
+  hrTemplateBackup.forEach(function(row, i) {
+    csh.appendRow([
+      evalId, i + 1, row.name, row.expectation || '',
+      row.self_score || '', row.mgr_score || '', row.note || '',
+      'hr_template'
+    ]);
+  });
+
+  // Append tiêu chí QL submit lần này — bỏ qua items trùng với HR template (cùng name)
+  // để tránh ghi đè/trùng. QL muốn modify HR template thì đổi tên hoặc HR sửa lại từ đầu.
+  var hrNames = {};
+  hrTemplateBackup.forEach(function(r) { hrNames[r.name] = true; });
+  var startStt = hrTemplateBackup.length;
   (d.criteria || []).forEach(function(c, i) {
-    csh.appendRow([evalId, i+1, c.name, c.expectation||'', '', '', '', c.source||'mgr']);
+    if (c.source === 'hr_template' || hrNames[c.name]) return; // đã preserve ở trên
+    csh.appendRow([evalId, startStt + i + 1, c.name, c.expectation || '', '', '', '', c.source || 'mgr']);
   });
 
   // Cập nhật status
@@ -375,15 +411,18 @@ function nvSubmit(d) {
   // ── Thông báo ─────────────────────────────────────────────────
   if (isCeoDirect) {
     // Luồng rút gọn: gửi CEO link ceo-review (HMAC token)
-    var ceoLink = buildLink('/evaluation/ceo', evalId, ceoId);
+    // FIX BUG #2: path đúng là /evaluation/ceo-review (folder webapp), không phải /evaluation/ceo
+    var ceoLink = buildLink('/evaluation/ceo-review', evalId, ceoId);
     notifyDiscord(ceoId,
       makeEmbed('✅ NV Đã Nộp Phiếu Tự Đánh Giá',
         '**' + evalObj.name + '** đã hoàn thành tự đánh giá.\nVui lòng xem xét và phê duyệt.',
         0x8B5CF6, [], ceoLink, 'Xem & Phê duyệt'),
       evalObj.hr_discord_id);
   } else {
-    // Luồng thường: gửi QL link mgr-review
-    var mgrLink = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
+    // Luồng thường: gửi QL link mgr-review (chấm điểm + quyết định)
+    // FIX BUG #2: trước đây code trỏ /evaluation/mgr-fill (sai context — QL đã điền xong)
+    //            + thiếu HMAC token → đổi sang /evaluation/mgr-review + buildLink
+    var mgrLink = buildLink('/evaluation/mgr-review', evalId, evalObj.manager_discord_id);
     notifyDiscord(evalObj.manager_discord_id,
       makeEmbed('✅ NV Đã Nộp Phiếu Tự Đánh Giá',
         '**' + evalObj.name + '** đã hoàn thành tự đánh giá. Vui lòng chấm điểm và đưa ra quyết định.',
@@ -425,7 +464,9 @@ function mgrReview(d) {
 
   var evalObj = getEvalObj(evalId);
   var ceoId   = prop('CEO_DISCORD_ID');
-  var ceoLink = prop('WEBAPP_URL') + '/evaluation/ceo/' + evalId;
+  // FIX BUG #2: trước đây link thiếu token + sai path (/evaluation/ceo) → CEO bị 403
+  //            + path đúng là /evaluation/ceo-review (theo folder webapp)
+  var ceoLink = ceoId ? buildLink('/evaluation/ceo-review', evalId, ceoId) : '';
   if (ceoId) {
     notifyDiscord(ceoId,
       makeEmbed('📊 Phiếu Chờ Phê Duyệt', '**' + evalObj.name + '** — Quản lý đề xuất: **' + (d.mgr_decision||'') + '**\nVui lòng xem xét và phê duyệt.', 0xF97316, [], ceoLink, 'Phê duyệt'),
@@ -437,22 +478,40 @@ function mgrReview(d) {
 
 // ============================================================
 //  ACTION 5: ceo_review — CEO phê duyệt hoặc trả về
-//  Status: PENDING_CEO → COMPLETED | UNDER_REVIEW
-//  Notify: QL + CC HR
+//  Status:
+//    - approve + thường  : PENDING_CEO → COMPLETED
+//    - approve + rút gọn : PENDING_CEO → PENDING_HR
+//    - reject (cả 2)     : PENDING_CEO → REJECTED
+//  Notify:
+//    - thường  : QL nhận thông báo (link mgr-review) + CC HR
+//    - rút gọn : HR nhận thông báo (gửi kết quả) + NV nhận tin báo chờ HR
 // ============================================================
 function ceoReview(d) {
   var evalId = d.eval_id;
-  var newStatus = d.status || (d.ceo_action === 'approve' ? 'COMPLETED' : 'UNDER_REVIEW');
+
+  // FIX BUG #8: GAS tự tính newStatus dựa trên is_ceo_direct của row, không phụ thuộc webapp gửi.
+  // Trước đây dùng d.status || (approve ? COMPLETED : UNDER_REVIEW) → nếu webapp quên gửi status
+  // sẽ default sai (UNDER_REVIEW không nằm trong enum chuẩn).
+  var evalObj = getEvalObj(evalId);
+  var ceoId   = prop('CEO_DISCORD_ID');
+  var isCeoDirect = !!(evalObj && ceoId && evalObj.manager_discord_id === ceoId);
+
+  var newStatus;
+  if (d.ceo_action === 'reject') {
+    newStatus = 'REJECTED';
+  } else if (d.ceo_action === 'approve') {
+    newStatus = isCeoDirect ? 'PENDING_HR' : 'COMPLETED';
+  } else {
+    // Action không hợp lệ — fallback giữ status cũ và log
+    Logger.log('ceoReview: ceo_action không hợp lệ: ' + d.ceo_action);
+    newStatus = (evalObj && evalObj.status) || 'PENDING_CEO';
+  }
 
   updateRow(SHEET_EVAL, 'id', evalId, {
     status: newStatus,
     ceo_comment: d.ceo_comment || '',
     ceo_reviewed_at: now()
   });
-
-  var evalObj = getEvalObj(evalId);
-  var ceoId   = prop('CEO_DISCORD_ID');
-  var isCeoDirect = !!(evalObj && ceoId && evalObj.manager_discord_id === ceoId);
 
   if (isCeoDirect) {
     // Luồng rút gọn: CEO đã đánh giá → notify HR + CC NV
@@ -470,7 +529,9 @@ function ceoReview(d) {
         'CEO đã xem xét phiếu của bạn. HR sẽ gửi kết quả sớm.', 0x94A3B8), null);
   } else {
     // Luồng thường: notify QL
-    var mgrLink = prop('WEBAPP_URL') + '/evaluation/mgr-fill/' + evalId;
+    // FIX BUG #2: link cũ trỏ /evaluation/mgr-fill (sai context — QL đã điền xong)
+    //            + thiếu HMAC token → đổi sang /evaluation/mgr-review + buildLink
+    var mgrLink = buildLink('/evaluation/mgr-review', evalId, evalObj.manager_discord_id);
     var title   = newStatus === 'COMPLETED' ? '✅ CEO Đã Phê Duyệt' : '🔄 CEO Yêu Cầu Xem Lại';
     var desc    = newStatus === 'COMPLETED'
       ? 'Phiếu của **' + evalObj.name + '** đã được CEO phê duyệt. Vui lòng gửi kết quả cho nhân viên.'

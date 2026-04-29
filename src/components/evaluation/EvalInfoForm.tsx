@@ -15,6 +15,7 @@ export interface EvalInfo {
   dept: string;
   role: string;
   manager_name: string;
+  manager_discord_id?: string;
   trial_start: string;
   trial_end?: string;
   eval_date: string;

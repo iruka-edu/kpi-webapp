@@ -5,61 +5,20 @@
  *   1. Danh sách công việc đã giao cho NV
  *   2. Tiêu chí đánh giá năng lực (sửa từ mẫu HR hoặc tự tạo)
  *
- * Bảo mật: Yêu cầu Dashboard Password (Quản lý đã biết)
- * URL: /evaluation/mgr-fill/[eval_id]
+ * Bảo mật: HMAC-SHA256 token cá nhân hóa qua URL (giống /evaluation NV self-eval)
+ * URL: /evaluation/mgr-fill/<eval_id>?discord_id=<id>&token=<hmac>
  */
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import MgrWorkSummary from '@/components/evaluation/MgrWorkSummary';
 import EvalInfoForm from '@/components/evaluation/EvalInfoForm';
-import { Lock, ClipboardCheck, Loader2, AlertTriangle } from 'lucide-react';
+import { ClipboardCheck, Loader2, AlertTriangle } from 'lucide-react';
 import type { EvalInfo } from '@/components/evaluation/EvalInfoForm';
 import type { CriteriaItem } from '@/components/evaluation/EvalCriteriaTable';
-
-// ── Màn hình đăng nhập Quản lý ───────────────────────────────────
-function MgrLoginGate({ onLogin }: { onLogin: (pass: string) => void }) {
-  const [pass, setPass] = useState('');
-  const [err, setErr] = useState('');
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
-      <div className="w-full max-w-sm bg-slate-800/60 rounded-2xl border border-slate-700/50 p-8 space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 bg-purple-600/20 rounded-2xl flex items-center justify-center mx-auto">
-            <Lock size={24} className="text-purple-400" />
-          </div>
-          <h1 className="text-xl font-bold text-white">Điền Công Việc</h1>
-          <p className="text-slate-400 text-sm">Xác thực trước khi điền form đánh giá</p>
-        </div>
-        {err && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2 text-red-400 text-sm">{err}</div>
-        )}
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">
-            Mật khẩu Dashboard
-          </label>
-          <input
-            type="password"
-            value={pass}
-            onChange={e => { setPass(e.target.value); setErr(''); }}
-            onKeyDown={e => e.key === 'Enter' && (pass ? onLogin(pass) : setErr('Nhập mật khẩu'))}
-            placeholder="••••••••"
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:border-purple-500 outline-none transition"
-          />
-        </div>
-        <button
-          onClick={() => pass ? onLogin(pass) : setErr('Nhập mật khẩu')}
-          className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors"
-        >
-          Vào Form
-        </button>
-      </div>
-    </div>
-  );
-}
 
 interface EvalData {
   info: EvalInfo;
@@ -67,41 +26,78 @@ interface EvalData {
   status: string;
 }
 
-export default function MgrFillPage() {
+function MgrFillContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const evalId = params?.id as string;
+  const discordId = searchParams.get('discord_id') || '';
+  const token = searchParams.get('token') || '';
 
-  const [pass, setPass] = useState('');
-  const [authed, setAuthed] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [evalData, setEvalData] = useState<EvalData | null>(null);
   const [error, setError] = useState('');
 
-  const loadData = async (dashPass: string) => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch(`/api/evaluation/mgr-fill?id=${encodeURIComponent(evalId)}`, {
-        headers: { 'x-dashboard-auth': dashPass },
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Lỗi tải phiếu');
-      setEvalData(data);
-      setAuthed(true);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+  useEffect(() => {
+    if (!evalId || !discordId || !token) {
+      setError('Link không hợp lệ — thiếu tham số xác thực. Vui lòng dùng link Bot Discord gửi.');
       setLoading(false);
+      return;
     }
-  };
+    const load = async () => {
+      try {
+        const url =
+          `/api/evaluation/mgr-fill?id=${encodeURIComponent(evalId)}` +
+          `&discord_id=${encodeURIComponent(discordId)}` +
+          `&token=${encodeURIComponent(token)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || 'Lỗi tải phiếu');
+        // Bảo đảm hr_criteria + status có giá trị mặc định
+        setEvalData({
+          info: data.info,
+          hr_criteria: data.hr_criteria || data.criteria || [],
+          status: data.status || '',
+        });
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [evalId, discordId, token]);
 
-  const handleLogin = (dashPass: string) => {
-    setPass(dashPass);
-    loadData(dashPass);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
+        <Loader2 size={32} className="animate-spin text-blue-400" />
+      </div>
+    );
+  }
 
-  if (!authed) {
-    return <MgrLoginGate onLogin={handleLogin} />;
+  if (error || !evalData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-red-400" />
+        <h1 className="text-xl font-bold text-white">Không thể mở phiếu</h1>
+        <p className="text-slate-400 max-w-md">{error || 'Phiếu không tồn tại'}</p>
+      </div>
+    );
+  }
+
+  // FIX BUG #4: Chặn khi luồng rút gọn (Quản lý trực tiếp = CEO) — bước này được bỏ qua
+  const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+  if (CEO_DISCORD_ID && evalData.info?.manager_discord_id === CEO_DISCORD_ID) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-amber-400" />
+        <h1 className="text-xl font-bold text-white">Bước này được bỏ qua</h1>
+        <p className="text-slate-400 max-w-md">
+          Phiếu này thuộc <b>luồng rút gọn</b> — Quản lý trực tiếp chính là CEO,
+          nên không cần bước này. NV sẽ tự điền công việc + tự đánh giá, sau đó CEO duyệt trực tiếp.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -137,40 +133,36 @@ export default function MgrFillPage() {
           </div>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-blue-400" />
-          </div>
-        )}
-
-        {/* Lỗi */}
-        {error && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-5 text-red-400">
-            <AlertTriangle size={20} className="shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
         {/* Nội dung */}
-        {evalData && !loading && (
-          <div className="space-y-8">
-            {/* Thông tin NV */}
-            <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-              <h2 className="text-base font-bold text-slate-300 mb-4">📋 Thông Tin Nhân Viên</h2>
-              <EvalInfoForm info={evalData.info} />
-            </section>
+        <div className="space-y-8">
+          {/* Thông tin NV */}
+          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
+            <h2 className="text-base font-bold text-slate-300 mb-4">📋 Thông Tin Nhân Viên</h2>
+            <EvalInfoForm info={evalData.info} />
+          </section>
 
-            {/* Form điền việc */}
-            <MgrWorkSummary
-              evalId={evalId}
-              employeeName={evalData.info.name}
-              dashboardPassword={pass}
-              hrCriteria={evalData.hr_criteria}
-            />
-          </div>
-        )}
+          {/* Form điền việc */}
+          <MgrWorkSummary
+            evalId={evalId}
+            employeeName={evalData.info.name}
+            discordId={discordId}
+            token={token}
+            hrCriteria={evalData.hr_criteria}
+          />
+        </div>
       </main>
     </div>
+  );
+}
+
+export default function MgrFillPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
+        <Loader2 size={32} className="animate-spin text-blue-400" />
+      </div>
+    }>
+      <MgrFillContent />
+    </Suspense>
   );
 }

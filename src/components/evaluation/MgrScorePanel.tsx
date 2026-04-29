@@ -40,10 +40,13 @@ interface MgrScorePanelProps {
   evalId: string;
   employeeName: string;
   criteria: CriteriaWithScore[];
-  dashboardPass: string;
+  /** Discord ID của Quản lý — dùng để verify HMAC token */
+  discordId: string;
+  /** HMAC token 72h từ link DM Bot Discord */
+  token: string;
 }
 
-export default function MgrScorePanel({ evalId, employeeName, criteria, dashboardPass }: MgrScorePanelProps) {
+export default function MgrScorePanel({ evalId, employeeName, criteria, discordId, token }: MgrScorePanelProps) {
   // Điểm QL chấm { criteriaIndex: score }
   const [mgrScores, setMgrScores] = useState<Record<number, number>>({});
   const [comment, setComment] = useState('');
@@ -96,12 +99,11 @@ export default function MgrScorePanel({ evalId, employeeName, criteria, dashboar
     try {
       const res = await fetch('/api/evaluation/mgr-review', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dashboard-auth': dashboardPass,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eval_id: evalId,
+          discord_id: discordId,
+          token,
           mgr_scores: criteria.map((c, i) => ({
             name: c.name,
             self_score: c.self_score,

@@ -28,7 +28,10 @@ export interface WorkItem {
 interface MgrWorkSummaryProps {
   evalId: string;
   employeeName: string;
-  dashboardPassword: string;
+  /** Discord ID của Quản lý — dùng để verify HMAC token */
+  discordId: string;
+  /** HMAC token 72h từ link DM Bot Discord */
+  token: string;
   /** Tiêu chí mẫu HR đã điền (có thể rỗng) */
   hrCriteria?: CriteriaItem[];
 }
@@ -37,7 +40,7 @@ const emptyWork = (stt: number): WorkItem => ({ stt, area: '', detail: '' });
 const emptyCrit = (): CriteriaItem => ({ name: '', expectation: '', source: 'mgr' });
 
 export default function MgrWorkSummary({
-  evalId, employeeName, dashboardPassword, hrCriteria = []
+  evalId, employeeName, discordId, token, hrCriteria = []
 }: MgrWorkSummaryProps) {
   const [works, setWorks] = useState<WorkItem[]>([emptyWork(1)]);
   const [criteria, setCriteria] = useState<CriteriaItem[]>(
@@ -82,13 +85,13 @@ export default function MgrWorkSummary({
     try {
       const res = await fetch('/api/evaluation/mgr-fill', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dashboard-auth': dashboardPassword,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eval_id: evalId,
-          work_items: validWorks,
+          discord_id: discordId,
+          token,
+          // Field đúng theo GAS expect — trước đây tên 'work_items' bị mất khi GAS save
+          work_summary: validWorks,
           criteria: validCrit,
         }),
       });

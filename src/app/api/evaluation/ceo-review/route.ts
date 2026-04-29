@@ -91,6 +91,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ceo_action phải là "approve" hoặc "reject"' }, { status: 400 });
     }
 
+    // FIX BUG #3: KHÔNG dùng body.is_ceo_direct (frontend gửi — có thể giả mạo).
+    // Server tự fetch row từ GAS rồi so sánh manager_discord_id với CEO_DISCORD_ID.
+    const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+    let isCeoDirect = false;
+    try {
+      const evalUrl = `${GAS_EVAL_URL}?action=get_evaluation&eval_id=${encodeURIComponent(eval_id)}`;
+      const evalRes = await fetch(evalUrl);
+      const evalData = await evalRes.json();
+      if (evalData?.error) throw new Error(evalData.error);
+      const mgrId = evalData?.info?.manager_discord_id || evalData?.manager_discord_id || '';
+      isCeoDirect = !!(CEO_DISCORD_ID && mgrId && mgrId === CEO_DISCORD_ID);
+    } catch (err: any) {
+      console.error('[ceo-review] Không xác định được is_ceo_direct (fetch GAS):', err.message);
+      return NextResponse.json(
+        { error: 'Không xác minh được loại phiếu (mất kết nối Sheet). Thử lại sau.' },
+        { status: 502 },
+      );
+    }
+
     // Xác định status mới dựa trên quyết định CEO và loại luồng:
     //  - Luồng THƯỜNG approve  → COMPLETED  (HR gửi NV)
     //  - Luồng RÚT GỌN approve  → PENDING_HR (HR xác nhận rồi gửi NV + CC CEO)
@@ -98,7 +117,7 @@ export async function POST(request: Request) {
     let newStatus: string;
     if (body.ceo_action === 'reject') {
       newStatus = 'REJECTED';
-    } else if (body.is_ceo_direct) {
+    } else if (isCeoDirect) {
       // Luồng rút gọn: CEO duyệt → chờ HR gửi kết quả cho NV
       newStatus = 'PENDING_HR';
     } else {
@@ -109,12 +128,15 @@ export async function POST(request: Request) {
     // Gửi GAS:
     //  approve → status COMPLETED → Bot gửi HR để gửi kết quả cho NV (CC NV)
     //  reject  → status REJECTED  → Bot báo HR + CC NV
+    // Loại bỏ body.is_ceo_direct không tin cậy trước khi forward GAS (GAS tự tính lại)
+    const { is_ceo_direct: _unused, ...safeBody } = body;
+    void _unused;
     const response = await fetch(GAS_EVAL_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'ceo_review',
-        ...body,
+        ...safeBody,
         status: newStatus,
       }),
     });

@@ -32,6 +32,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Thiếu eval_id' }, { status: 400 });
     }
 
+    // FIX BUG #6: Check status hiện tại — chỉ cho gửi khi COMPLETED hoặc PENDING_HR
+    //            (chống bấm "Gửi kết quả" 2 lần → NV nhận 2 DM trùng).
+    try {
+      const statusUrl = `${GAS_EVAL_URL}?action=get_evaluation&eval_id=${encodeURIComponent(body.eval_id)}`;
+      const statusRes = await fetch(statusUrl);
+      const statusData = await statusRes.json();
+      if (statusData?.error) throw new Error(statusData.error);
+      const currentStatus = statusData?.status || statusData?.info?.status || '';
+      const allowed = ['COMPLETED', 'PENDING_HR'];
+      if (currentStatus && !allowed.includes(currentStatus)) {
+        return NextResponse.json(
+          {
+            error:
+              `Phiếu đang ở trạng thái "${currentStatus}", không thể gửi kết quả. ` +
+              `Chỉ gửi được khi CEO đã duyệt xong (COMPLETED hoặc PENDING_HR).`,
+          },
+          { status: 409 },
+        );
+      }
+    } catch (err: any) {
+      console.error('[send-result] Không lấy được status hiện tại:', err.message);
+      return NextResponse.json(
+        { error: 'Không xác minh được trạng thái phiếu (mất kết nối Sheet). Thử lại sau.' },
+        { status: 502 },
+      );
+    }
+
     // Gửi GAS: chuyển status COMPLETED → RESULT_SENT
     // GAS trigger Bot: gửi link kết quả cho NV + CC CEO (bước cuối)
     const response = await fetch(GAS_EVAL_URL, {

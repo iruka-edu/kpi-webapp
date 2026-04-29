@@ -96,6 +96,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Vui lòng điền điểm tự đánh giá' }, { status: 400 });
     }
 
+    // FIX BUG #5: Validate từng self_score phải là số nguyên 1-5
+    for (const c of body.criteria_scores) {
+      const s = Number(c?.self_score);
+      if (!Number.isInteger(s) || s < 1 || s > 5) {
+        return NextResponse.json(
+          { error: 'Điểm tự đánh giá phải là số nguyên từ 1 đến 5' },
+          { status: 400 },
+        );
+      }
+    }
+
     // Gửi GAS: lưu + chuyển status NV_PENDING → SUBMITTED
     // GAS trigger Bot: báo Quản lý + CC HR
     const response = await fetch(GAS_EVAL_URL, {

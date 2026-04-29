@@ -77,9 +77,27 @@ export async function POST(request: Request) {
     if (!body.mgr_scores || body.mgr_scores.length === 0) {
       return NextResponse.json({ error: 'Vui lòng chấm điểm ít nhất 1 tiêu chí' }, { status: 400 });
     }
+    // FIX BUG #5: Validate từng mgr_score phải là số nguyên 1-5
+    for (const m of body.mgr_scores) {
+      const s = Number(m?.mgr_score);
+      if (!Number.isInteger(s) || s < 1 || s > 5) {
+        return NextResponse.json(
+          { error: 'Điểm chấm của Quản lý phải là số nguyên từ 1 đến 5' },
+          { status: 400 },
+        );
+      }
+    }
     // Phải có quyết định đề xuất
     if (!body.mgr_decision) {
       return NextResponse.json({ error: 'Vui lòng chọn đề xuất (Tiếp nhận / Chấm dứt / Gia hạn)' }, { status: 400 });
+    }
+    // Whitelist quyết định để chống giả mạo
+    const allowedDecisions = ['hire', 'extend', 'reject', 'Tiếp nhận', 'Gia hạn', 'Chấm dứt'];
+    if (!allowedDecisions.includes(String(body.mgr_decision))) {
+      return NextResponse.json(
+        { error: 'mgr_decision không hợp lệ' },
+        { status: 400 },
+      );
     }
 
     // Gửi GAS: lưu điểm QL + chuyển status → PENDING_CEO
