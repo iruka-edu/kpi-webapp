@@ -34,7 +34,7 @@ const BOT_INTERNAL_SECRET = process.env.BOT_INTERNAL_SECRET || '';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { secret, to, cc, embed } = body || {};
+    const { secret, to, cc, embed, cc_embed } = body || {};
 
     // Verify secret từ GAS — chống ai cũng gọi vào
     if (!secret || secret !== EVAL_SECRET) {
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
         to: String(to),
         cc: cc ? String(cc) : null,
         embed,
+        cc_embed: cc_embed || null,
       }),
     });
 

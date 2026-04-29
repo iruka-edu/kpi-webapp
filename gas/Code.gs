@@ -153,7 +153,8 @@ function buildLink(path, evalId, discordId) {
 
 // ── Gửi DM/thông báo qua Next.js Bot Relay ───────────────────
 // WebApp expose POST /api/discord/notify → bot gửi DM
-function notifyDiscord(targetDiscordId, embedData, ccDiscordId) {
+// ccEmbedData (optional): nội dung riêng cho CC — nếu null bot dùng lại embedData
+function notifyDiscord(targetDiscordId, embedData, ccDiscordId, ccEmbedData) {
   var webappUrl = prop('WEBAPP_URL');
   if (!webappUrl) {
     Logger.log('notifyDiscord: WEBAPP_URL chưa cấu hình — skip DM');
@@ -174,7 +175,8 @@ function notifyDiscord(targetDiscordId, embedData, ccDiscordId) {
         secret: prop('KPI_TOKEN_SECRET'),
         to: targetDiscordId,
         cc: ccDiscordId || null,
-        embed: embedData
+        embed: embedData,
+        cc_embed: ccEmbedData || null
       })
     });
     var code = resp.getResponseCode();
@@ -289,10 +291,13 @@ function initEvaluation(d) {
       makeEmbed('📝 Bạn Có Phiếu Tự Đánh Giá',
         'HR vừa tạo phiếu đánh giá thử việc cho bạn.\nVui lòng vào form điền công việc đã làm và tự đánh giá.',
         0xF59E0B, [], nvLink, 'Tự đánh giá ngay'),
-      d.hr_discord_id);
+      d.hr_discord_id,
+      makeEmbed('✅ Đã Tạo Phiếu Thành Công',
+        'Đã gửi phiếu tự đánh giá cho **' + d.name + '** (' + d.dept + ').\nBot sẽ thông báo khi nhân viên nộp xong.',
+        0x22C55E));
     if (ceoId) notifyDiscord(ceoId,
-      makeEmbed('📋 [CC] Phiếu mới: ' + d.name,
-        '**' + d.name + '** vừa nhận link tự đánh giá. Bạn sẽ được thông báo khi NV nộp xong.',
+      makeEmbed('📋 Phiếu Đánh Giá Thử Việc: ' + d.name,
+        'HR vừa tạo phiếu thử việc cho **' + d.name + '** (' + d.dept + ').\nNhân viên đang tự đánh giá — bạn sẽ nhận link review khi nộp xong.',
         0x94A3B8), null);
   } else {
     // Luồng thường: thông báo QL điền công việc
@@ -305,10 +310,13 @@ function initEvaluation(d) {
       [{ name: 'HR tạo', value: '<@' + d.hr_discord_id + '>', inline: true }],
       link, 'Điền công việc & tiêu chí'
     );
-    notifyDiscord(d.manager_discord_id, embed, d.hr_discord_id);
+    notifyDiscord(d.manager_discord_id, embed, d.hr_discord_id,
+      makeEmbed('✅ Đã Tạo Phiếu Thành Công',
+        'Đã gửi phiếu cho Quản lý **' + d.manager_name + '** xem xét và điền đầu việc cho **' + d.name + '**.',
+        0x22C55E));
     if (ceoId) notifyDiscord(ceoId,
-      makeEmbed('📋 [CC] Phiếu mới: ' + d.name,
-        'HR vừa tạo phiếu đánh giá thử việc cho **' + d.name + '**. Quản lý đang điền công việc.',
+      makeEmbed('📋 Phiếu Đánh Giá Thử Việc: ' + d.name,
+        'HR vừa tạo phiếu thử việc cho **' + d.name + '** (' + d.dept + ').\nQuản lý **' + d.manager_name + '** đang điền đầu việc và tiêu chí.',
         0x94A3B8), null);
   }
 
@@ -373,7 +381,10 @@ function mgrFill(d) {
     'Quản lý **' + evalObj.manager_name + '** vừa hoàn thành điền công việc.\nHãy vào form tự chấm điểm và điền kết quả thực tế.',
     0xF59E0B, [], nvLink, 'Tự đánh giá ngay'
   );
-  notifyDiscord(evalObj.discord_id, embed, evalObj.hr_discord_id);
+  notifyDiscord(evalObj.discord_id, embed, evalObj.hr_discord_id,
+    makeEmbed('📋 Quản Lý Đã Điền Xong',
+      'Quản lý **' + evalObj.manager_name + '** đã điền đầu việc và tiêu chí cho **' + evalObj.name + '**.\nNhân viên đang tự đánh giá.',
+      0x3B82F6));
 
   return { success: true };
 }
@@ -463,7 +474,10 @@ function nvSubmit(d) {
       makeEmbed('✅ NV Đã Nộp Phiếu Tự Đánh Giá',
         '**' + evalObj.name + '** đã hoàn thành tự đánh giá.\nVui lòng xem xét và phê duyệt.',
         0x8B5CF6, [], ceoLink, 'Xem & Phê duyệt'),
-      evalObj.hr_discord_id);
+      evalObj.hr_discord_id,
+      makeEmbed('📋 Nhân Viên Đã Nộp Phiếu',
+        '**' + evalObj.name + '** đã hoàn thành tự đánh giá.\nCEO đang xem xét — bạn sẽ nhận thông báo sau khi CEO phê duyệt.',
+        0x94A3B8));
   } else {
     // Luồng thường: gửi QL link mgr-review (chấm điểm + quyết định)
     // FIX BUG #2: trước đây code trỏ /evaluation/mgr-fill (sai context — QL đã điền xong)
@@ -473,7 +487,10 @@ function nvSubmit(d) {
       makeEmbed('✅ NV Đã Nộp Phiếu Tự Đánh Giá',
         '**' + evalObj.name + '** đã hoàn thành tự đánh giá. Vui lòng chấm điểm và đưa ra quyết định.',
         0x8B5CF6, [], mgrLink, 'Chấm điểm & Quyết định'),
-      evalObj.hr_discord_id);
+      evalObj.hr_discord_id,
+      makeEmbed('📋 Nhân Viên Đã Nộp Phiếu',
+        '**' + evalObj.name + '** đã hoàn thành tự đánh giá.\nQuản lý **' + evalObj.manager_name + '** đang chấm điểm và đưa ra quyết định.',
+        0x94A3B8));
   }
 
   return { success: true };
@@ -522,7 +539,10 @@ function mgrReview(d) {
   if (ceoId) {
     notifyDiscord(ceoId,
       makeEmbed('📊 Phiếu Chờ Phê Duyệt', '**' + evalObj.name + '** — Quản lý đề xuất: **' + (d.mgr_decision||'') + '**\nVui lòng xem xét và phê duyệt.', 0xF97316, [], ceoLink, 'Phê duyệt'),
-      evalObj.hr_discord_id);
+      evalObj.hr_discord_id,
+      makeEmbed('📊 Quản Lý Đã Chấm Điểm Xong',
+        'Quản lý **' + evalObj.manager_name + '** đã chấm điểm phiếu **' + evalObj.name + '** (đề xuất: **' + (d.mgr_decision||'chưa rõ') + '**).\nCEO đang phê duyệt.',
+        0x94A3B8));
   }
 
   return { success: true };
@@ -593,9 +613,14 @@ function ceoReview(d) {
       ? 'Phiếu của **' + evalObj.name + '** đã được CEO phê duyệt. Vui lòng gửi kết quả cho nhân viên.'
       : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||'');
     var color   = newStatus === 'COMPLETED' ? 0x22C55E : 0xF59E0B;
+    var hrTitle = newStatus === 'COMPLETED' ? '✅ CEO Đã Phê Duyệt' : '🔄 CEO Yêu Cầu Xem Lại';
+    var hrDesc  = newStatus === 'COMPLETED'
+      ? 'CEO đã phê duyệt phiếu **' + evalObj.name + '**. Quản lý **' + evalObj.manager_name + '** đang gửi kết quả cho nhân viên.'
+      : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||'') + '.\nQuản lý đang xử lý.';
     notifyDiscord(evalObj.manager_discord_id,
       makeEmbed(title, desc, color, [], mgrLink, 'Xem phiếu'),
-      evalObj.hr_discord_id);
+      evalObj.hr_discord_id,
+      makeEmbed(hrTitle, hrDesc, color));
   }
 
   return { success: true, new_status: newStatus };
@@ -623,7 +648,10 @@ function sendResult(d) {
     makeEmbed('🎉 Kết Quả Đánh Giá Thử Việc',
       'Kết quả đánh giá của bạn đã sẵn sàng.\n' + (d.mgr_note ? '> ' + d.mgr_note : ''),
       0x22C55E, [], nvLink, 'Xem kết quả'),
-    ceoId || null);
+    ceoId || null,
+    makeEmbed('✅ Kết Quả Đã Gửi Cho Nhân Viên',
+      'Kết quả đánh giá thử việc của **' + evalObj.name + '** đã được gửi thành công. Phiếu hoàn tất.',
+      0x94A3B8));
 
   return { success: true };
 }
