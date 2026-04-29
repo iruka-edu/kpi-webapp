@@ -459,7 +459,16 @@ export default function EvaluationForm({
               </tr>
             </thead>
             <tbody>
-              {Object.entries(groupCriteria(data.criteria)).map(([group, items]) => (
+              {(() => {
+                const grouped = groupCriteria(data.criteria);
+                // STT chạy liên tiếp xuyên suốt các nhóm (1,2,3,4...) theo thứ tự render,
+                // không dùng index gốc trong mảng (tránh hiện 1,2,3,10 khi xóa/thêm).
+                const sttByIndex: Record<number, number> = {};
+                let _stt = 0;
+                Object.values(grouped).forEach(items => {
+                  items.forEach(({ index }) => { _stt += 1; sttByIndex[index] = _stt; });
+                });
+                return Object.entries(grouped).map(([group, items]) => (
                 <Fragment key={group}>
                   <tr>
                     <td colSpan={6} className="bg-[#1e3a5f]/5 text-[#1e3a5f] font-black text-base uppercase tracking-[0.06em] p-[8px_12px] border border-[#d1d5db]">
@@ -468,7 +477,7 @@ export default function EvaluationForm({
                   </tr>
                   {items.map(({ item: c, index }) => (
                     <tr key={index} className="hover:bg-[#eff6ff] transition-colors">
-                      <Td align="center" bold>{index + 1}</Td>
+                      <Td align="center" bold>{sttByIndex[index]}</Td>
                       <Td>
                         <textarea rows={2} disabled={!cur('criteria_meta')} value={c.name} onChange={e => updateCrit(index, 'name', e.target.value)} placeholder="Nhập tên tiêu chí..." className={cellCls('font-bold', !cur('criteria_meta'))} />
                       </Td>
@@ -510,7 +519,8 @@ export default function EvaluationForm({
                     </tr>
                   )}
                 </Fragment>
-              ))}
+                ));
+              })()}
             </tbody>
           </table>
         </div>
