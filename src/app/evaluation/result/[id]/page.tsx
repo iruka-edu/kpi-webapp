@@ -76,6 +76,23 @@ function ResultContent() {
     );
   }
 
+  // Badge theo status thực tế
+  const badge = (() => {
+    switch (data.status) {
+      case 'PENDING_HR':
+      case 'COMPLETED':
+        return { label: 'Sẵn Sàng Gửi', dot: 'bg-green-500', wrap: 'bg-green-100 text-green-800' };
+      case 'RESULT_SENT':
+        return { label: 'Đã Gửi', dot: 'bg-slate-500', wrap: 'bg-slate-100 text-slate-700' };
+      case 'ACKNOWLEDGED':
+        return { label: 'NV Đã Xác Nhận', dot: 'bg-blue-500', wrap: 'bg-blue-100 text-blue-800' };
+      case 'REJECTED':
+        return { label: 'CEO Đã Từ Chối', dot: 'bg-red-500', wrap: 'bg-red-100 text-red-800' };
+      default:
+        return { label: data.status || 'N/A', dot: 'bg-amber-500', wrap: 'bg-amber-100 text-amber-800' };
+    }
+  })();
+
   return (
     <div className="w-full min-h-screen bg-[#f0f4f8] font-sans">
       <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-6 py-3">
@@ -83,11 +100,11 @@ function ResultContent() {
           <div className="w-12 h-12 bg-[#1e3a5f] rounded-xl flex items-center justify-center text-2xl shadow-md">📤</div>
           <div className="flex-1">
             <h1 className="font-black text-[#1e3a5f] text-xl">Đánh Giá Nhân Viên Sau Thử Việc</h1>
-            <p className="text-xs text-slate-500">Gửi kết quả cho nhân viên — Bước 6/6</p>
+            <p className="text-xs text-slate-500">Phiếu kết quả — {data.status === 'REJECTED' ? 'CEO đã từ chối' : 'HR/QL gửi cho nhân viên'}</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-800 uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-            Sẵn Sàng Gửi
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${badge.wrap}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
+            {badge.label}
           </span>
         </div>
       </div>

@@ -49,17 +49,34 @@ export default function ManagerResultSend({
   // - PENDING_HR: luồng rút gọn (CEO kiêm QL → HR gửi)
   const canSend = currentStatus === 'COMPLETED' || currentStatus === 'PENDING_HR';
   const alreadySent = currentStatus === 'RESULT_SENT' || currentStatus === 'ACKNOWLEDGED';
+  const isRejected = currentStatus === 'REJECTED';
 
   // ── Đã gửi rồi ────────────────────────────────────────────────
   if (alreadySent) {
     return (
-      <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 flex items-center gap-4">
-        <CheckCircle size={28} className="text-green-400 shrink-0" />
+      <div className="bg-green-50 border border-green-300 rounded-2xl p-6 flex items-center gap-4">
+        <CheckCircle size={28} className="text-green-600 shrink-0" />
         <div>
-          <div className="font-bold text-green-400 text-base">Kết quả đã được gửi</div>
-          <p className="text-slate-400 text-sm mt-0.5">
-            Nhân viên <strong className="text-white">{employeeName}</strong> đã nhận được kết quả
+          <div className="font-bold text-green-700 text-base">Kết quả đã được gửi</div>
+          <p className="text-slate-600 text-sm mt-0.5">
+            Nhân viên <strong className="text-slate-900">{employeeName}</strong> đã nhận được kết quả
             qua Discord. CEO cũng đã được CC thông báo.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── CEO đã từ chối ────────────────────────────────────────────
+  if (isRejected) {
+    return (
+      <div className="bg-red-50 border border-red-300 rounded-2xl p-6 flex items-center gap-4">
+        <AlertCircle size={28} className="text-red-600 shrink-0" />
+        <div>
+          <div className="font-bold text-red-700 text-base">CEO đã từ chối phiếu</div>
+          <p className="text-slate-600 text-sm mt-0.5">
+            Phiếu thử việc của <strong className="text-slate-900">{employeeName}</strong> đã bị CEO từ chối.
+            Vui lòng xem lý do trong phần "Ghi chú CEO" và liên hệ trực tiếp với nhân viên.
           </p>
         </div>
       </div>
@@ -69,10 +86,10 @@ export default function ManagerResultSend({
   // ── Chưa đủ điều kiện (CEO chưa duyệt) ──────────────────────
   if (!canSend) {
     return (
-      <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-6 flex items-center gap-4">
+      <div className="bg-slate-100 border border-slate-300 rounded-2xl p-6 flex items-center gap-4">
         <Info size={24} className="text-slate-500 shrink-0" />
-        <p className="text-slate-400 text-sm">
-          Nút gửi kết quả sẽ xuất hiện sau khi <strong className="text-white">CEO phê duyệt</strong> phiếu đánh giá này.
+        <p className="text-slate-600 text-sm">
+          Nút gửi kết quả sẽ xuất hiện sau khi <strong className="text-slate-900">CEO phê duyệt</strong> phiếu đánh giá này.
         </p>
       </div>
     );
@@ -81,12 +98,12 @@ export default function ManagerResultSend({
   // ── Gửi thành công ────────────────────────────────────────────
   if (sendStatus === 'sent') {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-        <CheckCircle size={64} className="text-green-400" />
-        <h2 className="text-2xl font-bold text-white">Đã Gửi Kết Quả!</h2>
-        <p className="text-slate-400 max-w-md">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center py-16 text-center space-y-4">
+        <CheckCircle size={64} className="text-green-600" />
+        <h2 className="text-2xl font-bold text-[#1e3a5f]">Đã Gửi Kết Quả!</h2>
+        <p className="text-slate-600 max-w-md">
           Kết quả đánh giá đã được gửi cho{' '}
-          <strong className="text-white">{employeeName}</strong> qua Discord.
+          <strong className="text-slate-900">{employeeName}</strong> qua Discord.
           CEO đã được CC thông báo.
         </p>
       </div>
@@ -121,14 +138,14 @@ export default function ManagerResultSend({
   };
 
   return (
-    <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50 space-y-5">
+    <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
       {/* Tiêu đề */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-green-600/20 flex items-center justify-center">
-          <Send size={18} className="text-green-400" />
+        <div className="w-9 h-9 rounded-xl bg-green-50 border border-green-200 flex items-center justify-center">
+          <Send size={18} className="text-green-600" />
         </div>
         <div>
-          <h2 className="text-base font-bold text-white">Gửi Kết Quả Cho Nhân Viên</h2>
+          <h2 className="text-base font-bold text-[#1e3a5f]">Gửi Kết Quả Cho Nhân Viên</h2>
           <p className="text-xs text-slate-500">
             Bước 6 — CEO đã phê duyệt. Nhấn gửi để hoàn tất quy trình.
           </p>
@@ -137,16 +154,16 @@ export default function ManagerResultSend({
 
       {/* Lời nhắn tuỳ chọn */}
       <div>
-        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">
+        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
           Lời nhắn kèm kết quả{' '}
-          <span className="text-slate-600 font-normal normal-case">(không bắt buộc)</span>
+          <span className="text-slate-400 font-normal normal-case">(không bắt buộc)</span>
         </label>
         <textarea
           rows={3}
           value={mgrNote}
           onChange={(e) => setMgrNote(e.target.value)}
           placeholder="Lời chúc, động viên, hoặc hướng dẫn tiếp theo cho nhân viên..."
-          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none resize-none transition text-sm"
+          className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none resize-none transition text-sm"
         />
       </div>
 
