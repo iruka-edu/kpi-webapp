@@ -109,11 +109,11 @@ export default function MgrWorkSummary({
   // ── Màn hình thành công ───────────────────────────────────────────
   if (status === 'success') {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-        <CheckCircle size={64} className="text-green-400" />
-        <h2 className="text-2xl font-bold text-white">Đã gửi cho nhân viên!</h2>
-        <p className="text-slate-400 max-w-md">
-          Bot Discord đã gửi link form đến <strong className="text-white">{employeeName}</strong> để tự đánh giá.
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <CheckCircle size={64} className="text-[#16a34a]" />
+        <h2 className="text-2xl font-bold text-[#1e3a5f]">Đã gửi cho nhân viên!</h2>
+        <p className="text-[#6b7280] max-w-md">
+          Bot Discord đã gửi link form đến <strong className="text-[#1e3a5f]">{employeeName}</strong> để tự đánh giá.
           HR đã được CC thông báo.
         </p>
       </div>
@@ -121,136 +121,163 @@ export default function MgrWorkSummary({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-24">
 
       {/* ── PHẦN 1: ĐẦU VIỆC ĐÃ GIAO ── */}
-      <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-sm font-bold">1</span>
-              Công Việc Đã Giao
-            </h2>
-            <p className="text-xs text-slate-500 mt-1 ml-9">
-              Điền đầy đủ các mảng việc + chi tiết nhiệm vụ đã giao cho <strong className="text-slate-300">{employeeName}</strong>
-            </p>
+      <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+        <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+          <span className="text-xl">🗂️</span>
+          <span className="font-black text-[#1e3a5f] uppercase tracking-wide">1. Công Việc Đã Giao</span>
+          <span className="font-medium text-[#6b7280] ml-2">(Quản lý điền — Nhân viên sẽ tự đánh giá kết quả sau)</span>
+        </div>
+        <div className="p-5">
+          <p className="text-sm text-[#6b7280] mb-4">
+            Điền đầy đủ các mảng việc + chi tiết nhiệm vụ đã giao cho <strong className="text-[#1e3a5f]">{employeeName}</strong>
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[40px] text-center">STT</th>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[200px]">Mảng công việc</th>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[260px]">Chi tiết nhiệm vụ & Kỳ vọng</th>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[44px] text-center">Xóa</th>
+                </tr>
+              </thead>
+              <tbody>
+                {works.map((w, i) => (
+                  <tr key={i} className="hover:bg-[#eff6ff] transition-colors">
+                    <td className="border border-[#d1d5db] p-[6px] text-center font-bold text-[#6b7280] w-[40px]">{w.stt}</td>
+                    <td className="border border-[#d1d5db] p-[6px]">
+                      <textarea
+                        rows={2}
+                        value={w.area}
+                        onChange={e => updateWork(i, 'area', e.target.value)}
+                        placeholder="VD: Thiết kế UI / Phát triển tính năng..."
+                        className="w-full font-sans border border-transparent hover:border-[#d1d5db] focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 rounded-[6px] p-[6px] outline-none text-[#111] font-bold bg-transparent focus:bg-white resize-y min-h-[44px] transition-all"
+                      />
+                    </td>
+                    <td className="border border-[#d1d5db] p-[6px]">
+                      <textarea
+                        rows={2}
+                        value={w.detail}
+                        onChange={e => updateWork(i, 'detail', e.target.value)}
+                        placeholder="Mô tả chi tiết công việc, tiêu chuẩn hoàn thành, kỳ vọng..."
+                        className="w-full font-sans text-base border border-transparent hover:border-[#d1d5db] focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 rounded-[6px] p-[6px] outline-none text-[#111] bg-transparent focus:bg-white resize-y min-h-[44px] transition-all leading-relaxed"
+                      />
+                    </td>
+                    <td className="border border-[#d1d5db] p-[6px] text-center">
+                      {works.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeWork(i)}
+                          className="text-red-400 hover:text-red-700 p-2 transition-colors"
+                          title="Xóa đầu việc"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan={4} className="border border-dashed border-blue-300 p-2 text-center bg-blue-50/20">
+                    <button
+                      type="button"
+                      onClick={addWork}
+                      className="text-[#1e3a5f] hover:text-blue-800 font-semibold flex items-center justify-center gap-2 w-full py-1 text-sm"
+                    >
+                      <Plus size={15} className="text-[#1e3a5f]" />
+                      Thêm đầu việc
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <button
-            type="button"
-            onClick={addWork}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 rounded-xl text-sm font-semibold transition-colors border border-blue-600/30"
-          >
-            <Plus size={16} /> Thêm đầu việc
-          </button>
         </div>
-
-        <div className="space-y-3">
-          {works.map((w, i) => (
-            <div key={i} className="grid grid-cols-[auto_1fr_2fr_auto] gap-3 items-start bg-slate-900/50 p-4 rounded-xl border border-slate-700/40">
-              <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 font-bold text-sm shrink-0 mt-1">
-                {w.stt}
-              </div>
-              <div>
-                <label className="text-xs text-slate-500 mb-1.5 block">Mảng công việc</label>
-                <input
-                  type="text"
-                  value={w.area}
-                  onChange={e => updateWork(i, 'area', e.target.value)}
-                  placeholder="VD: Thiết kế UI / Phát triển tính năng..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:border-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-slate-500 mb-1.5 block">Chi tiết nhiệm vụ & Kỳ vọng</label>
-                <textarea
-                  rows={2}
-                  value={w.detail}
-                  onChange={e => updateWork(i, 'detail', e.target.value)}
-                  placeholder="Mô tả chi tiết công việc, tiêu chuẩn hoàn thành, kỳ vọng..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:border-blue-500 outline-none resize-none"
-                />
-              </div>
-              {works.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeWork(i)}
-                  className="mt-7 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+      </div>
 
       {/* ── PHẦN 2: TIÊU CHÍ ĐÁNH GIÁ ── */}
-      <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center text-sm font-bold">2</span>
-              Tiêu Chí Đánh Giá Năng Lực
-            </h2>
-            {hrCriteria.length > 0 && (
-              <p className="text-xs text-purple-400/70 mt-1 ml-9">
-                ✨ HR đã tạo {hrCriteria.length} tiêu chí mẫu — bạn có thể sửa/xóa/thêm tự do
-              </p>
-            )}
+      <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+        <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+          <span className="text-xl">⚡</span>
+          <span className="font-black text-[#1e3a5f] uppercase tracking-wide">2. Tiêu Chí Đánh Giá Năng Lực</span>
+          {hrCriteria.length > 0 && (
+            <span className="font-medium text-[#6b7280] ml-2">
+              ✨ HR tạo {hrCriteria.length} tiêu chí mẫu — Quản lý có thể sửa/xóa/thêm tự do
+            </span>
+          )}
+        </div>
+        <div className="p-5">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[40px] text-center">STT</th>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[200px]">Tên tiêu chí</th>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[260px]">Mô tả kỳ vọng</th>
+                  <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[44px] text-center">Xóa</th>
+                </tr>
+              </thead>
+              <tbody>
+                {criteria.map((c, i) => (
+                  <tr key={i} className="hover:bg-[#eff6ff] transition-colors">
+                    <td className="border border-[#d1d5db] p-[6px] text-center font-bold text-[#6b7280] w-[40px]">{i + 1}</td>
+                    <td className="border border-[#d1d5db] p-[6px]">
+                      <textarea
+                        rows={2}
+                        value={c.name}
+                        onChange={e => updateCrit(i, 'name', e.target.value)}
+                        placeholder="VD: Kiến thức chuyên môn"
+                        className="w-full font-sans border border-transparent hover:border-[#d1d5db] focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 rounded-[6px] p-[6px] outline-none text-[#111] font-bold bg-transparent focus:bg-white resize-y min-h-[44px] transition-all"
+                      />
+                    </td>
+                    <td className="border border-[#d1d5db] p-[6px]">
+                      <textarea
+                        rows={2}
+                        value={c.expectation}
+                        onChange={e => updateCrit(i, 'expectation', e.target.value)}
+                        placeholder="Kỳ vọng cụ thể cho tiêu chí này..."
+                        className="w-full font-sans text-base border border-transparent hover:border-[#d1d5db] focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 rounded-[6px] p-[6px] outline-none text-[#111] bg-transparent focus:bg-white resize-y min-h-[44px] transition-all leading-relaxed"
+                      />
+                    </td>
+                    <td className="border border-[#d1d5db] p-[6px] text-center">
+                      {criteria.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeCrit(i)}
+                          className="text-red-400 hover:text-red-700 p-2 transition-colors"
+                          title="Xóa tiêu chí"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan={4} className="border border-dashed border-blue-300 p-2 text-center bg-blue-50/20">
+                    <button
+                      type="button"
+                      onClick={addCrit}
+                      className="text-[#1e3a5f] hover:text-blue-800 font-semibold flex items-center justify-center gap-2 w-full py-1 text-sm"
+                    >
+                      <Plus size={15} className="text-[#1e3a5f]" />
+                      Thêm tiêu chí
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <button
-            type="button"
-            onClick={addCrit}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 rounded-xl text-sm font-semibold transition-colors border border-purple-600/30"
-          >
-            <Plus size={16} /> Thêm tiêu chí
-          </button>
         </div>
-
-        <div className="space-y-3">
-          {criteria.map((c, i) => (
-            <div key={i} className="grid grid-cols-[auto_1fr_2fr_auto] gap-3 items-start bg-slate-900/50 p-4 rounded-xl border border-slate-700/40">
-              <div className="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 font-bold text-xs shrink-0 mt-1.5">
-                {i + 1}
-              </div>
-              <div>
-                <label className="text-xs text-slate-500 mb-1.5 block">Tên tiêu chí</label>
-                <input
-                  type="text"
-                  value={c.name}
-                  onChange={e => updateCrit(i, 'name', e.target.value)}
-                  placeholder="VD: Kiến thức chuyên môn"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:border-purple-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-slate-500 mb-1.5 block">Mô tả kỳ vọng</label>
-                <textarea
-                  rows={2}
-                  value={c.expectation}
-                  onChange={e => updateCrit(i, 'expectation', e.target.value)}
-                  placeholder="Kỳ vọng cụ thể cho tiêu chí này..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:border-purple-500 outline-none resize-none"
-                />
-              </div>
-              {criteria.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeCrit(i)}
-                  className="mt-7 p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+      </div>
 
       {/* ── LỖI ── */}
       {status === 'error' && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-5 py-3 text-red-400 text-sm">
-          ❌ {errorMsg}
+        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-base font-medium">
+          {errorMsg}
         </div>
       )}
 
@@ -259,7 +286,7 @@ export default function MgrWorkSummary({
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/20"
+          className="flex items-center gap-2 px-8 py-3 bg-gradient-to-br from-[#3b82f6] to-[#1e3a5f] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-[10px] transition-all shadow-lg border-b-[4px] border-[#1e3a5f] hover:scale-[1.02] active:scale-[0.98]"
         >
           {status === 'submitting' ? (
             <><Loader2 size={18} className="animate-spin" /> Đang gửi...</>

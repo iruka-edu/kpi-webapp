@@ -127,11 +127,11 @@ export default function MgrScorePanel({ evalId, employeeName, criteria, discordI
   // ── Màn hình thành công ───────────────────────────────────────────
   if (status === 'success') {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-        <CheckCircle size={64} className="text-green-400" />
-        <h2 className="text-2xl font-bold text-white">Đã gửi cho CEO duyệt!</h2>
-        <p className="text-slate-400 max-w-md">
-          Phiếu đánh giá <strong className="text-white">{employeeName}</strong> đã được gửi lên CEO.
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <CheckCircle size={64} className="text-[#16a34a]" />
+        <h2 className="text-2xl font-bold text-[#1e3a5f]">Đã gửi cho CEO duyệt!</h2>
+        <p className="text-[#6b7280] max-w-md">
+          Phiếu đánh giá <strong className="text-[#1e3a5f]">{employeeName}</strong> đã được gửi lên CEO.
           HR đã được CC thông báo.
         </p>
       </div>
@@ -139,91 +139,82 @@ export default function MgrScorePanel({ evalId, employeeName, criteria, discordI
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-24">
 
       {/* ── PHẦN 1: BẢNG CHẤM ĐIỂM ── */}
-      <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-        <h2 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center text-sm font-bold">1</span>
-          Chấm Điểm Từng Tiêu Chí
-        </h2>
-        <p className="text-xs text-slate-500 mb-5 ml-9">
-          Cột <span className="text-blue-400 font-medium">NV tự chấm</span> chỉ để tham khảo —
-          Điền cột <span className="text-purple-400 font-medium">Điểm QL</span> theo đánh giá của bạn
-        </p>
-
-        {/* Header cột */}
-        <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-4 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide">
-          <span className="w-7">#</span>
-          <span>Tiêu chí</span>
-          <span className="w-28 text-center">NV tự chấm</span>
-          <span className="w-36 text-center">Điểm QL (1-5)</span>
+      <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+        <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+          <span className="text-xl">⚡</span>
+          <span className="font-black text-[#1e3a5f] uppercase tracking-wide">1. Chấm Điểm Từng Tiêu Chí</span>
+          <span className="font-medium text-[#6b7280] ml-2">(Cột NV tự chấm chỉ để tham khảo)</span>
         </div>
-
-        <div className="space-y-2">
-          {criteria.map((c, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center bg-slate-900/50 rounded-xl px-4 py-3 border border-slate-700/40 hover:border-slate-600/50 transition-colors"
-            >
-              {/* STT */}
-              <div className="w-7 h-7 rounded-lg bg-slate-700/60 flex items-center justify-center text-slate-400 text-xs font-bold shrink-0">
-                {i + 1}
-              </div>
-
-              {/* Tiêu chí + kỳ vọng */}
-              <div>
-                <div className="text-white font-medium text-sm">{c.name}</div>
-                {c.expectation && (
-                  <div className="text-slate-500 text-xs mt-0.5 leading-relaxed">{c.expectation}</div>
-                )}
-              </div>
-
-              {/* Điểm NV (readonly) */}
-              <div className="w-28 flex flex-col items-center gap-0.5 shrink-0">
-                <div className="text-2xl font-bold text-blue-400">
-                  {c.self_score > 0 ? c.self_score : '—'}
-                </div>
-                {c.self_score > 0 && <div className="text-xs text-slate-500">/5</div>}
-              </div>
-
-              {/* Điểm QL — Click chọn */}
-              <div className="w-36 flex gap-1 justify-center shrink-0">
-                {[1, 2, 3, 4, 5].map(n => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setMgrScores(prev => ({ ...prev, [i]: n }))}
-                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-all duration-150 ${
-                      mgrScores[i] === n
-                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 scale-110'
-                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[40px] text-center">#</th>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] text-left min-w-[240px]">Tiêu chí</th>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[110px] text-center opacity-70">NV tự chấm</th>
+                <th className="border border-[#d1d5db] bg-[#1e3a5f] text-white font-bold p-[10px_12px] w-[180px] text-center">Điểm QL (1–5)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {criteria.map((c, i) => (
+                <tr key={i} className="hover:bg-[#eff6ff] transition-colors">
+                  <td className="border border-[#d1d5db] p-[8px] text-center font-bold text-[#6b7280] w-[40px]">{i + 1}</td>
+                  <td className="border border-[#d1d5db] p-[10px]">
+                    <div className="font-bold text-[#111] text-sm">{c.name}</div>
+                    {c.expectation && (
+                      <div className="text-[#6b7280] text-xs mt-0.5 leading-relaxed">{c.expectation}</div>
+                    )}
+                  </td>
+                  <td className="border border-[#d1d5db] p-[8px] text-center bg-[#f9fafb]">
+                    <span className="text-2xl font-bold text-[#3b82f6]">
+                      {c.self_score > 0 ? c.self_score : '—'}
+                    </span>
+                    {c.self_score > 0 && <div className="text-xs text-[#9ca3af]">/5</div>}
+                  </td>
+                  <td className="border border-[#d1d5db] p-[8px]">
+                    <div className="flex gap-1 justify-center">
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setMgrScores(prev => ({ ...prev, [i]: n }))}
+                          className={`w-8 h-8 rounded-lg text-sm font-bold border-2 transition-all duration-150 ${
+                            mgrScores[i] === n
+                              ? 'bg-[#1e3a5f] text-white border-[#1e3a5f] scale-110 shadow'
+                              : 'bg-white text-[#6b7280] border-[#d1d5db] hover:border-[#3b82f6] hover:text-[#3b82f6]'
+                          }`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </section>
+      </div>
 
       {/* ── TỔNG ĐIỂM TỰ ĐỘNG ── */}
       {Object.keys(mgrScores).length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="rounded-xl p-[24px_32px] flex flex-wrap items-center gap-6"
+          style={{ background: 'linear-gradient(135deg,#fffbeb,#fef9c3)', border: '2px solid #fbbf24' }}>
           {[
-            { label: 'TB NV tự chấm', avg: nvAvg, color: 'text-blue-400' },
-            { label: 'TB Quản lý chấm', avg: mgrAvg, color: 'text-purple-400' },
-            { label: 'Bình quân chung', avg: combinedAvg, color: getVerdictColor(combinedAvg) },
+            { label: 'TB NV tự chấm', avg: nvAvg, color: '#3b82f6' },
+            { label: 'TB Quản lý chấm', avg: mgrAvg, color: '#7c3aed' },
+            { label: 'Bình quân chung', avg: combinedAvg, color: '#b45309' },
           ].map(({ label, avg, color }) => (
-            <div key={label} className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 text-center">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{label}</div>
-              <div className={`text-3xl font-bold ${color}`}>
+            <div key={label} className="text-center">
+              <div className="text-sm font-bold uppercase tracking-[0.06em] text-[#6b7280] mb-1">{label}</div>
+              <div className="text-[40px] font-black leading-none" style={{ color }}>
                 {avg > 0 ? avg.toFixed(1) : '—'}
               </div>
               {label === 'Bình quân chung' && avg > 0 && (
-                <div className={`text-sm font-semibold mt-1 ${color}`}>{getVerdictLabel(avg)}</div>
+                <div className="text-sm font-semibold mt-1" style={{ color }}>{getVerdictLabel(avg)}</div>
               )}
             </div>
           ))}
@@ -231,50 +222,53 @@ export default function MgrScorePanel({ evalId, employeeName, criteria, discordI
       )}
 
       {/* ── PHẦN 2: NHẬN XÉT TỔNG THỂ ── */}
-      <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-sm font-bold">2</span>
-          Nhận Xét Tổng Thể
-          <MessageSquare size={16} className="text-slate-500" />
-        </h2>
-        <textarea
-          rows={5}
-          value={comment}
-          onChange={e => setComment(e.target.value)}
-          placeholder="Nhận xét về thái độ, tinh thần làm việc, điểm mạnh, điểm cần cải thiện, lý do đề xuất..."
-          className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none transition"
-        />
-      </section>
+      <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+        <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+          <span className="text-xl">💬</span>
+          <span className="font-black text-[#1e3a5f] uppercase tracking-wide">2. Nhận Xét Tổng Thể</span>
+        </div>
+        <div className="p-5">
+          <textarea
+            rows={5}
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="Nhận xét về thái độ, tinh thần làm việc, điểm mạnh, điểm cần cải thiện, lý do đề xuất..."
+            className="w-full font-sans border-[1.5px] border-[#d1d5db] rounded-[6px] px-[10px] py-[8px] outline-none text-[#111] bg-white focus:border-[#3b82f6] focus:ring-[3px] focus:ring-[#3b82f6]/15 transition-all resize-y min-h-[100px]"
+          />
+        </div>
+      </div>
 
       {/* ── PHẦN 3: ĐỀ XUẤT QUYẾT ĐỊNH ── */}
-      <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg bg-green-600 flex items-center justify-center text-sm font-bold">3</span>
-          Đề Xuất Quyết Định
-          <Star size={16} className="text-slate-500" />
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {DECISIONS.map(d => (
-            <button
-              key={d.value}
-              type="button"
-              onClick={() => setDecision(d.value)}
-              className={`p-4 rounded-xl border-2 text-center font-semibold transition-all duration-200 ${
-                decision === d.value
-                  ? d.color + ' scale-[1.02] shadow-lg'
-                  : 'border-slate-700 text-slate-400 hover:border-slate-600 bg-slate-900/50'
-              }`}
-            >
-              {d.label}
-            </button>
-          ))}
+      <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+        <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+          <span className="text-xl">⚖️</span>
+          <span className="font-black text-[#1e3a5f] uppercase tracking-wide">3. Đề Xuất Quyết Định</span>
+          <span className="text-[#dc2626] font-bold">*</span>
         </div>
-      </section>
+        <div className="p-5">
+          <div className="flex flex-wrap gap-[10px]">
+            {DECISIONS.map(d => (
+              <button
+                key={d.value}
+                type="button"
+                onClick={() => setDecision(d.value)}
+                className={`flex items-center gap-2 border-2 rounded-[8px] p-[10px_20px] font-semibold transition-all duration-200 ${
+                  decision === d.value
+                    ? 'border-[#1e3a5f] bg-[rgba(30,58,95,0.08)] text-[#1e3a5f] scale-[1.02] shadow'
+                    : 'border-[#d1d5db] text-[#374151] hover:border-[#1e3a5f] hover:bg-[rgba(30,58,95,0.04)]'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* ── LỖI ── */}
       {status === 'error' && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-5 py-3 text-red-400 text-sm">
-          ❌ {errorMsg}
+        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-base font-medium">
+          {errorMsg}
         </div>
       )}
 
@@ -283,7 +277,7 @@ export default function MgrScorePanel({ evalId, employeeName, criteria, discordI
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="flex items-center gap-2 px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-purple-600/20"
+          className="flex items-center gap-2 px-8 py-3 bg-gradient-to-br from-[#3b82f6] to-[#1e3a5f] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-[10px] transition-all shadow-lg border-b-[4px] border-[#1e3a5f] hover:scale-[1.02] active:scale-[0.98]"
         >
           {status === 'submitting' ? (
             <><Loader2 size={18} className="animate-spin" /> Đang gửi CEO...</>
