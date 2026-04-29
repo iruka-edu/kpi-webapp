@@ -9,7 +9,7 @@
  * Luồng:
  *   GAS notifyDiscord() → POST {WEBAPP_URL}/api/discord/notify
  *      → verify secret (EVALUATION_TOKEN_SECRET share với GAS)
- *      → POST {BOT_INTERNAL_URL}/internal/evaluation-notify
+ *      → POST {BOT_API_URL}/internal/evaluation-notify
  *      → bot.client.users.fetch(to).send({ embeds: [embed] })
  *
  * Body:
@@ -18,16 +18,16 @@
  *   - cc:     discord_id người nhận CC (optional, có thể null)
  *   - embed:  object Discord embed { title, description, color, fields, ... }
  *
- * ENV cần (đặt ở .env.local của webapp):
+ * ENV cần (đặt ở Vercel hoặc .env.local của webapp):
  *   - EVALUATION_TOKEN_SECRET: cùng giá trị với GAS Script Properties
- *   - BOT_INTERNAL_URL:        vd http://localhost:3101 (bot api-server)
+ *   - BOT_API_URL:             URL bot api-server (đã dùng chung với holiday/staff)
  *   - BOT_INTERNAL_SECRET:     cùng giá trị với BOT_INTERNAL_SECRET ở bot/.env
  */
 
 import { NextResponse } from 'next/server';
 
 const EVAL_SECRET         = process.env.EVALUATION_TOKEN_SECRET || 'iruka-eval-token-secret-2026';
-const BOT_INTERNAL_URL    = process.env.BOT_INTERNAL_URL || '';
+const BOT_API_URL         = process.env.BOT_API_URL || '';
 const BOT_INTERNAL_SECRET = process.env.BOT_INTERNAL_SECRET || '';
 
 export async function POST(request: Request) {
@@ -48,13 +48,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Thiếu trường "embed"' }, { status: 400 });
     }
 
-    if (!BOT_INTERNAL_URL || !BOT_INTERNAL_SECRET) {
-      console.error('[discord/notify] Chưa cấu hình BOT_INTERNAL_URL hoặc BOT_INTERNAL_SECRET');
+    if (!BOT_API_URL || !BOT_INTERNAL_SECRET) {
+      console.error('[discord/notify] Chưa cấu hình BOT_API_URL hoặc BOT_INTERNAL_SECRET');
       return NextResponse.json({ error: 'Bot relay chưa cấu hình' }, { status: 500 });
     }
 
     // Forward sang bot internal API
-    const botUrl = `${BOT_INTERNAL_URL.replace(/\/$/, '')}/internal/evaluation-notify`;
+    const botUrl = `${BOT_API_URL.replace(/\/$/, '')}/internal/evaluation-notify`;
     const botRes = await fetch(botUrl, {
       method: 'POST',
       headers: {
