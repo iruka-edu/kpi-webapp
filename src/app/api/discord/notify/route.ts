@@ -8,25 +8,26 @@
  *
  * Luồng:
  *   GAS notifyDiscord() → POST {WEBAPP_URL}/api/discord/notify
- *      → verify secret (EVALUATION_TOKEN_SECRET share với GAS)
+ *      → verify secret (KPI_TOKEN_SECRET share với GAS)
  *      → POST {BOT_API_URL}/internal/evaluation-notify
  *      → bot.client.users.fetch(to).send({ embeds: [embed] })
  *
  * Body:
- *   - secret: EVALUATION_TOKEN_SECRET (shared với GAS)
+ *   - secret: KPI_TOKEN_SECRET (shared với GAS)
  *   - to:     discord_id người nhận chính (bắt buộc)
  *   - cc:     discord_id người nhận CC (optional, có thể null)
  *   - embed:  object Discord embed { title, description, color, fields, ... }
  *
  * ENV cần (đặt ở Vercel hoặc .env.local của webapp):
- *   - EVALUATION_TOKEN_SECRET: cùng giá trị với GAS Script Properties
+ *   - KPI_TOKEN_SECRET:        cùng giá trị với GAS Script Properties (dùng chung với /weekly)
  *   - BOT_API_URL:             URL bot api-server (đã dùng chung với holiday/staff)
  *   - BOT_INTERNAL_SECRET:     cùng giá trị với BOT_INTERNAL_SECRET ở bot/.env
  */
 
 import { NextResponse } from 'next/server';
 
-const EVAL_SECRET         = process.env.EVALUATION_TOKEN_SECRET || 'iruka-eval-token-secret-2026';
+// Dùng chung secret KPI_TOKEN_SECRET với /weekly /monthly — đồng bộ Bot/Vercel/GAS
+const EVAL_SECRET         = process.env.KPI_TOKEN_SECRET || 'iruka-kpi-token-secret-2026';
 const BOT_API_URL         = process.env.BOT_API_URL || '';
 const BOT_INTERNAL_SECRET = process.env.BOT_INTERNAL_SECRET || '';
 

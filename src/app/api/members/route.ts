@@ -37,7 +37,8 @@ interface MemberRecord {
 // Trước đây signature chỉ HMAC(discordId) → không khớp Bot → HR bấm link luôn 401.
 function isValidEvalToken(token: string | null, discordId: string | null): boolean {
   if (!token || !discordId) return false;
-  const secret = process.env.EVALUATION_TOKEN_SECRET || process.env.KPI_TOKEN_SECRET || '';
+  // Dùng chung secret KPI_TOKEN_SECRET với /weekly /monthly — đồng bộ Bot/Vercel/GAS
+  const secret = process.env.KPI_TOKEN_SECRET || 'iruka-kpi-token-secret-2026';
   if (!secret) return false;
   const curWindow = Math.floor(Date.now() / (72 * 3600 * 1000));
   for (const w of [curWindow, curWindow - 1]) {

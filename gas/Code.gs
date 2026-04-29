@@ -12,7 +12,8 @@
 //   WEBAPP_URL          — URL Next.js (vd: https://kpi.irukaedu.vn)
 //   DISCORD_WEBHOOK_HR  — Webhook URL kênh HR
 //   DISCORD_WEBHOOK_CEO — Webhook URL kênh CEO / DM
-//   EVAL_TOKEN_SECRET   — Cùng secret với .env EVALUATION_TOKEN_SECRET
+//   KPI_TOKEN_SECRET    — Cùng secret với Bot/Vercel KPI_TOKEN_SECRET
+//                         (dùng chung với /weekly /monthly cho dễ đồng bộ)
 // ============================================================
 
 // ── Tên sheet ─────────────────────────────────────────────────
@@ -103,7 +104,8 @@ function updateRow(sheetName, idField, idValue, updates) {
 
 // ── Tạo HMAC token (cùng logic với Next.js) ───────────────────
 function makeToken(discordId, evalId) {
-  var secret = prop('EVAL_TOKEN_SECRET') || 'iruka-eval-token-secret-2026';
+  // Dùng chung secret KPI_TOKEN_SECRET với /weekly /monthly — đồng bộ Bot/Vercel/GAS
+  var secret = prop('KPI_TOKEN_SECRET') || 'iruka-kpi-token-secret-2026';
   var window  = Math.floor(Date.now() / (72 * 3600 * 1000));
   var payload = discordId + ':' + evalId + ':' + window;
   var sig = Utilities.computeHmacSha256Signature(payload, secret);
@@ -139,7 +141,7 @@ function notifyDiscord(targetDiscordId, embedData, ccDiscordId) {
       contentType: 'application/json',
       muteHttpExceptions: true,
       payload: JSON.stringify({
-        secret: prop('EVAL_TOKEN_SECRET'),
+        secret: prop('KPI_TOKEN_SECRET'),
         to: targetDiscordId,
         cc: ccDiscordId || null,
         embed: embedData

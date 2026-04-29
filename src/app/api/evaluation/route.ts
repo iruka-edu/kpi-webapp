@@ -21,7 +21,8 @@ const GAS_EVAL_URL = process.env.GOOGLE_APPS_SCRIPT_EVALUATION_URL || '';
  * Cùng logic với Bot Discord tạo link — window 72h.
  */
 function verifyEvalToken(token: string, discordId: string, evalId: string): boolean {
-  const secret = process.env.EVALUATION_TOKEN_SECRET || 'iruka-eval-token-secret-2026';
+  // Dùng chung secret KPI_TOKEN_SECRET với /weekly /monthly — đồng bộ Bot/Vercel/GAS
+  const secret = process.env.KPI_TOKEN_SECRET || 'iruka-kpi-token-secret-2026';
   const now = Date.now();
   const curWindow = Math.floor(now / (72 * 3600 * 1000));
   // Kiểm tra window hiện tại và 1 window trước để tránh hết hạn đúng ranh giới

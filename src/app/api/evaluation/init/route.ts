@@ -28,7 +28,8 @@ import { createHmac } from 'crypto';
 
 const GAS_EVAL_URL  = process.env.GOOGLE_APPS_SCRIPT_EVALUATION_URL || '';
 const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
-const EVAL_SECRET    = process.env.EVALUATION_TOKEN_SECRET || 'iruka-eval-token-secret-2026';
+// Dùng chung secret KPI_TOKEN_SECRET với /weekly /monthly — đồng bộ Bot/Vercel/GAS
+const EVAL_SECRET    = process.env.KPI_TOKEN_SECRET || 'iruka-kpi-token-secret-2026';
 
 /**
  * Verify HMAC token HR init tạo bởi Discord Bot.

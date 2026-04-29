@@ -16,7 +16,8 @@
 
 import { createHmac } from 'crypto';
 
-const EVAL_SECRET = process.env.EVALUATION_TOKEN_SECRET || 'iruka-eval-token-secret-2026';
+// Dùng chung secret KPI_TOKEN_SECRET với /weekly /monthly — đồng bộ Bot/Vercel/GAS
+const EVAL_SECRET = process.env.KPI_TOKEN_SECRET || 'iruka-kpi-token-secret-2026';
 const WINDOW_MS   = 72 * 3600 * 1000; // 72 giờ tính bằng milli-giây
 
 /**
