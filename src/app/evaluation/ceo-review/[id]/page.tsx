@@ -106,6 +106,9 @@ export default function CeoReviewPage() {
 }
 
 function mapApiToData(json: any, evalId: string): EvaluationData {
+  const mgrId = json.info?.manager_discord_id || json.manager_discord_id || '';
+  const ceoId = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+  const isCeoDirect = !!(mgrId && ceoId && mgrId === ceoId);
   return {
     eval_id: evalId,
     status: json.status || 'PENDING_CEO',
@@ -115,7 +118,7 @@ function mapApiToData(json: any, evalId: string): EvaluationData {
       dept: json.info?.dept || json.dept || '',
       role: json.info?.role || json.role || '',
       manager_name: json.info?.manager_name || json.manager_name || '',
-      manager_discord_id: json.info?.manager_discord_id || json.manager_discord_id || '',
+      manager_discord_id: mgrId,
       hr_discord_id: json.info?.hr_discord_id || json.hr_discord_id || '',
       trial_start: json.info?.trial_start || json.trial_start || '',
       trial_end: json.info?.trial_end || json.trial_end || '',
@@ -148,6 +151,6 @@ function mapApiToData(json: any, evalId: string): EvaluationData {
       ceo_comment: json.ceo_comment || '',
     },
     signatures: json.signatures || {},
-    is_ceo_direct: false,
+    is_ceo_direct: isCeoDirect,
   };
 }

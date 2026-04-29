@@ -69,7 +69,7 @@ export default function EvaluationForm({
   // ── Permission helpers (shorthand) ──────────────────────────
   const isCeoDirect = data.is_ceo_direct ?? false;
   const cur = (key: Parameters<typeof canEdit>[0]) => canEdit(key, viewMode, data.status, isCeoDirect);
-  const mySignAllowed = canSign(viewMode, data.status);
+  const mySignAllowed = canSign(viewMode, data.status, isCeoDirect);
 
   // ── HR: Load member list khi mount (chỉ HR cần dropdown chọn NV) ──
   useEffect(() => {
@@ -236,7 +236,15 @@ export default function EvaluationForm({
       }
     }
     if (viewMode === 'ceo') {
-      if (!data.conclusion.mgr_decision) return 'Quản lý chưa chọn quyết định';
+      if (isCeoDirect) {
+        // CEO kiêm QL: phải chấm điểm + nhận xét + quyết định như QL
+        const missingScore = data.criteria.some(c => !c.mgr_score);
+        if (missingScore) return 'Vui lòng chấm điểm QL ĐG cho tất cả tiêu chí';
+        if (!data.conclusion.mgr_comment.trim()) return 'Vui lòng nhập nhận xét chung (vai Quản lý)';
+        if (!data.conclusion.mgr_decision)        return 'Vui lòng chọn quyết định (vai Quản lý)';
+      } else {
+        if (!data.conclusion.mgr_decision) return 'Quản lý chưa chọn quyết định';
+      }
     }
     return null;
   };
@@ -880,14 +888,33 @@ function buildPayload(view: ViewMode, data: EvaluationData, token: string, curre
   if (view === 'ceo') {
     // /api/evaluation/ceo-review expect: eval_id, discord_id, token, ceo_action, ceo_comment
     const action = data.conclusion.mgr_decision === 'fail' ? 'reject' : 'approve';
-    return {
+    const isCeoDirect = data.is_ceo_direct ?? false;
+    const payload: Record<string, unknown> = {
       eval_id: data.eval_id,
       discord_id: currentUserId,
       token,
       ceo_action: action,
       ceo_comment: data.conclusion.ceo_comment || '',
-      signatures: { ...data.signatures, ceo: sig },
+      // Luồng rút gọn: CEO ký cả ô CEO và ô QL (vì kiêm 2 vai)
+      signatures: isCeoDirect
+        ? { ...data.signatures, ceo: sig, mgr: sig }
+        : { ...data.signatures, ceo: sig },
     };
+    if (isCeoDirect) {
+      // CEO kiêm QL → gửi kèm dữ liệu QL chấm điểm + nhận xét
+      payload.mgr_scores = data.criteria.map((c, i) => ({
+        stt: i + 1,
+        name: c.name,
+        self_score: c.self_score || 0,
+        mgr_score: c.mgr_score || 0,
+        note: c.note || '',
+      }));
+      payload.mgr_comment         = data.conclusion.mgr_comment;
+      payload.mgr_expectation     = data.conclusion.mgr_expectation;
+      payload.mgr_salary_proposal = data.conclusion.mgr_salary_proposal;
+      payload.mgr_decision        = data.conclusion.mgr_decision;
+    }
+    return payload;
   }
 
   return data as unknown as Record<string, unknown>;

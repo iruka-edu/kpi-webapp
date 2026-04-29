@@ -481,7 +481,13 @@ function nvSubmit(d) {
   }
 
   // Update status + chữ ký NV
-  var nvUpdates = { status: 'SUBMITTED', nv_pending_at: now(), submitted_at: now() };
+  // Luồng rút gọn (isCeoDirect): bỏ qua bước MGR review → đi thẳng PENDING_CEO
+  // (để permissions của CEO cho phép edit ô QL ĐG + ký được luôn)
+  var nvUpdates = {
+    status: isCeoDirect ? 'PENDING_CEO' : 'SUBMITTED',
+    nv_pending_at: now(),
+    submitted_at: now()
+  };
   var nvSig = extractSignatureFields(d, 'nv');
   for (var k2 in nvSig) { nvUpdates[k2] = nvSig[k2]; }
   updateRow(SHEET_EVAL, 'id', evalId, nvUpdates);
@@ -608,6 +614,34 @@ function ceoReview(d) {
   };
   var ceoSig = extractSignatureFields(d, 'ceo');
   for (var k4 in ceoSig) { ceoUpdates[k4] = ceoSig[k4]; }
+
+  // Luồng rút gọn: CEO kiêm QL → ghi thêm dữ liệu QL (mgr_scores, mgr_comment...)
+  // và ký luôn ô QL bằng chữ ký CEO. Chỉ ghi khi approve — reject thì giữ nguyên.
+  if (isCeoDirect && d.ceo_action === 'approve') {
+    // 1) Ghi điểm QL vào criteria sheet (giống mgrReview)
+    var csh = getSheet(SHEET_CRITERIA);
+    var cRows = csh.getDataRange().getValues();
+    var cHeaders = cRows[0];
+    (d.mgr_scores || []).forEach(function(ms) {
+      for (var i = 1; i < cRows.length; i++) {
+        if (cRows[i][cHeaders.indexOf('eval_id')] === evalId &&
+            cRows[i][cHeaders.indexOf('stt')]     === ms.stt) {
+          csh.getRange(i+1, cHeaders.indexOf('mgr_score')+1).setValue(ms.mgr_score);
+          if (ms.note) csh.getRange(i+1, cHeaders.indexOf('note')+1).setValue(ms.note);
+        }
+      }
+    });
+    // 2) Ghi quyết định + nhận xét QL vào eval row
+    ceoUpdates.decision            = d.mgr_decision || '';
+    ceoUpdates.mgr_comment         = d.mgr_comment || '';
+    ceoUpdates.mgr_expectation     = d.mgr_expectation || '';
+    ceoUpdates.mgr_salary_proposal = d.mgr_salary_proposal || '';
+    ceoUpdates.mgr_reviewed_at     = now();
+    // 3) Ký ô QL (frontend đã copy ceo sig vào slot mgr — extract bình thường)
+    var mgrSig = extractSignatureFields(d, 'mgr');
+    for (var kM in mgrSig) { ceoUpdates[kM] = mgrSig[kM]; }
+  }
+
   updateRow(SHEET_EVAL, 'id', evalId, ceoUpdates);
 
   if (isCeoDirect) {

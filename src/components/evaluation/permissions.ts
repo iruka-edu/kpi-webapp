@@ -69,20 +69,27 @@ export function canEdit(
   }
 
   // ── CEO mode ──
+  // Luồng rút gọn (isCeoDirect): CEO kiêm QL → cũng cho edit ô QL ĐG +
+  // accept status SUBMITTED (NV vừa nộp, chưa qua bước MGR review).
   if (view === 'ceo') {
-    if (status !== 'PENDING_CEO') return false;
-    return ['ceo_comment', 'conclusion'].includes(field);
+    const okStatus = isCeoDirect
+      ? (status === 'PENDING_CEO' || status === 'SUBMITTED')
+      : status === 'PENDING_CEO';
+    if (!okStatus) return false;
+    const allowed: FieldKey[] = ['ceo_comment', 'conclusion'];
+    if (isCeoDirect) allowed.push('criteria_mgr');
+    return allowed.includes(field);
   }
 
   return false;
 }
 
 /** Có được phép ký ô tương ứng vai mình không? */
-export function canSign(view: ViewMode, status: EvalStatus): boolean {
+export function canSign(view: ViewMode, status: EvalStatus, isCeoDirect: boolean = false): boolean {
   if (view === 'hr')  return status === '' || status === 'INIT';
   if (view === 'nv')  return status === 'NV_PENDING';
   if (view === 'mgr') return status === 'MGR_PENDING' || status === 'SUBMITTED' || status === 'UNDER_REVIEW';
-  if (view === 'ceo') return status === 'PENDING_CEO';
+  if (view === 'ceo') return status === 'PENDING_CEO' || (isCeoDirect && status === 'SUBMITTED');
   return false;
 }
 
