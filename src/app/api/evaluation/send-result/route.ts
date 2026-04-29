@@ -1,24 +1,39 @@
 /**
  * API: POST /api/evaluation/send-result
  * ----------------------------------------
- * Vai trò: Quản lý gửi kết quả cuối cho Nhân Viên — Bước 6.
+ * Vai trò: HR/Quản lý gửi kết quả cuối cho Nhân Viên — Bước 6.
  *
  * Luồng:
- *  POST → GAS lưu + chuyển status COMPLETED → RESULT_SENT
+ *  POST → GAS lưu + chuyển status COMPLETED/PENDING_HR → RESULT_SENT
  *       → Bot gửi link kết quả cho NV + CC CEO
  *
- * Auth: Dashboard password
+ * Auth: HMAC token (link Discord) hoặc Dashboard password (legacy).
  */
 
 import { NextResponse } from 'next/server';
+import { verifyEvalToken } from '../_utils/verifyEvalToken';
 
 const GAS_EVAL_URL = process.env.GOOGLE_APPS_SCRIPT_EVALUATION_URL || '';
 
 export async function POST(request: Request) {
+  const body = await request.json().catch(() => ({}));
+
+  // Đường vào 1: dashboard password (legacy)
   const authHeader = request.headers.get('x-dashboard-auth');
   const dashPass = process.env.DASHBOARD_PASSWORD || '';
-  if (authHeader !== dashPass) {
-    return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
+  const isDashAuth = !!(authHeader && dashPass && authHeader === dashPass);
+
+  // Đường vào 2: HMAC token (link Discord — HR/QL)
+  const isTokenAuth = !!(
+    body?.eval_id && body?.discord_id && body?.token &&
+    verifyEvalToken(body.token, body.discord_id, body.eval_id)
+  );
+
+  if (!isDashAuth && !isTokenAuth) {
+    return NextResponse.json(
+      { error: 'Không có quyền truy cập (cần token hợp lệ hoặc mật khẩu Dashboard).' },
+      { status: 401 },
+    );
   }
 
   if (!GAS_EVAL_URL) {
@@ -26,8 +41,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
-
     if (!body.eval_id) {
       return NextResponse.json({ error: 'Thiếu eval_id' }, { status: 400 });
     }

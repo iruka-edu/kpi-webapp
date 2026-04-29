@@ -25,15 +25,20 @@ import { AlertCircle, CheckCircle, Info, Loader2, Send } from 'lucide-react';
 interface ManagerResultSendProps {
   evalId: string;
   employeeName: string;
-  dashboardPass: string;
-  currentStatus: string; // Chỉ cho phép gửi khi = 'COMPLETED'
+  currentStatus: string; // Chỉ cho phép gửi khi = 'COMPLETED' hoặc 'PENDING_HR'
+  // Auth: HMAC token (link Discord) — ưu tiên. Hoặc dashboardPass (legacy).
+  discordId?: string;
+  token?: string;
+  dashboardPass?: string;
 }
 
 export default function ManagerResultSend({
   evalId,
   employeeName,
-  dashboardPass,
   currentStatus,
+  discordId,
+  token,
+  dashboardPass,
 }: ManagerResultSendProps) {
   const [mgrNote, setMgrNote] = useState('');
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -93,16 +98,18 @@ export default function ManagerResultSend({
     setSendStatus('sending');
     setErrorMsg('');
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      // Ưu tiên HMAC token (link Discord). Fallback dashboard pass nếu có.
+      if (dashboardPass) headers['x-dashboard-auth'] = dashboardPass;
+      const body: Record<string, unknown> = { eval_id: evalId, mgr_note: mgrNote };
+      if (discordId && token) {
+        body.discord_id = discordId;
+        body.token = token;
+      }
       const res = await fetch('/api/evaluation/send-result', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-dashboard-auth': dashboardPass,
-        },
-        body: JSON.stringify({
-          eval_id: evalId,
-          mgr_note: mgrNote,
-        }),
+        headers,
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Gửi kết quả thất bại');

@@ -707,19 +707,24 @@ export default function EvaluationForm({
           <span>Vai:</span>
           <strong className="text-[#1e3a5f] font-bold">{ROLE_LABEL[viewMode]}</strong>
         </div>
-        <div className="flex w-full md:w-auto justify-end">
-          <button
-            type="submit"
-            disabled={status === 'submitting' || !mySignAllowed}
-            className="w-full md:w-auto px-8 py-2.5 bg-gradient-to-br from-[#3b82f6] to-[#1e3a5f] text-white rounded-[8px] font-bold text-[15px] shadow-[0_4px_14px_rgba(59,130,246,0.4)] hover:shadow-[0_6px_20px_rgba(59,130,246,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2"
-          >
-            {status === 'submitting' ? (
-              <><Loader2 size={18} className="animate-spin" /> Đang xử lý...</>
-            ) : (
-              <><Send size={18} /> {submitButtonLabel(viewMode)}</>
-            )}
-          </button>
-        </div>
+        {/* Ẩn nút submit khi vai hiện tại không được ký (vd: result/final pages
+            mở EvaluationForm read-only — phép ký đã hết, hành động chuyển sang
+            nút riêng "Gửi kết quả" / "Xác nhận đã nhận" của trang đó). */}
+        {mySignAllowed && (
+          <div className="flex w-full md:w-auto justify-end">
+            <button
+              type="submit"
+              disabled={status === 'submitting'}
+              className="w-full md:w-auto px-8 py-2.5 bg-gradient-to-br from-[#3b82f6] to-[#1e3a5f] text-white rounded-[8px] font-bold text-[15px] shadow-[0_4px_14px_rgba(59,130,246,0.4)] hover:shadow-[0_6px_20px_rgba(59,130,246,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-60 disabled:pointer-events-none flex items-center justify-center gap-2"
+            >
+              {status === 'submitting' ? (
+                <><Loader2 size={18} className="animate-spin" /> Đang xử lý...</>
+              ) : (
+                <><Send size={18} /> {submitButtonLabel(viewMode)}</>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </form>
     <style>{`

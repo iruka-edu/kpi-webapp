@@ -1,92 +1,56 @@
 /**
- * app/evaluation/final/page.tsx — Nhân viên xem kết quả cuối + xác nhận
- * -----------------------------------------------------------------------
- * Vai trò: NV nhận link qua Discord Bot, vào trang này để xem kết quả
- *          đầy đủ (điểm NV + QL, nhận xét, quyết định), sau đó
- *          bấm nút xác nhận đã nhận kết quả.
+ * /evaluation/final — NV xem kết quả cuối + xác nhận
+ * -----------------------------------------------------
+ * Vai trò: NV nhận link qua Discord Bot, vào trang này xem TOÀN BỘ phiếu
+ *          (giao diện y hệt HR/QL/CEO — EvaluationForm read-only), sau đó
+ *          bấm nút xác nhận đã nhận.
  *
- * Bảo mật: Token HMAC-SHA256 qua URL params (giống /weekly)
  * URL: /evaluation/final?id=xxx&discord_id=yyy&token=zzz
+ * Auth: HMAC-SHA256 token cá nhân hóa (NV's discord_id)
  */
 
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CheckCircle, Loader2, AlertTriangle, Star, MessageSquare } from 'lucide-react';
-
-interface EvalResult {
-  info: {
-    name: string;
-    position: string;
-    department: string;
-    start_date: string;
-    manager_name: string;
-  };
-  criteria: Array<{ name: string; expectation: string; self_score: number; mgr_score: number }>;
-  mgr_comment: string;
-  mgr_decision: string;
-  ceo_comment: string;
-  mgr_note: string; // Lời nhắn của QL khi gửi kết quả
-}
-
-const DECISION_MAP: Record<string, { label: string; color: string; bg: string; icon: string; desc: string }> = {
-  hire: {
-    label: 'Tiếp nhận chính thức',
-    color: 'text-green-700',
-    bg: 'from-green-50 to-white border-green-200',
-    icon: '🎉',
-    desc: 'Chúc mừng! Bạn đã hoàn thành thử việc xuất sắc.',
-  },
-  extend: {
-    label: 'Gia hạn thử việc',
-    color: 'text-amber-700',
-    bg: 'from-amber-50 to-white border-amber-200',
-    icon: '⏳',
-    desc: 'Công ty quyết định gia hạn thử việc thêm. Hãy tiếp tục cố gắng!',
-  },
-  reject: {
-    label: 'Chấm dứt thử việc',
-    color: 'text-red-700',
-    bg: 'from-red-50 to-white border-red-200',
-    icon: '📋',
-    desc: 'Rất tiếc, công ty quyết định không tiếp tục sau thử việc.',
-  },
-};
+import { AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import EvaluationForm from '@/components/evaluation/EvaluationForm';
+import { mapApiToData } from '@/components/evaluation/mapApiToData';
+import type { EvaluationData } from '@/components/evaluation/types';
 
 function FinalContent() {
   const searchParams = useSearchParams();
-  const evalId = searchParams.get('id') || '';
+  const evalId    = searchParams.get('id') || '';
   const discordId = searchParams.get('discord_id') || '';
-  const token = searchParams.get('token') || '';
+  const token     = searchParams.get('token') || '';
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [evalData, setEvalData] = useState<EvalResult | null>(null);
+  const [data, setData]       = useState<EvaluationData | null>(null);
+  const [error, setError]     = useState('');
   const [ackStatus, setAckStatus] = useState<'idle' | 'confirming' | 'confirmed' | 'error'>('idle');
-  const [ackError, setAckError] = useState('');
+  const [ackError, setAckError]   = useState('');
 
   useEffect(() => {
-    if (!evalId) { setError('Link không hợp lệ — thiếu ID phiếu'); setLoading(false); return; }
-    fetchResult();
-  }, []);
-
-  const fetchResult = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ id: evalId });
-      if (discordId) params.set('discord_id', discordId);
-      if (token) params.set('token', token);
-      const res = await fetch(`/api/evaluation/acknowledge?${params}`);
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error);
-      setEvalData(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
+    if (!evalId || !discordId || !token) {
+      setError('Link không hợp lệ — thiếu tham số xác thực.');
       setLoading(false);
+      return;
     }
-  };
+    const load = async () => {
+      try {
+        const params = new URLSearchParams({ id: evalId, discord_id: discordId, token });
+        const res = await fetch(`/api/evaluation/acknowledge?${params}`);
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error(json.error || 'Lỗi tải kết quả');
+        setData(mapApiToData(json, evalId, { openerDiscordId: discordId }));
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [evalId, discordId, token]);
 
   const handleAcknowledge = async () => {
     setAckStatus('confirming');
@@ -97,8 +61,8 @@ function FinalContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eval_id: evalId, discord_id: discordId, token }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error);
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error || 'Xác nhận thất bại');
       setAckStatus('confirmed');
     } catch (err: any) {
       setAckStatus('error');
@@ -106,55 +70,27 @@ function FinalContent() {
     }
   };
 
-  // ── Tính điểm ─────────────────────────────────────────────────────
-  const calcAvg = (scores: number[]) => {
-    const v = scores.filter(s => s > 0);
-    return v.length > 0 ? v.reduce((a, b) => a + b, 0) / v.length : 0;
-  };
-  const selfAvg = calcAvg(evalData?.criteria.map(c => c.self_score) || []);
-  const mgrAvg = calcAvg(evalData?.criteria.map(c => c.mgr_score) || []);
-  const combined = selfAvg > 0 && mgrAvg > 0 ? (selfAvg + mgrAvg) / 2 : 0;
-
-  const getVerdictColor = (avg: number) => {
-    if (avg >= 4.5) return 'text-green-400';
-    if (avg >= 3.5) return 'text-blue-400';
-    if (avg >= 2.5) return 'text-yellow-400';
-    return 'text-red-400';
-  };
-  const getVerdictLabel = (avg: number) => {
-    if (avg >= 4.5) return 'Xuất sắc';
-    if (avg >= 3.5) return 'Tốt';
-    if (avg >= 2.5) return 'Đạt yêu cầu';
-    return 'Cần cải thiện';
-  };
-
-  const decision = DECISION_MAP[evalData?.mgr_decision || ''];
-
-  // ── Loading ───────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center">
-        <Loader2 size={36} className="animate-spin text-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-[#f0f4f8]">
+        <Loader2 size={32} className="animate-spin text-blue-600" />
       </div>
     );
   }
 
-  // ── Lỗi ──────────────────────────────────────────────────────────
-  if (error) {
+  if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#f0f4f8] flex flex-col items-center justify-center text-center space-y-4 p-8">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
         <AlertTriangle size={56} className="text-red-500" />
         <h1 className="text-xl font-bold text-slate-900">Không thể xem kết quả</h1>
-        <p className="text-slate-500 max-w-md">{error}</p>
-        <p className="text-slate-400 text-sm">Vui lòng liên hệ HR nếu cần hỗ trợ.</p>
+        <p className="text-slate-500 max-w-md">{error || 'Phiếu không tồn tại'}</p>
       </div>
     );
   }
 
-  // ── Đã xác nhận ──────────────────────────────────────────────────
   if (ackStatus === 'confirmed') {
     return (
-      <div className="min-h-screen bg-[#f0f4f8] flex flex-col items-center justify-center text-center space-y-4 p-8">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
         <CheckCircle size={64} className="text-green-600" />
         <h1 className="text-2xl font-bold text-slate-900">Đã Xác Nhận Nhận Kết Quả!</h1>
         <p className="text-slate-500 max-w-md">
@@ -166,157 +102,45 @@ function FinalContent() {
   }
 
   return (
-    <div className="w-full">
-      {/* ── TAB NAV ─── */}
-      <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-6 flex items-stretch h-16">
-        <div className="flex items-center gap-3 pr-8 border-r border-slate-200">
-          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-md shadow-blue-500/20">
-            <img src="/logo-iruka.svg" alt="IruKa Logo" className="object-contain" />
+    <div className="w-full min-h-screen bg-[#f0f4f8] font-sans">
+      <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-6 py-3">
+        <div className="max-w-5xl mx-auto flex items-center gap-4">
+          <div className="w-12 h-12 bg-[#1e3a5f] rounded-xl flex items-center justify-center text-2xl shadow-md">🎯</div>
+          <div className="flex-1">
+            <h1 className="font-black text-[#1e3a5f] text-xl">Kết Quả Đánh Giá Thử Việc</h1>
+            <p className="text-xs text-slate-500">Xem đầy đủ phiếu — Bấm "Đã nhận" sau khi xem xong</p>
           </div>
-          <span className="font-bold text-lg text-slate-800 tracking-tight">IruKa<span className="text-blue-600">Life</span></span>
-        </div>
-        <div className="flex px-4 items-center font-medium text-[15px] border-b-[3px] border-transparent text-slate-400 cursor-not-allowed">
-          📝 Tự Đánh Giá
-        </div>
-        <div className="flex px-4 items-center font-medium text-[15px] border-b-[3px] border-transparent text-slate-400 cursor-not-allowed">
-          📊 Quản Lý Đánh Giá
-        </div>
-        <div className="flex px-4 items-center font-semibold text-[15px] border-b-[3px] border-blue-600 text-blue-700 bg-blue-50/50 cursor-default">
-          🎯 Kết Quả Đánh Giá
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            Kết Quả Cuối
+          </span>
         </div>
       </div>
 
-      <main className="max-w-[1200px] mx-auto p-4 md:p-8 space-y-8 pb-32">
-        {/* Header Content */}
-        <div className="flex items-start justify-between mt-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Kết Quả Đánh Giá Thử Việc</h1>
-            <p className="text-sm text-slate-500 mt-1">Chi tiết điểm đánh giá và quyết định cuối cùng từ Ban Giám Đốc.</p>
-          </div>
-        </div>
+      <main className="max-w-5xl mx-auto p-4 md:p-8 space-y-6 pb-32">
+        {/* Phiếu đầy đủ — viewMode='nv', status RESULT_SENT/ACKNOWLEDGED → readonly */}
+        <EvaluationForm
+          viewMode="nv"
+          initialData={data}
+          currentUserId={discordId}
+          currentUserName={data.info.name || 'Nhân viên'}
+          token={token}
+        />
 
-        {/* Thông tin NV */}
-        {evalData && (
-          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h2 className="text-[15px] font-bold text-slate-800 mb-4 flex items-center gap-2 tracking-tight">
-              <span className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-600">i</span>
-              Thông Tin Chung
-            </h2>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                ['Nhân viên', evalData.info.name],
-                ['Vị trí', evalData.info.position],
-                ['Phòng ban', evalData.info.department],
-                ['Ngày bắt đầu', evalData.info.start_date],
-                ['Quản lý trực tiếp', evalData.info.manager_name],
-              ].map(([label, value]) => (
-                <div key={label} className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">{label}</div>
-                    <div className="text-slate-800 font-semibold">{value || '—'}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Lời nhắn QL khi gửi (nếu có) — fetch từ json gốc; lấy từ data nếu cần.
+            Hiện EvaluationForm chưa render mgr_note, nên hiện ở đây. */}
 
-        {/* Điểm tổng kết */}
-        {evalData && (
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: 'Bạn tự chấm', avg: selfAvg, color: 'text-blue-600' },
-              { label: 'Quản lý chấm', avg: mgrAvg, color: 'text-purple-600' },
-              { label: 'Điểm chung', avg: combined, color: getVerdictColor(combined).replace('400', '600') },
-            ].map(({ label, avg, color }) => (
-              <div key={label} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm text-center space-y-2">
-                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</div>
-                <div className={`text-4xl font-bold ${color}`}>{avg > 0 ? avg.toFixed(1) : '—'}</div>
-                {label === 'Điểm chung' && avg > 0 && (
-                  <div className={`text-sm font-bold ${color} mt-1`}>{getVerdictLabel(avg)}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Chi tiết tiêu chí */}
-        {evalData && (
-          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h2 className="text-[15px] font-bold text-slate-800 mb-4 flex items-center gap-2 tracking-tight">
-              <span className="w-6 h-6 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center">
-                <Star size={14} className="text-blue-600" />
-              </span>
-              Chi Tiết Từng Tiêu Chí
-            </h2>
-            <div className="space-y-3">
-              {evalData.criteria.map((c, i) => (
-                <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center bg-slate-50 rounded-xl px-4 py-4 border border-slate-200">
-                  <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-500 shadow-sm">{i + 1}</div>
-                  <div>
-                    <div className="text-slate-800 font-semibold text-sm">{c.name}</div>
-                    {c.expectation && <div className="text-slate-600 text-sm mt-1 leading-relaxed">{c.expectation}</div>}
-                  </div>
-                  <div className="text-center px-2">
-                    <div className="text-[10px] font-bold text-blue-500 uppercase mb-1">Tự chấm</div>
-                    <div className="text-2xl font-bold text-blue-600">{c.self_score || '—'}</div>
-                  </div>
-                  <div className="text-center px-2">
-                    <div className="text-[10px] font-bold text-purple-500 uppercase mb-1">QL chấm</div>
-                    <div className="text-2xl font-bold text-purple-600">{c.mgr_score || '—'}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Nhận xét QL */}
-        {evalData?.mgr_comment && (
-          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h2 className="text-[15px] font-bold text-slate-800 mb-3 flex items-center gap-2 tracking-tight">
-              <span className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center">
-                <MessageSquare size={14} className="text-slate-600" />
-              </span>
-              Nhận Xét Của Quản Lý
-            </h2>
-            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm p-4 bg-slate-50 rounded-xl border border-slate-200">{evalData.mgr_comment}</p>
-          </section>
-        )}
-
-        {/* Ghi chú CEO */}
-        {evalData?.ceo_comment && (
-          <section className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
-            <h2 className="text-[15px] font-bold text-amber-600 mb-3 flex items-center gap-2">👑 Ghi Chú Của CEO</h2>
-            <p className="text-amber-900 leading-relaxed whitespace-pre-wrap text-sm">{evalData.ceo_comment}</p>
-          </section>
-        )}
-
-        {/* Lời nhắn QL */}
-        {evalData?.mgr_note && (
-          <section className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <h2 className="text-[15px] font-bold text-blue-700 mb-3">💬 Lời Nhắn Từ Quản Lý</h2>
-            <p className="text-blue-900 leading-relaxed whitespace-pre-wrap text-sm">{evalData.mgr_note}</p>
-          </section>
-        )}
-
-        {/* Quyết định chính thức */}
-        {decision && evalData && (
-          <section className={`rounded-2xl p-6 border bg-gradient-to-br ${decision.bg}`}>
-            <div className="text-3xl mb-3">{decision.icon}</div>
-            <h2 className={`text-2xl font-bold mb-2 ${decision.color}`}>{decision.label}</h2>
-            <p className="text-slate-600">{decision.desc}</p>
-          </section>
-        )}
-
-        {/* Nút xác nhận */}
+        {/* Toast lỗi xác nhận */}
         {ackStatus === 'error' && (
-          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-5 py-3 text-red-400 text-sm">
+          <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-5 py-3 text-red-600 text-sm">
             <AlertTriangle size={16} /> {ackError}
           </div>
         )}
+
+        {/* Nút xác nhận */}
         <div className="flex justify-center pb-12">
           <button
+            type="button"
             onClick={handleAcknowledge}
             disabled={ackStatus === 'confirming'}
             className="flex items-center gap-2 px-10 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/20 text-lg"
@@ -336,8 +160,8 @@ function FinalContent() {
 export default function FinalPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center">
-        <Loader2 size={36} className="animate-spin text-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-[#f0f4f8]">
+        <Loader2 size={32} className="animate-spin text-blue-600" />
       </div>
     }>
       <FinalContent />

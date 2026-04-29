@@ -644,41 +644,42 @@ function ceoReview(d) {
 
   updateRow(SHEET_EVAL, 'id', evalId, ceoUpdates);
 
+  var nameWithDept = evalObj.name + (evalObj.dept ? ' (' + evalObj.dept + ')' : '');
   if (isCeoDirect) {
-    // Luồng rút gọn: CEO đã đánh giá → notify HR + CC NV
+    // Luồng rút gọn: CEO đã đánh giá → notify HR (dùng HMAC token, không cần password)
     var isApproved = (newStatus === 'PENDING_HR');
-    // Link mở thẳng trang HR gửi kết quả (dùng dashboard password để vào)
-    var hrResultLink = (prop('WEBAPP_URL') || '').replace(/\/$/, '') + '/evaluation/result/' + evalId;
-    var nameWithDept = evalObj.name + (evalObj.dept ? ' (' + evalObj.dept + ')' : '');
+    var hrResultLink = isApproved
+      ? buildLink('/evaluation/result', evalId, evalObj.hr_discord_id)
+      : (prop('WEBAPP_URL') || '');
     notifyDiscord(evalObj.hr_discord_id,
       makeEmbed(
         isApproved ? '✅ CEO Đã Phê Duyệt — Sẵn Sàng Gửi Kết Quả' : '🔄 CEO Yêu Cầu Xem Lại',
         isApproved
           ? 'CEO đã đánh giá xong **phiếu thử việc của ' + nameWithDept + '**.\nNhấn nút bên dưới để mở phiếu và gửi kết quả cho nhân viên.'
           : 'CEO yêu cầu xem lại phiếu thử việc của **' + nameWithDept + '**: ' + (d.ceo_comment||''),
-        isApproved ? 0x22C55E : 0xF59E0B, [],
-        isApproved ? hrResultLink : (prop('WEBAPP_URL') || ''),
+        isApproved ? 0x22C55E : 0xF59E0B, [], hrResultLink,
         isApproved ? '📤 Mở phiếu & Gửi kết quả' : 'Xem dashboard'
       ), null);
     notifyDiscord(evalObj.discord_id,
       makeEmbed('⏳ Phiếu Đang Chờ HR Xử Lý',
         'CEO đã xem xét phiếu của bạn. HR sẽ gửi kết quả sớm.', 0x94A3B8), null);
   } else {
-    // Luồng thường: notify QL
-    // FIX BUG #2: link cũ trỏ /evaluation/mgr-fill (sai context — QL đã điền xong)
-    //            + thiếu HMAC token → đổi sang /evaluation/mgr-review + buildLink
-    var mgrLink = buildLink('/evaluation/mgr-review', evalId, evalObj.manager_discord_id);
-    var title   = newStatus === 'COMPLETED' ? '✅ CEO Đã Phê Duyệt' : '🔄 CEO Yêu Cầu Xem Lại';
+    // Luồng thường: CEO đã duyệt → QL gửi kết quả (link tới trang result, HMAC token)
+    var mgrResultLink = newStatus === 'COMPLETED'
+      ? buildLink('/evaluation/result', evalId, evalObj.manager_discord_id)
+      : buildLink('/evaluation/mgr-review', evalId, evalObj.manager_discord_id);
+    var title   = newStatus === 'COMPLETED' ? '✅ CEO Đã Phê Duyệt — Sẵn Sàng Gửi Kết Quả' : '🔄 CEO Yêu Cầu Xem Lại';
     var desc    = newStatus === 'COMPLETED'
-      ? 'Phiếu của **' + evalObj.name + '** đã được CEO phê duyệt. Vui lòng gửi kết quả cho nhân viên.'
-      : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||'');
+      ? 'CEO đã phê duyệt **phiếu thử việc của ' + nameWithDept + '**.\nNhấn nút bên dưới để mở phiếu và gửi kết quả cho nhân viên.'
+      : 'CEO yêu cầu xem lại phiếu **' + nameWithDept + '**: ' + (d.ceo_comment||'');
     var color   = newStatus === 'COMPLETED' ? 0x22C55E : 0xF59E0B;
+    var btn     = newStatus === 'COMPLETED' ? '📤 Mở phiếu & Gửi kết quả' : 'Xem phiếu';
     var hrTitle = newStatus === 'COMPLETED' ? '✅ CEO Đã Phê Duyệt' : '🔄 CEO Yêu Cầu Xem Lại';
     var hrDesc  = newStatus === 'COMPLETED'
-      ? 'CEO đã phê duyệt phiếu **' + evalObj.name + '**. Quản lý **' + evalObj.manager_name + '** đang gửi kết quả cho nhân viên.'
-      : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||'') + '.\nQuản lý đang xử lý.';
+      ? 'CEO đã phê duyệt phiếu **' + nameWithDept + '**. Quản lý **' + evalObj.manager_name + '** đang gửi kết quả cho nhân viên.'
+      : 'CEO yêu cầu xem lại phiếu **' + nameWithDept + '**: ' + (d.ceo_comment||'') + '.\nQuản lý đang xử lý.';
     notifyDiscord(evalObj.manager_discord_id,
-      makeEmbed(title, desc, color, [], mgrLink, 'Xem phiếu'),
+      makeEmbed(title, desc, color, [], mgrResultLink, btn),
       evalObj.hr_discord_id,
       makeEmbed(hrTitle, hrDesc, color));
   }
