@@ -18,7 +18,7 @@
  */
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle, Loader2, PlusCircle, Send, Trash2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, PlusCircle, Send, Trash2, X } from 'lucide-react';
 import { canEdit, canSign, ROLE_LABEL, STATUS_LABEL } from './permissions';
 import { MANAGER_LIST, addLabelForGroup, groupCriteria } from './defaults';
 import type { CriteriaItem, EvaluationData, MemberOption, ViewMode, WorkItem } from './types';
@@ -255,6 +255,35 @@ export default function EvaluationForm({
   }
 
   return (
+    <>
+      {/* Toast lỗi — hiện giữa màn hình khi validate fail */}
+      {errorMsg && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.45)' }}
+          onClick={() => { setErrorMsg(''); setStatus('idle'); }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 flex flex-col items-center gap-4 text-center animate-bounce-in"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertCircle size={32} className="text-red-500" />
+            </div>
+            <div>
+              <div className="font-black text-[#1e3a5f] text-lg mb-1">Thiếu thông tin!</div>
+              <div className="text-[#374151] text-base font-medium leading-snug">{errorMsg}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setErrorMsg(''); setStatus('idle'); }}
+              className="mt-1 px-6 py-2 bg-[#1e3a5f] text-white rounded-lg font-bold text-sm hover:bg-[#16304f] transition-colors"
+            >
+              Đã hiểu, điền tiếp
+            </button>
+          </div>
+        </div>
+      )}
     <form
       onSubmit={(e) => {
         const err = validateBeforeSubmit();
@@ -263,11 +292,6 @@ export default function EvaluationForm({
       }}
       className="space-y-6 pb-24"
     >
-      {errorMsg && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-red-600 text-base font-medium">
-          {errorMsg}
-        </div>
-      )}
 
       {/* ───── 1. THÔNG TIN CHUNG ───── */}
       <Section title="1. Thông Tin Chung" icon="📋">
@@ -672,6 +696,15 @@ export default function EvaluationForm({
         </div>
       </div>
     </form>
+    <style>{`
+      @keyframes bounce-in {
+        0%   { transform: scale(0.8); opacity: 0; }
+        60%  { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(1); }
+      }
+      .animate-bounce-in { animation: bounce-in 0.25s ease-out; }
+    `}</style>
+    </>
   );
 }
 
