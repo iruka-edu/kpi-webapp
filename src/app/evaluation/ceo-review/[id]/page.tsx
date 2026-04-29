@@ -107,8 +107,12 @@ export default function CeoReviewPage() {
 
 function mapApiToData(json: any, evalId: string): EvaluationData {
   const mgrId = json.info?.manager_discord_id || json.manager_discord_id || '';
+  // Server đã tính is_ceo_direct (xem /api/evaluation/ceo-review GET).
+  // Fallback: tự tính từ env nếu server không gửi (cũ).
   const ceoId = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
-  const isCeoDirect = !!(mgrId && ceoId && mgrId === ceoId);
+  const isCeoDirect = typeof json.is_ceo_direct === 'boolean'
+    ? json.is_ceo_direct
+    : !!(mgrId && ceoId && mgrId === ceoId);
   return {
     eval_id: evalId,
     status: json.status || 'PENDING_CEO',

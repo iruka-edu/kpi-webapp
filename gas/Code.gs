@@ -154,12 +154,12 @@ function makeToken(discordId, evalId) {
 }
 
 // ── Build link với token ───────────────────────────────────────
-// /evaluation (NV) dùng query param ?id=... vì page dùng useSearchParams
-// Các route CEO/QL dùng dynamic segment /<evalId> vì page dùng useParams [id]
+// /evaluation (NV) + /evaluation/final (NV xem kết quả) dùng query param ?id=...
+// vì page dùng useSearchParams. Còn lại dùng dynamic segment /<evalId>.
 function buildLink(path, evalId, discordId) {
   var base = prop('WEBAPP_URL') || 'https://kpi.irukaedu.vn';
   var token = makeToken(discordId, evalId);
-  if (path === '/evaluation') {
+  if (path === '/evaluation' || path === '/evaluation/final') {
     return base + path + '?id=' + evalId + '&discord_id=' + discordId + '&token=' + token;
   }
   return base + path + '/' + evalId + '?discord_id=' + discordId + '&token=' + token;
@@ -647,13 +647,18 @@ function ceoReview(d) {
   if (isCeoDirect) {
     // Luồng rút gọn: CEO đã đánh giá → notify HR + CC NV
     var isApproved = (newStatus === 'PENDING_HR');
+    // Link mở thẳng trang HR gửi kết quả (dùng dashboard password để vào)
+    var hrResultLink = (prop('WEBAPP_URL') || '').replace(/\/$/, '') + '/evaluation/result/' + evalId;
+    var nameWithDept = evalObj.name + (evalObj.dept ? ' (' + evalObj.dept + ')' : '');
     notifyDiscord(evalObj.hr_discord_id,
       makeEmbed(
-        isApproved ? '✅ CEO Đã Đánh Giá Xong' : '🔄 CEO Yêu Cầu Xem Lại',
+        isApproved ? '✅ CEO Đã Phê Duyệt — Sẵn Sàng Gửi Kết Quả' : '🔄 CEO Yêu Cầu Xem Lại',
         isApproved
-          ? 'CEO đã đánh giá xong phiếu **' + evalObj.name + '**. Vui lòng gửi kết quả cho nhân viên.'
-          : 'CEO yêu cầu xem lại phiếu **' + evalObj.name + '**: ' + (d.ceo_comment||''),
-        isApproved ? 0x22C55E : 0xF59E0B, [], prop('WEBAPP_URL'), 'Xem dashboard'
+          ? 'CEO đã đánh giá xong **phiếu thử việc của ' + nameWithDept + '**.\nNhấn nút bên dưới để mở phiếu và gửi kết quả cho nhân viên.'
+          : 'CEO yêu cầu xem lại phiếu thử việc của **' + nameWithDept + '**: ' + (d.ceo_comment||''),
+        isApproved ? 0x22C55E : 0xF59E0B, [],
+        isApproved ? hrResultLink : (prop('WEBAPP_URL') || ''),
+        isApproved ? '📤 Mở phiếu & Gửi kết quả' : 'Xem dashboard'
       ), null);
     notifyDiscord(evalObj.discord_id,
       makeEmbed('⏳ Phiếu Đang Chờ HR Xử Lý',
@@ -696,7 +701,9 @@ function sendResult(d) {
   });
 
   var evalObj = getEvalObj(evalId);
-  var nvLink  = buildLink('/evaluation/result', evalId, evalObj.discord_id);
+  // NV xem kết quả ở /evaluation/final (HMAC token, NV có quyền), KHÔNG phải
+  // /evaluation/result (trang HR/QL gửi kết quả — yêu cầu Dashboard password).
+  var nvLink  = buildLink('/evaluation/final', evalId, evalObj.discord_id);
   var ceoId   = prop('CEO_DISCORD_ID');
 
   notifyDiscord(evalObj.discord_id,

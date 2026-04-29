@@ -40,7 +40,9 @@ export default function ManagerResultSend({
   const [errorMsg, setErrorMsg] = useState('');
 
   // Chỉ hiển thị nút khi CEO đã duyệt xong
-  const canSend = currentStatus === 'COMPLETED';
+  // - COMPLETED: luồng thường (QL gửi)
+  // - PENDING_HR: luồng rút gọn (CEO kiêm QL → HR gửi)
+  const canSend = currentStatus === 'COMPLETED' || currentStatus === 'PENDING_HR';
   const alreadySent = currentStatus === 'RESULT_SENT' || currentStatus === 'ACKNOWLEDGED';
 
   // ── Đã gửi rồi ────────────────────────────────────────────────

@@ -61,7 +61,14 @@ export async function GET(request: Request) {
     const response = await fetch(url);
     const data     = await response.json();
     if (data.error) throw new Error(data.error);
-    return NextResponse.json(data);
+
+    // Tính is_ceo_direct server-side để frontend khỏi phụ thuộc NEXT_PUBLIC_*
+    // (env var này có thể chưa set trên Vercel build → client thấy '' → false sai).
+    const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+    const mgrId = data?.info?.manager_discord_id || data?.manager_discord_id || '';
+    const isCeoDirect = !!(CEO_DISCORD_ID && mgrId && mgrId === CEO_DISCORD_ID);
+
+    return NextResponse.json({ ...data, is_ceo_direct: isCeoDirect });
   } catch (error: any) {
     console.error('🚨 Lỗi GET phiếu CEO review:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

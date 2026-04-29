@@ -22,19 +22,29 @@ import { verifyEvalToken } from '../_utils/verifyEvalToken';
 const GAS_EVAL_URL = process.env.GOOGLE_APPS_SCRIPT_EVALUATION_URL || '';
 
 // ── GET: Lấy toàn bộ phiếu để QL xem + chấm ─────────────────────
+//   Auth: HMAC token cá nhân (link Discord) HOẶC dashboard password
+//         (HR mở /evaluation/result/[id] để gửi kết quả cho NV).
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const evalId    = searchParams.get('id');
   const discordId = searchParams.get('discord_id');
   const token     = searchParams.get('token');
 
-  // Xác thực HMAC token cá nhân hóa
-  if (!evalId || !discordId || !token) {
-    return NextResponse.json({ error: 'Thiếu thông tin xác thực (id, discord_id, token)' }, { status: 400 });
+  if (!evalId) {
+    return NextResponse.json({ error: 'Thiếu eval_id' }, { status: 400 });
   }
-  if (!verifyEvalToken(token, discordId, evalId)) {
+
+  // Đường vào 1: dashboard password (HR/Dashboard)
+  const dashAuth = request.headers.get('x-dashboard-auth');
+  const dashPass = process.env.DASHBOARD_PASSWORD || '';
+  const isDashAuth = !!(dashAuth && dashPass && dashAuth === dashPass);
+
+  // Đường vào 2: HMAC token cá nhân hóa (link Discord cho QL/CEO)
+  const isTokenAuth = !!(discordId && token && verifyEvalToken(token, discordId, evalId));
+
+  if (!isDashAuth && !isTokenAuth) {
     return NextResponse.json(
-      { error: 'Link không hợp lệ hoặc đã hết hạn (72h). Vui lòng liên hệ HR để lấy link mới.' },
+      { error: 'Không có quyền truy cập (cần token hợp lệ hoặc mật khẩu Dashboard).' },
       { status: 403 }
     );
   }
