@@ -41,7 +41,7 @@ var HEADERS = {
     'mgr_expectation','mgr_salary_proposal'
   ],
   trial_work_summary: ['eval_id','stt','area','detail','result'],
-  trial_criteria:     ['eval_id','stt','name','expectation','self_score','mgr_score','note','source'],
+  trial_criteria:     ['eval_id','stt','name','expectation','self_score','mgr_score','note','source','group'],
   trial_proposals:    ['eval_id','salary_expectation','training_request','feedback'],
   staff_directory:    ['name','discord_id','dept','role','manager_name','manager_discord_id']
 };
@@ -130,6 +130,15 @@ function updateRow(sheetName, idField, idValue, updates) {
     }
   }
   return false;
+}
+
+// ── Format ngày về YYYY-MM-DD (GAS có thể trả Date object từ Sheet) ──
+function formatDateStr(v) {
+  if (!v) return '';
+  if (v instanceof Date) return Utilities.formatDate(v, 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd');
+  var s = String(v).trim();
+  if (s.length > 10 && s.charAt(10) === 'T') return s.slice(0, 10);
+  return s;
 }
 
 // ── Tạo HMAC token (cùng logic với Next.js) ───────────────────
@@ -268,19 +277,21 @@ function initEvaluation(d) {
     updateRow(SHEET_EVAL, 'id', evalId, hrSig);
   }
 
-  // Ghi tiêu chí mẫu HR điền (nếu có)
+  // Ghi tiêu chí mẫu HR điền (nếu có) — lưu kèm group để NV/QL nhìn đúng nhóm
   if (d.criteria && d.criteria.length > 0) {
     var csh = getSheet(SHEET_CRITERIA);
     d.criteria.forEach(function(c, i) {
-      csh.appendRow([evalId, i+1, c.name, c.expectation||'', '', '', '', 'hr_template']);
+      csh.appendRow([evalId, i+1, c.name, c.expectation||'', '', '', '', 'hr_template', c.group||'']);
     });
   }
 
   // Ghi công việc HR điền sẵn trong luồng rút gọn (nếu có)
-  if (isCeoDirect && d.work_summary && d.work_summary.length > 0) {
+  // Webapp gửi work_items [{task, details}] hoặc work_summary [{area, detail}] — chấp nhận cả hai
+  var hrWorkItems = d.work_items || d.work_summary || [];
+  if (isCeoDirect && hrWorkItems.length > 0) {
     var wsh = getSheet(SHEET_WORK);
-    d.work_summary.forEach(function(w, i) {
-      wsh.appendRow([evalId, i+1, w.area||'', w.detail||'', '']);
+    hrWorkItems.forEach(function(w, i) {
+      wsh.appendRow([evalId, i+1, w.area||w.task||'', w.detail||w.details||'', '']);
     });
   }
 
@@ -347,12 +358,12 @@ function mgrFill(d) {
   deleteRowsByEvalId(SHEET_CRITERIA, evalId);
   var csh = getSheet(SHEET_CRITERIA);
 
-  // Ghi lại HR template (giữ source gốc)
+  // Ghi lại HR template (giữ source gốc + group)
   hrTemplateBackup.forEach(function(row, i) {
     csh.appendRow([
       evalId, i + 1, row.name, row.expectation || '',
       row.self_score || '', row.mgr_score || '', row.note || '',
-      'hr_template'
+      'hr_template', row.group || ''
     ]);
   });
 
@@ -363,7 +374,7 @@ function mgrFill(d) {
   var startStt = hrTemplateBackup.length;
   (d.criteria || []).forEach(function(c, i) {
     if (c.source === 'hr_template' || hrNames[c.name]) return; // đã preserve ở trên
-    csh.appendRow([evalId, startStt + i + 1, c.name, c.expectation || '', '', '', '', c.source || 'mgr']);
+    csh.appendRow([evalId, startStt + i + 1, c.name, c.expectation || '', '', '', '', c.source || 'mgr', c.group || '']);
   });
 
   // Cập nhật status
@@ -428,13 +439,13 @@ function nvSubmit(d) {
   if (isCeoDirect && existingCriteria.length === 0) {
     // HR chưa điền tiêu chí trước → NV tự điền toàn bộ
     (d.criteria_scores || []).forEach(function(cs, i) {
-      csh.appendRow([evalId, i+1, cs.name||'', cs.expectation||'', cs.self_score||0, '', cs.note||'', 'nv_fill']);
+      csh.appendRow([evalId, i+1, cs.name||'', cs.expectation||'', cs.self_score||0, '', cs.note||'', 'nv_fill', cs.group||'']);
     });
   } else {
-    // Luồng thường: cập nhật điểm tự chấm
+    // Cập nhật điểm tự chấm cho tiêu chí đã có (HR/QL tạo)
     var cRows = csh.getDataRange().getValues();
     var cHeaders = cRows[0];
-    (d.criteria_scores || []).forEach(function(cs) {
+    (d.criteria_scores || []).filter(function(cs) { return cs.source !== 'nv_added'; }).forEach(function(cs) {
       for (var i = 1; i < cRows.length; i++) {
         if (cRows[i][cHeaders.indexOf('eval_id')] === evalId &&
             cRows[i][cHeaders.indexOf('stt')]     === cs.stt) {
@@ -443,13 +454,18 @@ function nvSubmit(d) {
         }
       }
     });
-    // Tiêu chí NV thêm mới
+    // Tiêu chí NV thêm mới (từ criteria_scores có source='nv_added' hoặc criteria_new)
     var existingStts = cRows.slice(1)
       .filter(function(r) { return r[cHeaders.indexOf('eval_id')] === evalId; })
       .map(function(r) { return r[cHeaders.indexOf('stt')]; });
     var maxStt = existingStts.length > 0 ? Math.max.apply(null, existingStts) : 0;
+    var nvAdded = (d.criteria_scores || []).filter(function(cs) { return cs.source === 'nv_added'; });
+    nvAdded.forEach(function(cn, i) {
+      csh.appendRow([evalId, maxStt+i+1, cn.name, cn.expectation||'', cn.self_score||0, '', cn.note||'', 'nv_added', cn.group||'']);
+    });
+    // Backward compat: criteria_new (cũ)
     (d.criteria_new || []).forEach(function(cn, i) {
-      csh.appendRow([evalId, maxStt+i+1, cn.name, cn.expectation||'', cn.self_score||'', '', '', 'nv_added']);
+      csh.appendRow([evalId, maxStt+nvAdded.length+i+1, cn.name, cn.expectation||'', cn.self_score||'', '', '', 'nv_added', cn.group||'']);
     });
   }
 
@@ -695,7 +711,7 @@ function getEvaluation(evalId) {
     }
   });
 
-  // Form mới expect info object — wrap các field vào info
+  // Form mới expect info object — wrap các field vào info + format ngày về YYYY-MM-DD
   evalObj.info = {
     name: evalObj.name,
     discord_id: evalObj.discord_id,
@@ -704,9 +720,9 @@ function getEvaluation(evalId) {
     manager_name: evalObj.manager_name,
     manager_discord_id: evalObj.manager_discord_id,
     hr_discord_id: evalObj.hr_discord_id,
-    trial_start: evalObj.trial_start,
-    trial_end: evalObj.trial_end,
-    eval_date: evalObj.eval_date
+    trial_start: formatDateStr(evalObj.trial_start),
+    trial_end: formatDateStr(evalObj.trial_end),
+    eval_date: formatDateStr(evalObj.eval_date)
   };
 
   return evalObj;

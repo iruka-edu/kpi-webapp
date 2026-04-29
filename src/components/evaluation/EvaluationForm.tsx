@@ -460,7 +460,7 @@ export default function EvaluationForm({
                         />
                       </Td>
                       <Td align="center">
-                        {cur('criteria_meta') && (
+                        {cur('criteria_meta') && (viewMode !== 'nv' || c.source === 'nv_added') && (
                           <button type="button" onClick={() => removeCrit(index)} className="text-red-400 hover:text-red-700 p-2 transition-colors" title="Xóa tiêu chí">
                             <Trash2 size={16} />
                           </button>
