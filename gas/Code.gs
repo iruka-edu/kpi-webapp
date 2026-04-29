@@ -154,10 +154,15 @@ function makeToken(discordId, evalId) {
 }
 
 // ── Build link với token ───────────────────────────────────────
+// /evaluation (NV) dùng query param ?id=... vì page dùng useSearchParams
+// Các route CEO/QL dùng dynamic segment /<evalId> vì page dùng useParams [id]
 function buildLink(path, evalId, discordId) {
   var base = prop('WEBAPP_URL') || 'https://kpi.irukaedu.vn';
   var token = makeToken(discordId, evalId);
-  return base + path + '?id=' + evalId + '&discord_id=' + discordId + '&token=' + token;
+  if (path === '/evaluation') {
+    return base + path + '?id=' + evalId + '&discord_id=' + discordId + '&token=' + token;
+  }
+  return base + path + '/' + evalId + '?discord_id=' + discordId + '&token=' + token;
 }
 
 // ── Gửi DM/thông báo qua Next.js Bot Relay ───────────────────
