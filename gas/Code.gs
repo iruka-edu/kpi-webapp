@@ -645,48 +645,63 @@ function ceoReview(d) {
   updateRow(SHEET_EVAL, 'id', evalId, ceoUpdates);
 
   var nameWithDept = evalObj.name + (evalObj.dept ? ' (' + evalObj.dept + ')' : '');
+
+  // Quyết định cuối (pass/extend/fail) — kèm vào DM để HR/QL biết outcome ngay,
+  // KHÔNG đổi flow: cả 3 outcome cùng đi qua trang result để gửi cho NV.
+  // CEO chỉ có ceo_action='approve' (frontend không gửi 'reject' nữa).
+  var dec       = (d.mgr_decision || (evalObj && evalObj.decision) || '').toString();
+  var decLabel  = dec === 'pass'   ? '✅ Tiếp nhận chính thức'
+                : dec === 'extend' ? '⏳ Gia hạn thử việc 1 tháng'
+                : dec === 'fail'   ? '❌ Chấm dứt thử việc'
+                : '(chưa xác định)';
+  var decColor  = dec === 'fail'   ? 0xEF4444
+                : dec === 'extend' ? 0xF59E0B
+                : 0x22C55E;
+  var legacyReject = (d.ceo_action === 'reject'); // backward compat — không nên xảy ra nữa
+
   if (isCeoDirect) {
-    // Luồng rút gọn: CEO đã xử lý → notify HR (HMAC token, không cần password)
-    var isApproved = (newStatus === 'PENDING_HR');
-    // CẢ 2 nhánh đều phải mở được phiếu để xem chi tiết → dùng buildLink HR
+    // Luồng rút gọn: CEO đã xử lý → HR mở phiếu để gửi kết quả cho NV
     var hrResultLink = buildLink('/evaluation/result', evalId, evalObj.hr_discord_id);
-    notifyDiscord(evalObj.hr_discord_id,
-      makeEmbed(
-        isApproved ? '✅ CEO Đã Phê Duyệt — Sẵn Sàng Gửi Kết Quả' : '❌ CEO Đã Từ Chối Phiếu',
-        isApproved
-          ? 'CEO đã đánh giá xong **phiếu thử việc của ' + nameWithDept + '**.\nNhấn nút bên dưới để mở phiếu và gửi kết quả cho nhân viên.'
-          : 'CEO đã từ chối **phiếu thử việc của ' + nameWithDept + '**.\nLý do: ' + (d.ceo_comment||'(không ghi chú)') + '\nMở phiếu để xem chi tiết và xử lý tiếp.',
-        isApproved ? 0x22C55E : 0xEF4444, [], hrResultLink,
-        isApproved ? '📤 Mở phiếu & Gửi kết quả' : '📋 Mở phiếu để xem'
-      ), null);
+    if (legacyReject) {
+      // Path cũ — chỉ chạy với data legacy, frontend mới không trigger
+      notifyDiscord(evalObj.hr_discord_id,
+        makeEmbed('🔄 CEO Yêu Cầu Xem Lại Phiếu',
+          'CEO yêu cầu xem lại phiếu **' + nameWithDept + '**.\nLý do: ' + (d.ceo_comment||'(không ghi chú)'),
+          0xF59E0B, [], hrResultLink, '📋 Mở phiếu để xem'), null);
+    } else {
+      notifyDiscord(evalObj.hr_discord_id,
+        makeEmbed(
+          '✅ CEO Đã Phê Duyệt — Sẵn Sàng Gửi Kết Quả',
+          'CEO đã phê duyệt **phiếu thử việc của ' + nameWithDept + '**.\n**Quyết định: ' + decLabel + '**\nNhấn nút bên dưới để mở phiếu và gửi kết quả cho nhân viên.',
+          decColor, [], hrResultLink, '📤 Mở phiếu & Gửi kết quả'), null);
+    }
     notifyDiscord(evalObj.discord_id,
-      makeEmbed(
-        isApproved ? '⏳ Phiếu Đang Chờ HR Xử Lý' : '❌ Phiếu Bị Từ Chối',
-        isApproved
-          ? 'CEO đã xem xét phiếu của bạn. HR sẽ gửi kết quả sớm.'
-          : 'CEO đã từ chối phiếu thử việc của bạn. HR sẽ liên hệ để trao đổi cụ thể.',
-        isApproved ? 0x94A3B8 : 0xEF4444), null);
+      makeEmbed('⏳ Phiếu Đang Chờ HR Xử Lý',
+        'CEO đã xem xét xong phiếu của bạn. HR sẽ gửi kết quả sớm — bạn sẽ nhận DM thông báo khi có.',
+        0x94A3B8), null);
   } else {
-    // Luồng thường: CEO đã xử lý → QL nhận link, HR CC.
-    // CẢ 2 nhánh (approve/reject) đều dùng buildLink → trang result page
-    // (có HMAC token, không cần password) để mở phiếu xem/xử lý.
+    // Luồng thường: CEO đã xử lý → QL nhận link gửi kết quả, HR CC.
     var mgrResultLink = buildLink('/evaluation/result', evalId, evalObj.manager_discord_id);
     var hrViewLink    = buildLink('/evaluation/result', evalId, evalObj.hr_discord_id);
-    var isApprovedNm  = (newStatus === 'COMPLETED');
-    var title   = isApprovedNm ? '✅ CEO Đã Phê Duyệt — Sẵn Sàng Gửi Kết Quả' : '❌ CEO Đã Từ Chối Phiếu';
-    var desc    = isApprovedNm
-      ? 'CEO đã phê duyệt **phiếu thử việc của ' + nameWithDept + '**.\nNhấn nút bên dưới để mở phiếu và gửi kết quả cho nhân viên.'
-      : 'CEO đã từ chối **phiếu thử việc của ' + nameWithDept + '**.\nLý do: ' + (d.ceo_comment||'(không ghi chú)') + '\nMở phiếu để xem chi tiết.';
-    var color   = isApprovedNm ? 0x22C55E : 0xEF4444;
-    var btn     = isApprovedNm ? '📤 Mở phiếu & Gửi kết quả' : '📋 Mở phiếu để xem';
-    var hrTitle = isApprovedNm ? '✅ CEO Đã Phê Duyệt' : '❌ CEO Đã Từ Chối Phiếu';
-    var hrDesc  = isApprovedNm
-      ? 'CEO đã phê duyệt phiếu **' + nameWithDept + '**. Quản lý **' + evalObj.manager_name + '** đang gửi kết quả cho nhân viên.'
-      : 'CEO đã từ chối phiếu **' + nameWithDept + '**.\nLý do: ' + (d.ceo_comment||'(không ghi chú)') + '\nQuản lý **' + evalObj.manager_name + '** đang xử lý.';
-    notifyDiscord(evalObj.manager_discord_id,
-      makeEmbed(title, desc, color, [], mgrResultLink, btn),
-      evalObj.hr_discord_id,
-      makeEmbed(hrTitle, hrDesc, color, [], hrViewLink, '📋 Mở phiếu để xem'));
+    if (legacyReject) {
+      notifyDiscord(evalObj.manager_discord_id,
+        makeEmbed('🔄 CEO Yêu Cầu Xem Lại Phiếu',
+          'CEO yêu cầu xem lại phiếu **' + nameWithDept + '**.\nLý do: ' + (d.ceo_comment||'(không ghi chú)'),
+          0xF59E0B, [], mgrResultLink, '📋 Mở phiếu để xem'),
+        evalObj.hr_discord_id,
+        makeEmbed('🔄 CEO Yêu Cầu Xem Lại Phiếu',
+          'CEO yêu cầu xem lại phiếu **' + nameWithDept + '**.\nLý do: ' + (d.ceo_comment||'(không ghi chú)') + '\nQuản lý **' + evalObj.manager_name + '** đang xử lý.',
+          0xF59E0B, [], hrViewLink, '📋 Mở phiếu để xem'));
+    } else {
+      notifyDiscord(evalObj.manager_discord_id,
+        makeEmbed('✅ CEO Đã Phê Duyệt — Sẵn Sàng Gửi Kết Quả',
+          'CEO đã phê duyệt **phiếu thử việc của ' + nameWithDept + '**.\n**Quyết định: ' + decLabel + '**\nNhấn nút bên dưới để mở phiếu và gửi kết quả cho nhân viên.',
+          decColor, [], mgrResultLink, '📤 Mở phiếu & Gửi kết quả'),
+        evalObj.hr_discord_id,
+        makeEmbed('✅ CEO Đã Phê Duyệt',
+          'CEO đã phê duyệt phiếu **' + nameWithDept + '**.\n**Quyết định: ' + decLabel + '**\nQuản lý **' + evalObj.manager_name + '** đang gửi kết quả cho nhân viên.',
+          decColor, [], hrViewLink, '📋 Mở phiếu để xem'));
+    }
   }
 
   return { success: true, new_status: newStatus };
@@ -708,14 +723,35 @@ function sendResult(d) {
 
   var evalObj = getEvalObj(evalId);
   // NV xem kết quả ở /evaluation/final (HMAC token, NV có quyền), KHÔNG phải
-  // /evaluation/result (trang HR/QL gửi kết quả — yêu cầu Dashboard password).
+  // /evaluation/result (trang HR/QL — HMAC khác).
   var nvLink  = buildLink('/evaluation/final', evalId, evalObj.discord_id);
   var ceoId   = prop('CEO_DISCORD_ID');
 
+  // Title/màu/text theo quyết định cuối (decision column = mgr_decision)
+  // Mọi outcome cùng đi qua flow này — chỉ khác text để NV chuẩn bị tâm lý.
+  var dec = (evalObj.decision || '').toString();
+  var nvTitle, nvDesc, nvColor;
+  if (dec === 'pass') {
+    nvTitle = '🎉 Kết Quả: Tiếp Nhận Chính Thức';
+    nvDesc  = 'Chúc mừng! Bạn đã hoàn thành thử việc và được tiếp nhận chính thức. Mở phiếu để xem chi tiết và xác nhận.';
+    nvColor = 0x22C55E;
+  } else if (dec === 'extend') {
+    nvTitle = '⏳ Kết Quả: Gia Hạn Thử Việc 1 Tháng';
+    nvDesc  = 'Công ty quyết định gia hạn thử việc thêm 1 tháng. Mở phiếu để xem nhận xét và mục tiêu cải thiện.';
+    nvColor = 0xF59E0B;
+  } else if (dec === 'fail') {
+    nvTitle = '❌ Kết Quả: Chấm Dứt Thử Việc';
+    nvDesc  = 'Rất tiếc, công ty quyết định không tiếp tục hợp đồng sau thử việc. HR sẽ liên hệ trao đổi thêm. Mở phiếu để xem nhận xét chi tiết.';
+    nvColor = 0xEF4444;
+  } else {
+    nvTitle = '🎯 Kết Quả Đánh Giá Thử Việc';
+    nvDesc  = 'Kết quả đánh giá của bạn đã sẵn sàng. Mở phiếu để xem chi tiết.';
+    nvColor = 0x3B82F6;
+  }
+  if (d.mgr_note) nvDesc += '\n\n💬 Lời nhắn: ' + d.mgr_note;
+
   notifyDiscord(evalObj.discord_id,
-    makeEmbed('🎉 Kết Quả Đánh Giá Thử Việc',
-      'Kết quả đánh giá của bạn đã sẵn sàng.\n' + (d.mgr_note ? '> ' + d.mgr_note : ''),
-      0x22C55E, [], nvLink, 'Xem kết quả'),
+    makeEmbed(nvTitle, nvDesc, nvColor, [], nvLink, '📄 Xem phiếu kết quả'),
     ceoId || null,
     makeEmbed('✅ Kết Quả Đã Gửi Cho Nhân Viên',
       'Kết quả đánh giá thử việc của **' + evalObj.name + '** đã được gửi thành công. Phiếu hoàn tất.',

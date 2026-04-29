@@ -910,7 +910,10 @@ function buildPayload(view: ViewMode, data: EvaluationData, token: string, curre
 
   if (view === 'ceo') {
     // /api/evaluation/ceo-review expect: eval_id, discord_id, token, ceo_action, ceo_comment
-    const action = data.conclusion.mgr_decision === 'fail' ? 'reject' : 'approve';
+    // CEO submit = phê duyệt cuối cùng cho QUYẾT ĐỊNH (pass/extend/fail) đã chọn.
+    // Cả 3 outcome đều đi cùng 1 luồng: status → COMPLETED/PENDING_HR → HR/QL
+    // gửi kết quả cho NV. Sự khác biệt chỉ ở banner hiển thị, không phải logic flow.
+    const action = 'approve';
     // Safety net giống component: detect CEO-direct qua currentUserId === manager_discord_id
     const isCeoDirect = (data.is_ceo_direct ?? false) || (
       !!currentUserId &&

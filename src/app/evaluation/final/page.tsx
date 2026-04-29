@@ -15,6 +15,7 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import EvaluationForm from '@/components/evaluation/EvaluationForm';
+import DecisionBanner from '@/components/evaluation/DecisionBanner';
 import { mapApiToData } from '@/components/evaluation/mapApiToData';
 import type { EvaluationData } from '@/components/evaluation/types';
 
@@ -118,6 +119,9 @@ function FinalContent() {
       </div>
 
       <main className="max-w-5xl mx-auto p-4 md:p-8 space-y-6 pb-32">
+        {/* Banner quyết định cuối — NV thấy ngay outcome khi mở phiếu */}
+        <DecisionBanner decision={data.conclusion.mgr_decision} audience="nv" />
+
         {/* Phiếu đầy đủ — viewMode='nv', status RESULT_SENT/ACKNOWLEDGED → readonly */}
         <EvaluationForm
           viewMode="nv"
