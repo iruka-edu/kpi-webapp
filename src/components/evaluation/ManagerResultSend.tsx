@@ -20,7 +20,7 @@
  */
 
 import React, { useState } from 'react';
-import { Send, Loader2, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, Loader2, Send } from 'lucide-react';
 
 interface ManagerResultSendProps {
   evalId: string;
@@ -141,11 +141,33 @@ export default function ManagerResultSend({
         />
       </div>
 
-      {/* Lỗi */}
-      {sendStatus === 'error' && (
-        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-red-400 text-sm">
-          <AlertTriangle size={16} className="shrink-0" />
-          {errorMsg}
+      {/* Lỗi — toast giữa màn hình */}
+      {sendStatus === 'error' && errorMsg && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.55)' }}
+          onClick={() => { setSendStatus('idle'); setErrorMsg(''); }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 flex flex-col items-center gap-4 text-center"
+            style={{ animation: 'bounce-in 0.25s ease-out' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertCircle size={32} className="text-red-500" />
+            </div>
+            <div>
+              <div className="font-black text-[#1e3a5f] text-lg mb-1">Gửi thất bại!</div>
+              <div className="text-[#374151] text-base font-medium leading-snug">{errorMsg}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setSendStatus('idle'); setErrorMsg(''); }}
+              className="mt-1 px-6 py-2 bg-[#1e3a5f] text-white rounded-lg font-bold text-sm hover:bg-[#16304f] transition-colors"
+            >
+              Đóng, thử lại
+            </button>
+          </div>
         </div>
       )}
 
