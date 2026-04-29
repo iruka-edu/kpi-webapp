@@ -24,6 +24,8 @@ var SHEET_PROPOSAL = 'trial_proposals';
 var SHEET_STAFF    = 'staff_directory';
 
 // ── Header từng sheet ─────────────────────────────────────────
+// LƯU Ý: thêm cột mới vào CUỐI để không vỡ cột cũ. updateRow() chỉ update theo tên,
+// nên thêm field mới sẽ tự ghi vào cột mới mà không cần migrate row hiện có.
 var HEADERS = {
   trial_evaluations: [
     'id','name','discord_id','dept','role',
@@ -31,13 +33,30 @@ var HEADERS = {
     'trial_start','trial_end','eval_date',
     'status','decision','mgr_comment','ceo_comment','mgr_note',
     'init_at','mgr_pending_at','nv_pending_at','submitted_at',
-    'mgr_reviewed_at','ceo_reviewed_at','result_sent_at','acknowledged_at'
+    'mgr_reviewed_at','ceo_reviewed_at','result_sent_at','acknowledged_at',
+    // Mở rộng: chữ ký 4 vai (HR / NV / QL / CEO) — auto-fill từ Discord member name
+    'hr_signed_at','hr_signed_by','nv_signed_at','nv_signed_by',
+    'mgr_signed_at','mgr_signed_by','ceo_signed_at','ceo_signed_by',
+    // Mở rộng: nhận xét QL/CEO bổ sung (tách từ mgr_comment cũ)
+    'mgr_expectation','mgr_salary_proposal'
   ],
   trial_work_summary: ['eval_id','stt','area','detail','result'],
   trial_criteria:     ['eval_id','stt','name','expectation','self_score','mgr_score','note','source'],
   trial_proposals:    ['eval_id','salary_expectation','training_request','feedback'],
   staff_directory:    ['name','discord_id','dept','role','manager_name','manager_discord_id']
 };
+
+// ── Helper: trích chữ ký từ payload và build object updates ───
+// Form mới gửi `signatures: { hr|nv|mgr|ceo: { signed_at, signed_by, discord_id } }`
+// Function này đọc 1 vai cụ thể và trả về fields tương ứng cho updateRow.
+function extractSignatureFields(d, role) {
+  var sig = (d && d.signatures && d.signatures[role]) || null;
+  if (!sig) return {};
+  var out = {};
+  out[role + '_signed_at'] = sig.signed_at || now();
+  out[role + '_signed_by'] = sig.signed_by || '';
+  return out;
+}
 
 // ── Lấy/tạo sheet ─────────────────────────────────────────────
 function getSheet(name) {
@@ -47,6 +66,17 @@ function getSheet(name) {
     sh = ss.insertSheet(name);
     sh.appendRow(HEADERS[name]);
     sh.setFrozenRows(1);
+    return sh;
+  }
+  // Auto-migrate: thêm cột thiếu nếu HEADERS schema được mở rộng (vd: signatures, mgr_expectation)
+  // Cột cũ giữ nguyên thứ tự, cột mới append vào cuối.
+  if (HEADERS[name]) {
+    var lastCol = sh.getLastColumn() || 0;
+    var current = lastCol > 0 ? sh.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+    var missing = HEADERS[name].filter(function(h) { return current.indexOf(h) === -1; });
+    if (missing.length > 0) {
+      sh.getRange(1, lastCol + 1, 1, missing.length).setValues([missing]);
+    }
   }
   return sh;
 }
@@ -221,7 +251,7 @@ function initEvaluation(d) {
   // Luồng rút gọn khi Quản lý trực tiếp chính là CEO
   var isCeoDirect = !!(d.manager_discord_id && ceoId && d.manager_discord_id === ceoId);
 
-  // Ghi row chính
+  // Ghi row chính (24 cột nguyên thủy — các cột mở rộng update sau bằng updateRow)
   sh.appendRow([
     evalId, d.name, d.discord_id, d.dept, d.role,
     d.manager_name, d.manager_discord_id, d.hr_discord_id,
@@ -229,6 +259,12 @@ function initEvaluation(d) {
     isCeoDirect ? 'NV_PENDING' : 'MGR_PENDING', '', '', '', '',
     ts, isCeoDirect ? '' : ts, isCeoDirect ? ts : '', '', '', '', '', ''
   ]);
+
+  // Ghi chữ ký HR (vai khởi tạo)
+  var hrSig = extractSignatureFields(d, 'hr');
+  if (Object.keys(hrSig).length > 0) {
+    updateRow(SHEET_EVAL, 'id', evalId, hrSig);
+  }
 
   // Ghi tiêu chí mẫu HR điền (nếu có)
   if (d.criteria && d.criteria.length > 0) {
@@ -323,7 +359,11 @@ function mgrFill(d) {
   });
 
   // Cập nhật status
-  updateRow(SHEET_EVAL, 'id', evalId, { status: 'NV_PENDING', mgr_pending_at: now() });
+  // Update status + chữ ký QL (lần 1: mgr-fill)
+  var mgrFillUpdates = { status: 'NV_PENDING', mgr_pending_at: now() };
+  var mgrFillSig = extractSignatureFields(d, 'mgr');
+  for (var k in mgrFillSig) { mgrFillUpdates[k] = mgrFillSig[k]; }
+  updateRow(SHEET_EVAL, 'id', evalId, mgrFillUpdates);
 
   // Lấy thông tin NV
   var evalObj = getEvalObj(evalId);
@@ -408,7 +448,11 @@ function nvSubmit(d) {
     getSheet(SHEET_PROPOSAL).appendRow([evalId, d.proposals.salary_expectation||'', d.proposals.training_request||'', d.proposals.feedback||'']);
   }
 
-  updateRow(SHEET_EVAL, 'id', evalId, { status: 'SUBMITTED', nv_pending_at: now(), submitted_at: now() });
+  // Update status + chữ ký NV
+  var nvUpdates = { status: 'SUBMITTED', nv_pending_at: now(), submitted_at: now() };
+  var nvSig = extractSignatureFields(d, 'nv');
+  for (var k2 in nvSig) { nvUpdates[k2] = nvSig[k2]; }
+  updateRow(SHEET_EVAL, 'id', evalId, nvUpdates);
 
   // ── Thông báo ─────────────────────────────────────────────────
   if (isCeoDirect) {
@@ -457,12 +501,18 @@ function mgrReview(d) {
     }
   });
 
-  updateRow(SHEET_EVAL, 'id', evalId, {
+  // Update status + nhận xét + chữ ký QL (lần 2: mgr-review — ghi đè signature lần 1)
+  var mgrReviewUpdates = {
     status: 'PENDING_CEO',
     decision: d.mgr_decision || '',
     mgr_comment: d.mgr_comment || '',
+    mgr_expectation: d.mgr_expectation || '',
+    mgr_salary_proposal: d.mgr_salary_proposal || '',
     mgr_reviewed_at: now()
-  });
+  };
+  var mgrReviewSig = extractSignatureFields(d, 'mgr');
+  for (var k3 in mgrReviewSig) { mgrReviewUpdates[k3] = mgrReviewSig[k3]; }
+  updateRow(SHEET_EVAL, 'id', evalId, mgrReviewUpdates);
 
   var evalObj = getEvalObj(evalId);
   var ceoId   = prop('CEO_DISCORD_ID');
@@ -509,11 +559,15 @@ function ceoReview(d) {
     newStatus = (evalObj && evalObj.status) || 'PENDING_CEO';
   }
 
-  updateRow(SHEET_EVAL, 'id', evalId, {
+  // Update status + chữ ký CEO
+  var ceoUpdates = {
     status: newStatus,
     ceo_comment: d.ceo_comment || '',
     ceo_reviewed_at: now()
-  });
+  };
+  var ceoSig = extractSignatureFields(d, 'ceo');
+  for (var k4 in ceoSig) { ceoUpdates[k4] = ceoSig[k4]; }
+  updateRow(SHEET_EVAL, 'id', evalId, ceoUpdates);
 
   if (isCeoDirect) {
     // Luồng rút gọn: CEO đã đánh giá → notify HR + CC NV
@@ -593,9 +647,40 @@ function getEvaluation(evalId) {
   var evalObj = getEvalObj(evalId);
   if (!evalObj) return { error: 'Không tìm thấy phiếu: ' + evalId };
   evalObj.work_summary = findByEvalId(SHEET_WORK, evalId);
+  evalObj.work_items   = evalObj.work_summary; // alias để form mới đọc
   evalObj.criteria     = findByEvalId(SHEET_CRITERIA, evalId);
   var props = findByEvalId(SHEET_PROPOSAL, evalId);
   evalObj.proposals = props.length > 0 ? props[0] : null;
+  evalObj.proposal  = evalObj.proposals; // alias singular cho form mới
+
+  // Rebuild signatures object từ các cột phẳng (hr_signed_at, hr_signed_by, ...)
+  evalObj.signatures = {};
+  ['hr', 'nv', 'mgr', 'ceo'].forEach(function(role) {
+    var at = evalObj[role + '_signed_at'];
+    var by = evalObj[role + '_signed_by'];
+    if (at || by) {
+      evalObj.signatures[role] = {
+        signed_at: at || '',
+        signed_by: by || '',
+        discord_id: '' // Không lưu discord_id riêng — chỉ giữ tên
+      };
+    }
+  });
+
+  // Form mới expect info object — wrap các field vào info
+  evalObj.info = {
+    name: evalObj.name,
+    discord_id: evalObj.discord_id,
+    dept: evalObj.dept,
+    role: evalObj.role,
+    manager_name: evalObj.manager_name,
+    manager_discord_id: evalObj.manager_discord_id,
+    hr_discord_id: evalObj.hr_discord_id,
+    trial_start: evalObj.trial_start,
+    trial_end: evalObj.trial_end,
+    eval_date: evalObj.eval_date
+  };
+
   return evalObj;
 }
 
@@ -660,8 +745,20 @@ function deleteRowsByEvalId(sheetName, evalId) {
   }
 }
 
-// ── Utility: Chạy thủ công để khởi tạo tất cả sheet ─────────
+// ── Utility: Chạy thủ công để khởi tạo / migrate tất cả sheet ─
+// Chạy từ Apps Script Editor: chọn function này → Run → xem Logger để xác nhận.
+// (Không dùng SpreadsheetApp.getUi() vì khi chạy từ editor sẽ lỗi "Cannot call getUi from this context")
 function setupSheets() {
-  Object.keys(HEADERS).forEach(function(name) { getSheet(name); });
-  SpreadsheetApp.getUi().alert('✅ Đã khởi tạo đủ 5 sheet!');
+  var report = [];
+  Object.keys(HEADERS).forEach(function(name) {
+    var sh = getSheet(name); // tự đính kèm cột thiếu nếu sheet đã có sẵn
+    var lastCol = sh.getLastColumn();
+    report.push('  ✅ ' + name + ' — ' + lastCol + ' cột (header đã đồng bộ)');
+  });
+  Logger.log('========================================');
+  Logger.log('✅ Đã khởi tạo / migrate ' + Object.keys(HEADERS).length + ' sheet:');
+  report.forEach(function(line) { Logger.log(line); });
+  Logger.log('========================================');
+  Logger.log('Mở View > Logs (hoặc Ctrl+Enter) để xem chi tiết.');
+  return { ok: true, sheets: Object.keys(HEADERS) };
 }
