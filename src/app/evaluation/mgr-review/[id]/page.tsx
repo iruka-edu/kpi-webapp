@@ -69,18 +69,18 @@ function MgrReviewContent() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
-        <Loader2 size={32} className="animate-spin text-purple-400" />
+      <div className="flex items-center justify-center min-h-screen bg-[#f0f4f8]">
+        <Loader2 size={32} className="animate-spin text-blue-600" />
       </div>
     );
   }
 
   if (error || !evalData) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <AlertTriangle size={56} className="text-red-400" />
-        <h1 className="text-xl font-bold text-white">Không thể tải phiếu</h1>
-        <p className="text-slate-400 max-w-md">{error || 'Phiếu không tồn tại'}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-red-500" />
+        <h1 className="text-xl font-bold text-slate-900">Không thể tải phiếu</h1>
+        <p className="text-slate-500 max-w-md">{error || 'Phiếu không tồn tại'}</p>
       </div>
     );
   }
@@ -89,10 +89,10 @@ function MgrReviewContent() {
   const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
   if (CEO_DISCORD_ID && evalData.info?.manager_discord_id === CEO_DISCORD_ID) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <AlertTriangle size={56} className="text-amber-400" />
-        <h1 className="text-xl font-bold text-white">Bước này được bỏ qua</h1>
-        <p className="text-slate-400 max-w-md">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-amber-500" />
+        <h1 className="text-xl font-bold text-slate-900">Bước này được bỏ qua</h1>
+        <p className="text-slate-500 max-w-md">
           Phiếu này thuộc <b>luồng rút gọn</b> — Quản lý trực tiếp chính là CEO,
           nên không cần bước Quản lý chấm điểm. CEO sẽ duyệt trực tiếp sau khi NV nộp phiếu.
         </p>
@@ -109,87 +109,96 @@ function MgrReviewContent() {
       RESULT_SENT: 'Kết quả đã được gửi cho nhân viên.',
     };
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <ClipboardCheck size={56} className="text-blue-400" />
-        <h1 className="text-xl font-bold text-white">Phiếu đang ở giai đoạn khác</h1>
-        <p className="text-slate-400">{statusMsg[evalData.status] || `Trạng thái hiện tại: ${evalData.status}`}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <ClipboardCheck size={56} className="text-blue-500" />
+        <h1 className="text-xl font-bold text-slate-900">Phiếu đang ở giai đoạn khác</h1>
+        <p className="text-slate-500">{statusMsg[evalData.status] || `Trạng thái hiện tại: ${evalData.status}`}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a1120] text-slate-100 font-sans">
-      <Sidebar />
-      <main className="flex-1 p-8 space-y-8 max-w-5xl mx-auto">
-
-        {/* Header */}
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-purple-600/20 flex items-center justify-center">
-              <ClipboardCheck size={22} className="text-purple-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Chấm Điểm Đánh Giá</h1>
-              <p className="text-sm text-slate-400">Bước 4/6 — Quản lý chấm điểm và đề xuất quyết định</p>
-            </div>
-          </div>
-          {/* Workflow breadcrumb */}
-          <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
-            {['HR tạo phiếu', 'Quản lý điền việc', 'NV tự đánh giá', 'Quản lý chấm điểm', 'CEO duyệt', 'Kết quả'].map((step, i) => (
-              <React.Fragment key={step}>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${
-                  i === 3 ? 'bg-purple-600 text-white' : i < 3 ? 'bg-green-600/20 text-green-400' : 'bg-slate-800 text-slate-400'
-                }`}>
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    i === 3 ? 'bg-white/20' : i < 3 ? 'bg-green-600/30' : 'bg-slate-700'
-                  }`}>{i + 1}</span>
-                  {step}
-                </div>
-                {i < 5 && <span className="text-slate-600 shrink-0">›</span>}
-              </React.Fragment>
-            ))}
-          </div>
+    <div className="w-full min-h-screen bg-[#f0f4f8] font-sans">
+      {/* Sticky header nav */}
+      <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-6 flex items-center h-16 gap-4">
+        <div className="flex items-center gap-3 pr-8 border-r border-slate-200">
+          <ClipboardCheck size={22} className="text-[#1e3a5f]" />
+          <span className="font-bold text-lg text-slate-800 tracking-tight">IruKa<span className="text-blue-600">Life</span></span>
         </div>
+        <div className="flex flex-col">
+          <span className="font-bold text-[#1e3a5f] text-[15px]">Chấm Điểm Đánh Giá</span>
+          <span className="text-xs text-slate-400">Bước 4/6 — Quản lý chấm điểm và đề xuất quyết định</span>
+        </div>
+        <div className="ml-auto flex items-center gap-2 overflow-x-auto">
+          {['HR tạo phiếu', 'Quản lý điền việc', 'NV tự đánh giá', 'Quản lý chấm điểm', 'CEO duyệt', 'Kết quả'].map((step, i) => (
+            <React.Fragment key={step}>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 border ${
+                i === 3 ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm' :
+                i < 3 ? 'bg-green-50 text-green-700 border-green-200' :
+                'bg-white text-slate-400 border-slate-200'
+              }`}>
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  i === 3 ? 'bg-blue-600 text-white' :
+                  i < 3 ? 'bg-green-600 text-white' :
+                  'bg-slate-200 text-slate-500'
+                }`}>{i + 1}</span>
+                {step}
+              </div>
+              {i < 5 && <span className="text-slate-300 shrink-0">›</span>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
 
-        <div className="space-y-8">
-          {/* Thông tin NV */}
-          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-            <h2 className="text-base font-bold text-slate-300 mb-4">📋 Thông Tin Nhân Viên</h2>
+      <main className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
+        {/* 1. Thông tin nhân viên */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+          <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+            <span className="text-xl">📋</span>
+            <span className="font-black text-[#1e3a5f] uppercase tracking-wide">1. Thông Tin Nhân Viên</span>
+          </div>
+          <div className="p-5">
             <EvalInfoForm info={evalData.info} />
-          </section>
-
-          {/* Tổng kết công việc — Quản lý chỉ xem (readonly) */}
-          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-            <h2 className="text-base font-bold text-slate-300 mb-4 flex items-center gap-2">
-              📁 Kết Quả Công Việc NV Báo Cáo
-              <span className="text-xs font-normal text-slate-500">(chỉ xem)</span>
-            </h2>
-            <WorkSummaryTable rows={evalData.work_items} readonly={true} />
-          </section>
-
-          {/* Đề xuất của NV */}
-          <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-            <h2 className="text-base font-bold text-slate-300 mb-4 flex items-center gap-2">
-              💬 Đề Xuất Của Nhân Viên
-              <span className="text-xs font-normal text-slate-500">(chỉ xem)</span>
-            </h2>
-            <EmployeeProposal data={evalData.proposal} readonly={true} />
-          </section>
-
-          {/* Panel chấm điểm */}
-          <MgrScorePanel
-            evalId={evalId}
-            employeeName={evalData.info.name}
-            criteria={evalData.criteria.map(c => ({
-              name: c.name,
-              expectation: c.expectation,
-              source: c.source as 'mgr' | 'hr_template' | 'nv_added',
-              self_score: c.self_score,
-            }))}
-            discordId={discordId}
-            token={token}
-          />
+          </div>
         </div>
+
+        {/* 2. Tổng kết công việc */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+          <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+            <span className="text-xl">🗂️</span>
+            <span className="font-black text-[#1e3a5f] uppercase tracking-wide">2. Kết Quả Công Việc NV Báo Cáo</span>
+            <span className="font-medium text-[#6b7280] ml-2">(chỉ xem)</span>
+          </div>
+          <div className="overflow-x-auto">
+            <WorkSummaryTable rows={evalData.work_items} readonly={true} />
+          </div>
+        </div>
+
+        {/* 3. Đề xuất của NV */}
+        <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+          <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+            <span className="text-xl">💬</span>
+            <span className="font-black text-[#1e3a5f] uppercase tracking-wide">3. Đề Xuất Của Nhân Viên</span>
+            <span className="font-medium text-[#6b7280] ml-2">(chỉ xem)</span>
+          </div>
+          <div className="p-5">
+            <EmployeeProposal data={evalData.proposal} readonly={true} />
+          </div>
+        </div>
+
+        {/* 4. Panel chấm điểm */}
+        <MgrScorePanel
+          evalId={evalId}
+          employeeName={evalData.info.name}
+          criteria={evalData.criteria.map(c => ({
+            name: c.name,
+            expectation: c.expectation,
+            source: c.source as 'mgr' | 'hr_template' | 'nv_added',
+            self_score: c.self_score,
+          }))}
+          discordId={discordId}
+          token={token}
+        />
       </main>
     </div>
   );
@@ -198,8 +207,8 @@ function MgrReviewContent() {
 export default function MgrReviewPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
-        <Loader2 size={32} className="animate-spin text-purple-400" />
+      <div className="flex items-center justify-center min-h-screen bg-[#f0f4f8]">
+        <Loader2 size={32} className="animate-spin text-blue-600" />
       </div>
     }>
       <MgrReviewContent />

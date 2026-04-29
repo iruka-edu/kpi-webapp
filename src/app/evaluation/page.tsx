@@ -45,9 +45,8 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
     return () => clearTimeout(t);
   }, [onClose]);
   return (
-    <div className={`fixed top-5 right-5 z-[100] flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl font-medium ${
-      type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-    }`}>
+    <div className={`fixed top-5 right-5 z-[100] flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl font-medium ${type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+      }`}>
       <span>{message}</span>
       <button onClick={onClose} className="ml-2 text-white/80 hover:text-white font-bold text-lg">×</button>
     </div>
@@ -57,9 +56,9 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 // ── Nội dung chính (cần Suspense do useSearchParams) ─────────────
 function EvaluationContent() {
   const searchParams = useSearchParams();
-  const evalId      = searchParams.get('id') || '';
-  const discordId   = searchParams.get('discord_id') || '';
-  const token       = searchParams.get('token') || '';
+  const evalId = searchParams.get('id') || '';
+  const discordId = searchParams.get('discord_id') || '';
+  const token = searchParams.get('token') || '';
   // is_ceo_direct=1 khi Quản lý trực tiếp là CEO (luồng rút gọn)
   const isCeoDirect = searchParams.get('is_ceo_direct') === '1';
 
@@ -248,8 +247,8 @@ function EvaluationContent() {
       </div>
 
       {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
-      
-      <main className="max-w-[1200px] mx-auto p-4 md:p-8 space-y-8 pb-32">
+
+      <main className="max-w-[1200px] mx-auto p-4 md:p-8 space-y-6 pb-32">
 
         {/* Header Content */}
         <div className="flex items-start justify-between mt-4">
@@ -257,7 +256,7 @@ function EvaluationContent() {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Phiếu Tự Đánh Giá Thử Việc</h1>
             <p className="text-sm text-slate-500 mt-1">Vui lòng điền đầy đủ thông tin thực tế công việc đã làm và tự đánh giá năng lực của mình.</p>
           </div>
-          
+
           <div className="hidden md:flex items-center gap-2">
             {/* Luồng rút gọn (MGR=CEO) bỏ bước QL điền */}
             {(isCeoDirect
@@ -265,16 +264,14 @@ function EvaluationContent() {
               : ['HR tạo', 'QL điền', 'NV đánh giá', 'QL chấm', 'CEO duyệt']
             ).map((step, i, arr) => (
               <React.Fragment key={step}>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap border ${
-                  (isCeoDirect ? i === 1 : i === 2) ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm' :
-                  (isCeoDirect ? i < 1 : i < 2) ? 'bg-green-50 text-green-700 border-green-200' :
-                  'bg-white text-slate-400 border-slate-200'
-                }`}>
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    (isCeoDirect ? i === 1 : i === 2) ? 'bg-blue-600 text-white' :
-                    (isCeoDirect ? i < 1 : i < 2) ? 'bg-green-600 text-white' :
-                    'bg-slate-200 text-slate-500'
-                  }`}>{i + 1}</span>
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold whitespace-nowrap border ${(isCeoDirect ? i === 1 : i === 2) ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm' :
+                    (isCeoDirect ? i < 1 : i < 2) ? 'bg-green-50 text-green-700 border-green-200' :
+                      'bg-white text-slate-400 border-slate-200'
+                  }`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${(isCeoDirect ? i === 1 : i === 2) ? 'bg-blue-600 text-white' :
+                      (isCeoDirect ? i < 1 : i < 2) ? 'bg-green-600 text-white' :
+                        'bg-slate-200 text-slate-500'
+                    }`}>{i + 1}</span>
                   {step}
                 </div>
                 {i < arr.length - 1 && <span className="text-slate-300">›</span>}
@@ -285,54 +282,63 @@ function EvaluationContent() {
 
         {/* PHẦN 1: Thông tin chung */}
         {evalInfo && (
-          <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h2 className="text-[15px] font-bold text-slate-800 mb-4 flex items-center gap-2 tracking-tight">
-              <span className="w-6 h-6 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-600">1</span>
-              Thông Tin Chung
-            </h2>
-            <EvalInfoForm info={evalInfo} />
-          </section>
+          <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+            <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+              <span className="text-xl">📋</span>
+              <span className="font-black text-[#1e3a5f] uppercase tracking-wide">1. Thông Tin Chung</span>
+              <span className="font-medium text-[#6b7280] ml-2">(HR đã điền — chỉ xem)</span>
+            </div>
+            <div className="p-5">
+              <EvalInfoForm info={evalInfo} />
+            </div>
+          </div>
         )}
 
         {/* PHẦN 2: Tổng kết công việc — NV điền kết quả */}
-        <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-          <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-xs font-bold">2</span>
-            Tổng Kết Công Việc
-            <span className="text-xs font-normal text-slate-400 ml-1">
-              {isCeoDirect ? '— Điền công việc đã làm + kết quả thực tế' : '— Điền kết quả thực tế bạn đã làm được'}
+        <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+          <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+            <span className="text-xl">🗂️</span>
+            <span className="font-black text-[#1e3a5f] uppercase tracking-wide">2. Tổng Kết Công Việc Thời Gian Thử Việc</span>
+            <span className="font-medium text-[#6b7280] ml-2">
+              {isCeoDirect ? '(Nhân viên tự điền công việc + kết quả thực tế)' : '(Quản lý đã điền — Nhân viên điền kết quả thực tế vào cột cuối)'}
             </span>
-          </h2>
-          {isCeoDirect && (
-            <p className="text-xs text-amber-300 mb-3 flex items-center gap-1.5">
-              <span>ℹ️</span>
-              {workRows.some(r => (r as any).detail?.trim())
-                ? 'HR đã điền sẵn danh sách công việc — bạn điền kết quả thực tế vào cột cuối.'
-                : 'Quản lý trực tiếp của bạn là CEO — bạn cần tự điền công việc đã làm trong thời gian thử việc.'}
-            </p>
-          )}
-          <WorkSummaryTable
-            rows={workRows}
-            onChange={setWorkRows}
-            readonly={false}
-          />
-        </section>
+          </div>
+          <div className="overflow-x-auto">
+            {isCeoDirect && (
+              <div className="px-5 pt-3 pb-0">
+                <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 flex items-center gap-2 mb-3">
+                  <span>ℹ️</span>
+                  {workRows.some(r => (r as any).detail?.trim())
+                    ? 'HR đã điền sẵn danh sách công việc — bạn điền kết quả thực tế vào cột cuối.'
+                    : 'Quản lý trực tiếp của bạn là CEO — bạn cần tự điền công việc đã làm trong thời gian thử việc.'}
+                </p>
+              </div>
+            )}
+            <WorkSummaryTable
+              rows={workRows}
+              onChange={setWorkRows}
+              readonly={false}
+            />
+          </div>
+        </div>
 
         {/* PHẦN 3: Điểm tự đánh giá */}
-        <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-          <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-purple-600 flex items-center justify-center text-xs font-bold">3</span>
-            Tự Đánh Giá Năng Lực
-            <span className="text-xs font-normal text-slate-400 ml-1">— Chấm điểm 1-5 cho từng tiêu chí</span>
-          </h2>
-          <EvalCriteriaTable
-            criteria={criteria}
-            scores={selfScores}
-            onScoreChange={handleScoreChange}
-            onAddCriteria={handleAddCriteria}
-            readonly={false}
-          />
-        </section>
+        <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+          <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+            <span className="text-xl">⚡</span>
+            <span className="font-black text-[#1e3a5f] uppercase tracking-wide">3. Đánh Giá Năng Lực (Tiêu Chí Mẫu)</span>
+            <span className="font-medium text-[#6b7280] ml-2">(HR & Quản lý điền sẵn tiêu chí — Nhân viên chấm điểm 1–5)</span>
+          </div>
+          <div className="overflow-x-auto">
+            <EvalCriteriaTable
+              criteria={criteria}
+              scores={selfScores}
+              onScoreChange={handleScoreChange}
+              onAddCriteria={handleAddCriteria}
+              readonly={false}
+            />
+          </div>
+        </div>
 
         {/* Điểm tổng tự động */}
         {criteria.length > 0 && (
@@ -343,43 +349,48 @@ function EvaluationContent() {
         )}
 
         {/* PHẦN 4: Đề xuất của NV */}
-        <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-          <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-yellow-600 flex items-center justify-center text-xs font-bold">4</span>
-            Đề Xuất Của Nhân Viên
-          </h2>
-          <EmployeeProposal data={proposal} onChange={setProposal} readonly={false} />
-        </section>
+        <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+          <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+            <span className="text-xl">💡</span>
+            <span className="font-black text-[#1e3a5f] uppercase tracking-wide">4. Nhân Viên Tự Đề Xuất</span>
+            <span className="font-medium text-[#6b7280] ml-2">(Điền theo ý kiến cá nhân)</span>
+          </div>
+          <div className="p-5">
+            <EmployeeProposal data={proposal} onChange={setProposal} readonly={false} />
+          </div>
+        </div>
 
         {/* PHẦN 5: Ký xác nhận */}
-        <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-          <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-green-600 flex items-center justify-center text-xs font-bold">5</span>
-            Xác Nhận & Nộp
-          </h2>
-          <div className="flex gap-6 justify-center flex-wrap">
-            <SignatureBlock
-              role="Nhân Viên"
-              name={evalInfo?.name || 'Nhân viên'}
-              signed={false}
-              canSign={true}
-              onSign={handleSubmit}
-            />
-            <SignatureBlock
-              role="Quản Lý Trực Tiếp"
-              name={evalInfo?.manager_name || 'Quản lý'}
-              signed={false}
-              canSign={false}
-            />
+        <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+          <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+            <span className="text-xl">✅</span>
+            <span className="font-black text-[#1e3a5f] uppercase tracking-wide">5. Ký Xác Nhận</span>
           </div>
-        </section>
+          <div className="p-5">
+            <div className="flex gap-6 justify-center flex-wrap">
+              <SignatureBlock
+                role="Nhân Viên"
+                name={evalInfo?.name || 'Nhân viên'}
+                signed={false}
+                canSign={true}
+                onSign={handleSubmit}
+              />
+              <SignatureBlock
+                role="Quản Lý Trực Tiếp"
+                name={evalInfo?.manager_name || 'Quản lý'}
+                signed={false}
+                canSign={false}
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Nút Submit dự phòng */}
         <div className="flex justify-end pb-8">
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-600/20"
+            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-br from-[#3b82f6] to-[#1e3a5f] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-[10px] transition-all shadow-lg border-b-[4px] border-[#1e3a5f] hover:scale-[1.02] active:scale-[0.98]"
           >
             {submitting ? (
               <><Loader2 size={18} className="animate-spin" /> Đang nộp...</>

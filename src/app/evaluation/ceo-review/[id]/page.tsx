@@ -30,30 +30,30 @@ function LoginGate({ onLogin }: { onLogin: (pass: string) => void }) {
   const [pass, setPass] = useState('');
   const [err, setErr] = useState('');
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0a1120]">
-      <div className="w-full max-w-sm bg-slate-800/60 rounded-2xl border border-slate-700/50 p-8 space-y-6">
+    <div className="flex items-center justify-center min-h-screen bg-[#f0f4f8]">
+      <div className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+          <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-2xl border border-amber-100 shadow-sm">
             👑
           </div>
-          <h1 className="text-xl font-bold text-white">CEO — Phê Duyệt Đánh Giá</h1>
-          <p className="text-slate-400 text-sm">Xác thực để xem và phê duyệt phiếu đánh giá nhân sự</p>
+          <h1 className="text-xl font-bold text-slate-800">CEO — Phê Duyệt Đánh Giá</h1>
+          <p className="text-slate-500 text-sm">Xác thực để xem và phê duyệt phiếu đánh giá nhân sự</p>
         </div>
-        {err && <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2 text-red-400 text-sm">{err}</div>}
+        {err && <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-2 text-red-600 text-sm">{err}</div>}
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Mật khẩu Dashboard</label>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Mật khẩu Dashboard</label>
           <input
             type="password"
             value={pass}
             onChange={e => { setPass(e.target.value); setErr(''); }}
             onKeyDown={e => e.key === 'Enter' && (pass ? onLogin(pass) : setErr('Nhập mật khẩu'))}
             placeholder="••••••••"
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:border-amber-500 outline-none transition"
+            className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
           />
         </div>
         <button
           onClick={() => pass ? onLogin(pass) : setErr('Nhập mật khẩu')}
-          className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl transition-colors shadow-lg shadow-amber-500/20"
+          className="w-full py-3 bg-gradient-to-b from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 border-b-[4px] border-amber-600 active:border-b-[0px] active:translate-y-[4px] text-white font-bold rounded-xl transition-all shadow-md"
         >
           Xem Phiếu
         </button>
@@ -109,13 +109,13 @@ export default function CeoReviewPage() {
   // ── Chưa đăng nhập ───────────────────────────────────────────────
   if (!authed) {
     return error ? (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a1120] text-center space-y-4 p-8">
-        <AlertTriangle size={56} className="text-red-400" />
-        <h1 className="text-xl font-bold text-white">Không thể tải phiếu</h1>
-        <p className="text-slate-400">{error}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4f8] text-center space-y-4 p-8">
+        <AlertTriangle size={56} className="text-red-500" />
+        <h1 className="text-xl font-bold text-slate-900">Không thể tải phiếu</h1>
+        <p className="text-slate-500">{error}</p>
         <button
           onClick={() => { setError(''); setPass(''); }}
-          className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-medium transition-colors"
+          className="px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-sm font-medium transition-colors"
         >
           Thử lại
         </button>
@@ -146,53 +146,58 @@ export default function CeoReviewPage() {
   });
 
   return (
-    <div className="flex min-h-screen bg-[#0a1120] text-slate-100 font-sans">
-      <Sidebar />
-      <main className="flex-1 p-8 space-y-8 max-w-5xl mx-auto">
-
-        {/* Header */}
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-xl">
-              👑
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Phê Duyệt Đánh Giá Nhân Sự</h1>
-              <p className="text-sm text-slate-400">Bước 5/6 — CEO phê duyệt hoặc trả về cho Quản lý</p>
-            </div>
-          </div>
-          {/* Workflow breadcrumb */}
-          <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
-            {['HR tạo phiếu', 'Quản lý điền việc', 'NV tự đánh giá', 'Quản lý chấm điểm', 'CEO duyệt', 'Kết quả'].map((step, i) => (
-              <React.Fragment key={step}>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${
-                  i === 4 ? 'bg-amber-500 text-white' : i < 4 ? 'bg-green-600/20 text-green-400' : 'bg-slate-800 text-slate-400'
-                }`}>
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    i === 4 ? 'bg-white/20' : i < 4 ? 'bg-green-600/30' : 'bg-slate-700'
-                  }`}>{i + 1}</span>
-                  {step}
-                </div>
-                {i < 5 && <span className="text-slate-600 shrink-0">›</span>}
-              </React.Fragment>
-            ))}
-          </div>
+    <div className="w-full min-h-screen bg-[#f0f4f8] font-sans">
+      {/* Sticky header nav */}
+      <div className="sticky top-0 z-[100] bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-6 flex items-center h-16 gap-4">
+        <div className="flex items-center gap-3 pr-8 border-r border-slate-200">
+          <span className="text-xl">👑</span>
+          <span className="font-bold text-lg text-slate-800 tracking-tight">IruKa<span className="text-blue-600">Life</span></span>
         </div>
+        <div className="flex flex-col">
+          <span className="font-bold text-[#1e3a5f] text-[15px]">CEO Phê Duyệt Đánh Giá</span>
+          <span className="text-xs text-slate-400">Bước 5/6 — CEO phê duyệt hoặc trả về cho Quản lý</span>
+        </div>
+        <div className="ml-auto flex items-center gap-2 overflow-x-auto">
+          {['HR tạo phiếu', 'Quản lý điền việc', 'NV tự đánh giá', 'Quản lý chấm điểm', 'CEO duyệt', 'Kết quả'].map((step, i) => (
+            <React.Fragment key={step}>
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 border ${
+                i === 4 ? 'bg-amber-50 text-amber-700 border-amber-200 shadow-sm' :
+                i < 4 ? 'bg-green-50 text-green-700 border-green-200' :
+                'bg-white text-slate-400 border-slate-200'
+              }`}>
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  i === 4 ? 'bg-amber-500 text-white' :
+                  i < 4 ? 'bg-green-600 text-white' :
+                  'bg-slate-200 text-slate-500'
+                }`}>{i + 1}</span>
+                {step}
+              </div>
+              {i < 5 && <span className="text-slate-300 shrink-0">›</span>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
 
+      <main className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-amber-400" />
+            <Loader2 size={32} className="animate-spin text-amber-500" />
           </div>
         )}
 
         {evalData && !loading && (
-          <div className="space-y-8">
-            {/* Thông tin NV */}
-            <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-              <h2 className="text-base font-bold text-slate-300 mb-4">📋 Thông Tin Nhân Viên</h2>
-              <EvalInfoForm info={evalData.info} />
-            </section>
+          <div className="space-y-6">
+            {/* 1. Thông tin NV */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+              <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+                <span className="text-xl">📋</span>
+                <span className="font-black text-[#1e3a5f] uppercase tracking-wide">1. Thông Tin Nhân Viên</span>
+              </div>
+              <div className="p-5">
+                <EvalInfoForm info={evalData.info} />
+              </div>
+            </div>
 
             {/* Tổng điểm tổng quan */}
             <ScoreSummaryBar
@@ -201,51 +206,63 @@ export default function CeoReviewPage() {
               total={criteriaForTable.length}
             />
 
-            {/* Bảng tiêu chí + điểm 2 bên — CEO xem readonly */}
-            <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-              <h2 className="text-base font-bold text-slate-300 mb-4 flex items-center gap-2">
-                📊 Chi Tiết Điểm Từng Tiêu Chí
-                <span className="text-xs font-normal text-slate-500">(NV + Quản lý)</span>
-              </h2>
+            {/* 2. Bảng tiêu chí + điểm 2 bên — CEO xem readonly */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+              <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+                <span className="text-xl">📊</span>
+                <span className="font-black text-[#1e3a5f] uppercase tracking-wide">2. Chi Tiết Điểm Từng Tiêu Chí</span>
+                <span className="font-medium text-[#6b7280] ml-2">(NV + Quản lý)</span>
+              </div>
+              
               {/* Hiển thị bảng điểm song song */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-wide">
+              <div className="p-5 space-y-2 bg-[#f8fafc]">
+                <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-4 text-xs font-bold text-[#6b7280] uppercase tracking-wide">
                   <span className="w-7">#</span>
                   <span>Tiêu chí</span>
-                  <span className="w-24 text-center text-blue-400">NV tự chấm</span>
-                  <span className="w-28 text-center text-purple-400">QL chấm</span>
+                  <span className="w-24 text-center text-blue-600">NV tự chấm</span>
+                  <span className="w-28 text-center text-purple-600">QL chấm</span>
                 </div>
                 {criteriaForTable.map((c, i) => (
-                  <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center bg-slate-900/50 rounded-xl px-4 py-3 border border-slate-700/40">
-                    <div className="w-7 h-7 rounded-lg bg-slate-700/60 flex items-center justify-center text-slate-400 text-xs font-bold">{i + 1}</div>
+                  <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center bg-white rounded-xl px-4 py-3 border border-[#d1d5db] shadow-sm">
+                    <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-[#1e3a5f] text-xs font-bold">{i + 1}</div>
                     <div>
-                      <div className="text-white font-medium text-sm">{c.name}</div>
+                      <div className="text-[#1e3a5f] font-bold text-sm">{c.name}</div>
                       {c.expectation && <div className="text-slate-500 text-xs mt-0.5">{c.expectation}</div>}
                     </div>
                     <div className="w-24 text-center">
-                      <span className="text-2xl font-bold text-blue-400">{c.self_score || '—'}</span>
-                      {c.self_score > 0 && <span className="text-slate-500 text-xs">/5</span>}
+                      <span className="text-2xl font-black text-blue-600">{c.self_score || '—'}</span>
+                      {c.self_score > 0 && <span className="text-slate-400 font-bold text-xs">/5</span>}
                     </div>
                     <div className="w-28 text-center">
-                      <span className="text-2xl font-bold text-purple-400">{c.mgr_score || '—'}</span>
-                      {c.mgr_score > 0 && <span className="text-slate-500 text-xs">/5</span>}
+                      <span className="text-2xl font-black text-purple-600">{c.mgr_score || '—'}</span>
+                      {c.mgr_score > 0 && <span className="text-slate-400 font-bold text-xs">/5</span>}
                     </div>
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
 
-            {/* Tổng kết công việc */}
-            <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-              <h2 className="text-base font-bold text-slate-300 mb-4">📁 Kết Quả Công Việc NV Báo Cáo</h2>
-              <WorkSummaryTable rows={evalData.work_items} readonly={true} />
-            </section>
+            {/* 3. Tổng kết công việc */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+              <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+                <span className="text-xl">🗂️</span>
+                <span className="font-black text-[#1e3a5f] uppercase tracking-wide">3. Kết Quả Công Việc NV Báo Cáo</span>
+              </div>
+              <div className="overflow-x-auto">
+                <WorkSummaryTable rows={evalData.work_items} readonly={true} />
+              </div>
+            </div>
 
-            {/* Đề xuất NV */}
-            <section className="bg-slate-800/60 rounded-2xl p-6 border border-slate-700/50">
-              <h2 className="text-base font-bold text-slate-300 mb-4">💬 Đề Xuất Của Nhân Viên</h2>
-              <EmployeeProposal data={evalData.proposal} readonly={true} />
-            </section>
+            {/* 4. Đề xuất NV */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#d1d5db] overflow-hidden">
+              <div className="bg-[#f8fafc] px-5 py-3 border-b border-[#d1d5db] flex items-center gap-2">
+                <span className="text-xl">💬</span>
+                <span className="font-black text-[#1e3a5f] uppercase tracking-wide">4. Đề Xuất Của Nhân Viên</span>
+              </div>
+              <div className="p-5">
+                <EmployeeProposal data={evalData.proposal} readonly={true} />
+              </div>
+            </div>
 
             {/* Panel CEO phê duyệt */}
             <CeoApprovalPanel
