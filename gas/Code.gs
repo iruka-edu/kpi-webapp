@@ -763,12 +763,38 @@ function sendResult(d) {
 // ============================================================
 //  ACTION 7: acknowledge — NV xác nhận đã xem kết quả
 //  Status: RESULT_SENT → ACKNOWLEDGED
+//  Notify: HR (primary) + CC CEO — để 2 vai biết NV đã nhận, phiếu đóng.
 // ============================================================
 function acknowledge(d) {
-  updateRow(SHEET_EVAL, 'id', d.eval_id, {
+  var evalId = d.eval_id;
+  updateRow(SHEET_EVAL, 'id', evalId, {
     status: 'ACKNOWLEDGED',
     acknowledged_at: now()
   });
+
+  var evalObj = getEvalObj(evalId);
+  if (!evalObj) return { success: true }; // không có evalObj thì bỏ qua DM
+
+  var nameWithDept = evalObj.name + (evalObj.dept ? ' (' + evalObj.dept + ')' : '');
+  var dec = (evalObj.decision || '').toString();
+  var decLabel = dec === 'pass'   ? '✅ Tiếp nhận chính thức'
+               : dec === 'extend' ? '⏳ Gia hạn thử việc 1 tháng'
+               : dec === 'fail'   ? '❌ Chấm dứt thử việc'
+               : '(không rõ)';
+
+  var ceoId = prop('CEO_DISCORD_ID');
+  // HR là primary (vì là người gửi kết quả). CEO CC để biết phiếu đã đóng.
+  notifyDiscord(evalObj.hr_discord_id,
+    makeEmbed(
+      '✅ Nhân Viên Đã Xác Nhận Nhận Kết Quả',
+      '**' + nameWithDept + '** đã xác nhận đã đọc kết quả đánh giá thử việc.\n**Quyết định cuối: ' + decLabel + '**\nPhiếu đã đóng — quy trình hoàn tất.',
+      0x22C55E),
+    ceoId || null,
+    makeEmbed(
+      '✅ Phiếu Thử Việc Đã Hoàn Tất',
+      'Nhân viên **' + nameWithDept + '** đã xác nhận nhận kết quả.\n**Quyết định: ' + decLabel + '**\nQuy trình đánh giá đóng — không cần thêm hành động.',
+      0x94A3B8));
+
   return { success: true };
 }
 
