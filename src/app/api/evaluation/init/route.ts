@@ -24,16 +24,52 @@
  */
 
 import { NextResponse } from 'next/server';
+import { createHmac } from 'crypto';
 
 const GAS_EVAL_URL  = process.env.GOOGLE_APPS_SCRIPT_EVALUATION_URL || '';
 const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+const EVAL_SECRET    = process.env.EVALUATION_TOKEN_SECRET || 'iruka-eval-token-secret-2026';
+
+/**
+ * Verify HMAC token HR init tạo bởi Discord Bot.
+ * Bot payload: "{hrDiscordId}:init:{72h_window}"  (xem discord-bot/commands/evaluation.js)
+ * Kiểm tra cả window hiện tại + 1 window trước để tránh hết hạn đúng ranh giới.
+ */
+function verifyHrInitToken(token: string, hrDiscordId: string): boolean {
+  if (!token || !hrDiscordId) return false;
+  const curWindow = Math.floor(Date.now() / (72 * 3600 * 1000));
+  for (const w of [curWindow, curWindow - 1]) {
+    const payload  = `${hrDiscordId}:init:${w}`;
+    const expected = createHmac('sha256', EVAL_SECRET).update(payload).digest('hex');
+    if (token === expected) return true;
+  }
+  return false;
+}
 
 export async function POST(request: Request) {
-  // Bảo mật: chỉ Dashboard mới được gọi endpoint này (HR đã login)
-  const authHeader = request.headers.get('x-dashboard-auth');
+  // Bảo mật: hỗ trợ 2 cách auth (giống /api/members):
+  //  1) Dashboard password (HR vào trực tiếp dashboard)
+  //  2) HMAC token cá nhân hóa (HR bấm link từ Discord Bot)
+  const authHeader = request.headers.get('x-dashboard-auth') || '';
   const dashPass   = process.env.DASHBOARD_PASSWORD || '';
-  if (authHeader !== dashPass) {
-    return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
+  const validDashboard = dashPass && authHeader === dashPass;
+
+  // Đọc body 1 lần (vì cần hr_discord_id để verify token)
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Body không hợp lệ' }, { status: 400 });
+  }
+
+  const hrDiscordId = String(body.hr_discord_id || '');
+  const validHrToken = verifyHrInitToken(authHeader, hrDiscordId);
+
+  if (!validDashboard && !validHrToken) {
+    return NextResponse.json(
+      { error: 'Không có quyền truy cập (token sai hoặc đã hết hạn 72h)' },
+      { status: 401 },
+    );
   }
 
   if (!GAS_EVAL_URL) {
@@ -41,7 +77,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    // body đã đọc ở phần auth phía trên — không gọi request.json() lần nữa
 
     // Validate các trường bắt buộc
     const required = ['name', 'dept', 'manager_name', 'manager_discord_id', 'trial_start', 'eval_date', 'hr_discord_id'];

@@ -33,12 +33,19 @@ interface MemberRecord {
 }
 
 // ── Xác thực token eval từ link Discord bot ───────────────────
+// Bot payload: "{hrDiscordId}:init:{72h_window}"  (xem discord-bot/commands/evaluation.js)
+// Trước đây signature chỉ HMAC(discordId) → không khớp Bot → HR bấm link luôn 401.
 function isValidEvalToken(token: string | null, discordId: string | null): boolean {
   if (!token || !discordId) return false;
   const secret = process.env.EVALUATION_TOKEN_SECRET || process.env.KPI_TOKEN_SECRET || '';
   if (!secret) return false;
-  const expected = createHmac('sha256', secret).update(discordId).digest('hex');
-  return token === expected;
+  const curWindow = Math.floor(Date.now() / (72 * 3600 * 1000));
+  for (const w of [curWindow, curWindow - 1]) {
+    const payload  = `${discordId}:init:${w}`;
+    const expected = createHmac('sha256', secret).update(payload).digest('hex');
+    if (token === expected) return true;
+  }
+  return false;
 }
 
 // ── Đọc file members.json local (fallback cho dev) ────────────
