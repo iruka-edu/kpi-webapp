@@ -62,11 +62,13 @@ export async function GET(request: Request) {
     const data     = await response.json();
     if (data.error) throw new Error(data.error);
 
-    // Tính is_ceo_direct server-side để frontend khỏi phụ thuộc NEXT_PUBLIC_*
-    // (env var này có thể chưa set trên Vercel build → client thấy '' → false sai).
-    const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+    // Tính is_ceo_direct = "QL của phiếu trùng với người mở link" KHÔNG dựa env var.
+    // Logic: GAS chỉ gửi link ceo-review cho CEO (cả 2 luồng). Vì vậy discord_id URL
+    // luôn là CEO. Nếu manager_discord_id của phiếu === discord_id thì CEO chính là QL
+    // → CEO-direct. Cách này tránh phụ thuộc NEXT_PUBLIC_CEO_DISCORD_ID (có thể chưa
+    // set / cached trên Vercel build).
     const mgrId = data?.info?.manager_discord_id || data?.manager_discord_id || '';
-    const isCeoDirect = !!(CEO_DISCORD_ID && mgrId && mgrId === CEO_DISCORD_ID);
+    const isCeoDirect = !!(mgrId && discordId && mgrId === discordId);
 
     return NextResponse.json({ ...data, is_ceo_direct: isCeoDirect });
   } catch (error: any) {
@@ -99,8 +101,9 @@ export async function POST(request: Request) {
     }
 
     // FIX BUG #3: KHÔNG dùng body.is_ceo_direct (frontend gửi — có thể giả mạo).
-    // Server tự fetch row từ GAS rồi so sánh manager_discord_id với CEO_DISCORD_ID.
-    const CEO_DISCORD_ID = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+    // Server fetch row từ GAS, so sánh manager_discord_id với discord_id người gọi.
+    // Vì link ceo-review chỉ gửi cho CEO → discord_id luôn là CEO → nếu QL phiếu
+    // trùng người gọi thì CEO chính là QL. Cách này không cần env var.
     let isCeoDirect = false;
     try {
       const evalUrl = `${GAS_EVAL_URL}?action=get_evaluation&eval_id=${encodeURIComponent(eval_id)}`;
@@ -108,7 +111,7 @@ export async function POST(request: Request) {
       const evalData = await evalRes.json();
       if (evalData?.error) throw new Error(evalData.error);
       const mgrId = evalData?.info?.manager_discord_id || evalData?.manager_discord_id || '';
-      isCeoDirect = !!(CEO_DISCORD_ID && mgrId && mgrId === CEO_DISCORD_ID);
+      isCeoDirect = !!(mgrId && discord_id && mgrId === discord_id);
     } catch (err: any) {
       console.error('[ceo-review] Không xác định được is_ceo_direct (fetch GAS):', err.message);
       return NextResponse.json(

@@ -67,7 +67,15 @@ export default function EvaluationForm({
   const pickerRef = useRef<HTMLDivElement>(null);
 
   // ── Permission helpers (shorthand) ──────────────────────────
-  const isCeoDirect = data.is_ceo_direct ?? false;
+  // Safety net: nếu data.is_ceo_direct không được set (server cũ chưa redeploy),
+  // ở viewMode='ceo' tự derive bằng cách so currentUserId (CEO mở link) với
+  // manager_discord_id của phiếu. Trùng → CEO chính là QL → CEO-direct.
+  const isCeoDirect = (data.is_ceo_direct ?? false) || (
+    viewMode === 'ceo' &&
+    !!currentUserId &&
+    !!data.info?.manager_discord_id &&
+    data.info.manager_discord_id === currentUserId
+  );
   const cur = (key: Parameters<typeof canEdit>[0]) => canEdit(key, viewMode, data.status, isCeoDirect);
   const mySignAllowed = canSign(viewMode, data.status, isCeoDirect);
 
@@ -898,7 +906,12 @@ function buildPayload(view: ViewMode, data: EvaluationData, token: string, curre
   if (view === 'ceo') {
     // /api/evaluation/ceo-review expect: eval_id, discord_id, token, ceo_action, ceo_comment
     const action = data.conclusion.mgr_decision === 'fail' ? 'reject' : 'approve';
-    const isCeoDirect = data.is_ceo_direct ?? false;
+    // Safety net giống component: detect CEO-direct qua currentUserId === manager_discord_id
+    const isCeoDirect = (data.is_ceo_direct ?? false) || (
+      !!currentUserId &&
+      !!data.info?.manager_discord_id &&
+      data.info.manager_discord_id === currentUserId
+    );
     const payload: Record<string, unknown> = {
       eval_id: data.eval_id,
       discord_id: currentUserId,

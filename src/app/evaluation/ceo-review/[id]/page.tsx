@@ -36,7 +36,7 @@ function CeoPageContent() {
         const res = await fetch(url);
         const json = await res.json();
         if (!res.ok || json.error) throw new Error(json.error || 'Lỗi tải phiếu');
-        setData(mapApiToData(json, evalId));
+        setData(mapApiToData(json, evalId, discordId));
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -105,14 +105,18 @@ export default function CeoReviewPage() {
   );
 }
 
-function mapApiToData(json: any, evalId: string): EvaluationData {
+function mapApiToData(json: any, evalId: string, openerDiscordId: string = ''): EvaluationData {
   const mgrId = json.info?.manager_discord_id || json.manager_discord_id || '';
-  // Server đã tính is_ceo_direct (xem /api/evaluation/ceo-review GET).
-  // Fallback: tự tính từ env nếu server không gửi (cũ).
-  const ceoId = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
+  // Thứ tự ưu tiên: server đã tính → so với người mở link → so với env (cuối cùng)
+  // Vì link ceo-review chỉ gửi cho CEO → openerDiscordId luôn là CEO. Nếu QL phiếu
+  // = người mở thì CEO chính là QL (CEO-direct). Cách này KHÔNG cần env var.
+  const ceoIdEnv = process.env.NEXT_PUBLIC_CEO_DISCORD_ID || '';
   const isCeoDirect = typeof json.is_ceo_direct === 'boolean'
     ? json.is_ceo_direct
-    : !!(mgrId && ceoId && mgrId === ceoId);
+    : !!(mgrId && (
+        (openerDiscordId && mgrId === openerDiscordId) ||
+        (ceoIdEnv && mgrId === ceoIdEnv)
+      ));
   return {
     eval_id: evalId,
     status: json.status || 'PENDING_CEO',
