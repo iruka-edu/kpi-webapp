@@ -757,6 +757,21 @@ function sendResult(d) {
       'Kết quả đánh giá thử việc của **' + evalObj.name + '** đã được gửi thành công. Phiếu hoàn tất.',
       0x94A3B8));
 
+  // Luồng đầy đủ (non-direct): HR ≠ sender → cần biết QL đã gửi kết quả.
+  // Luồng rút gọn (CEO-direct): HR chính là sender → KHÔNG cần DM (sẽ nhiễu).
+  var isCeoDirect = !!(evalObj.manager_discord_id && ceoId &&
+                       evalObj.manager_discord_id === ceoId);
+  if (!isCeoDirect && evalObj.hr_discord_id) {
+    var nameWithDept = evalObj.name + (evalObj.dept ? ' (' + evalObj.dept + ')' : '');
+    var hrViewLink = buildLink('/evaluation/result', evalId, evalObj.hr_discord_id);
+    notifyDiscord(evalObj.hr_discord_id,
+      makeEmbed(
+        '📤 Kết Quả Đã Được Gửi Cho Nhân Viên',
+        'Quản lý **' + (evalObj.manager_name||'') + '** vừa gửi kết quả đánh giá cho **' + nameWithDept + '**.\nNhân viên đang xem phiếu — bạn sẽ nhận thông báo khi NV xác nhận.',
+        nvColor, [], hrViewLink, '📋 Mở phiếu để xem'
+      ), null);
+  }
+
   return { success: true };
 }
 

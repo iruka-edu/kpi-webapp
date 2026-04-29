@@ -111,8 +111,18 @@ function ResultContent() {
       </div>
 
       <main className="max-w-5xl mx-auto p-4 md:p-8 space-y-6 pb-32">
-        {/* Banner quyết định cuối — HR cần biết outcome để giao tiếp với NV phù hợp */}
-        <DecisionBanner decision={data.conclusion.mgr_decision} audience="hr" />
+        {/* Banner quyết định cuối — text adjust theo người mở:
+            - HR (luồng rút gọn, là sender) → hr note
+            - QL (luồng đầy đủ, là sender) → mgr note
+            Phân biệt qua so sánh discord_id URL với hr/manager_discord_id của phiếu. */}
+        <DecisionBanner
+          decision={data.conclusion.mgr_decision}
+          audience={
+            discordId === data.info.manager_discord_id ? 'mgr'
+            : discordId === data.info.hr_discord_id ? 'hr'
+            : 'hr' // fallback an toàn — HR-style hướng dẫn chung
+          }
+        />
 
         {/* Phiếu đầy đủ — giao diện y hệt các vai khác (read-only do status PENDING_HR/COMPLETED) */}
         <EvaluationForm

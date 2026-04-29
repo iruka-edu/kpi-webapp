@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import EvaluationForm from './EvaluationForm';
+import { mapApiToData } from './mapApiToData';
 import type { EvaluationData } from './types';
 
 interface Props {
@@ -42,7 +43,9 @@ export default function MgrEvalPageContent({ flow }: Props) {
         const res = await fetch(url);
         const json = await res.json();
         if (!res.ok || json.error) throw new Error(json.error || 'Lỗi tải phiếu');
-        setData(mapApiToData(json, evalId));
+        // QL pages chỉ chạy ở luồng đầy đủ (CEO-direct guard chặn ở dưới),
+        // nên forceCeoDirect=false. Truyền openerDiscordId làm fallback an toàn.
+        setData(mapApiToData(json, evalId, { forceCeoDirect: false, openerDiscordId: discordId }));
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -131,50 +134,5 @@ export default function MgrEvalPageContent({ flow }: Props) {
   );
 }
 
-// Cùng map function với /evaluation/page.tsx — copy để tránh import vòng
-function mapApiToData(json: any, evalId: string): EvaluationData {
-  return {
-    eval_id: evalId,
-    status: json.status || '',
-    info: {
-      name: json.info?.name || json.name || '',
-      discord_id: json.info?.discord_id || json.discord_id || '',
-      dept: json.info?.dept || json.dept || '',
-      role: json.info?.role || json.role || '',
-      manager_name: json.info?.manager_name || json.manager_name || '',
-      manager_discord_id: json.info?.manager_discord_id || json.manager_discord_id || '',
-      hr_discord_id: json.info?.hr_discord_id || json.hr_discord_id || '',
-      trial_start: json.info?.trial_start || json.trial_start || '',
-      trial_end: json.info?.trial_end || json.trial_end || '',
-      eval_date: json.info?.eval_date || json.eval_date || new Date().toISOString().slice(0, 10),
-    },
-    work_items: (json.work_items || json.work_summary || []).map((w: any) => ({
-      task: w.task || w.area || '',
-      details: w.details || w.detail || '',
-      result: w.result || '',
-    })),
-    criteria: (json.criteria || []).map((c: any) => ({
-      name: c.name || '',
-      expectation: c.expectation || '',
-      group: c.group || '💡 TIÊU CHÍ KHÁC',
-      source: c.source,
-      self_score: Number(c.self_score) || 0,
-      mgr_score: Number(c.mgr_score) || 0,
-      note: c.note || '',
-    })),
-    proposal: {
-      salary_expectation: json.proposal?.salary_expectation || '',
-      training_request: json.proposal?.training_request || '',
-      feedback: json.proposal?.feedback || '',
-    },
-    conclusion: {
-      mgr_comment: json.mgr_comment || '',
-      mgr_expectation: json.mgr_expectation || '',
-      mgr_salary_proposal: json.mgr_salary_proposal || '',
-      mgr_decision: (json.mgr_decision || '') as any,
-      ceo_comment: json.ceo_comment || '',
-    },
-    signatures: json.signatures || {},
-    is_ceo_direct: false,
-  };
-}
+// mapApiToData đã chuyển sang shared module ./mapApiToData để dùng chung
+// (proposals plural fallback, decision fallback, openerDiscordId derive).
