@@ -262,8 +262,6 @@ function StaffListContent() {
   const [data, setData] = useState<ListResp>({ ok: false });
 
   // Filter state
-  const [filterDept, setFilterDept] = useState<string>('');
-  const [showInactive, setShowInactive] = useState(false);
   const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [colFilters, setColFilters] = useState<Partial<Record<ColumnKey, string>>>({});
@@ -354,17 +352,8 @@ function StaffListContent() {
   }, [scheduleStaff, handleSaveFieldRaw]);
 
   // ── Filter + Sort ───────────────────────────────────────
-  const depts = useMemo(() => {
-    const set = new Set<string>();
-    (data.list || []).forEach(s => s.dept && set.add(s.dept));
-    return Array.from(set).sort();
-  }, [data]);
-
   const filtered = useMemo(() => {
     let list = data.list || [];
-
-    if (filterDept) list = list.filter(s => s.dept === filterDept);
-    if (!showInactive) list = list.filter(s => s.active !== false);
 
     for (const [colKey, filterVal] of Object.entries(colFilters)) {
       if (!filterVal || !filterVal.trim()) continue;
@@ -399,7 +388,7 @@ function StaffListContent() {
     }
 
     return list;
-  }, [data, filterDept, showInactive, colFilters, sortKey, sortDir]);
+  }, [data, colFilters, sortKey, sortDir]);
 
   function toggleSort(key: ColumnKey) {
     if (sortKey !== key) { setSortKey(key); setSortDir('asc'); }
@@ -806,34 +795,6 @@ function StaffListContent() {
           <div style={{ fontSize: 12, opacity: 0.85 }}>
             💡 Click TÊN → popup chi tiết · Click ô khác → sửa nhanh (Enter/blur để lưu)
           </div>
-        </div>
-
-        {/* Filter bar */}
-        <div style={{
-          background: '#fff', padding: 12, borderRadius: 10, marginBottom: 12,
-          border: '1px solid #e5e7eb', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center',
-        }}>
-          <select
-            value={filterDept} onChange={(e) => setFilterDept(e.target.value)}
-            style={{
-              padding: '8px 12px', border: '1.5px solid #d1d5db', borderRadius: 8,
-              fontSize: 14, color: '#111827', background: '#fff', cursor: 'pointer',
-            }}
-          >
-            <option value="">🏢 Tất cả phòng ban</option>
-            {depts.map(d => (<option key={d} value={d}>{DEPT_EMOJI[d] || '📁'} {d}</option>))}
-          </select>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#374151', cursor: 'pointer' }}>
-            <input
-              type="checkbox" checked={showInactive}
-              onChange={(e) => setShowInactive(e.target.checked)}
-              style={{ width: 16, height: 16, cursor: 'pointer' }}
-            />
-            Hiện inactive
-          </label>
-          <span style={{ fontSize: 13, color: '#6b7280', marginLeft: 'auto' }}>
-            Hiển thị: <b>{filtered.length}</b>/{data.total}
-          </span>
         </div>
 
         {/* Hint */}
