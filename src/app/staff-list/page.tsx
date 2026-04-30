@@ -59,6 +59,14 @@ type Staff = {
     totalUsed: number;
     balance: number;
   } | null;
+  // [Phase B v5 — NHÓM A: Khẩn cấp]
+  emergencyContact?: string | null;
+  emergencyPhone?: string | null;
+  emergencyRelation?: string | null;
+  // [Phase B v5 — NHÓM B: Pháp lý CCCD]
+  cccdNumber?: string | null;
+  cccdIssueDate?: string | null;
+  cccdIssuePlace?: string | null;
 };
 
 type ListResp = {
@@ -94,7 +102,9 @@ type ColumnKey =
   | 'name' | 'dept' | 'position' | 'contractType' | 'active'
   | 'phone' | 'email' | 'dateOfBirth' | 'numerology' | 'hometown'
   | 'bankNumber' | 'bankName' | 'contractSignDate' | 'probationEndDate' | 'workingDur'
-  | 'workSchedule' | 'leaveQuota' | 'leaveUsed' | 'leaveBalance' | 'manager';
+  | 'workSchedule' | 'leaveQuota' | 'leaveUsed' | 'leaveBalance' | 'manager'
+  | 'emergencyContact' | 'emergencyPhone' | 'emergencyRelation'
+  | 'cccdNumber' | 'cccdIssueDate' | 'cccdIssuePlace';
 type SortDir = 'asc' | 'desc' | null;
 
 type ColumnDef = {
@@ -130,6 +140,27 @@ const COLUMNS: ColumnDef[] = [
   { key: 'leaveUsed',        label: '📈 Đã nghỉ',         width: 100 },
   { key: 'leaveBalance',     label: '🎯 Còn dư',           width: 100 },
   { key: 'manager',          label: '👨‍💼 QL trực tiếp',  width: 160 },
+  // [Phase B v5] NHÓM A — Khẩn cấp (ngoài cùng phải)
+  { key: 'emergencyContact', label: '🚨 Tên người thân',     width: 180, filterable: true, filterPlaceholder: 'tên...' },
+  { key: 'emergencyPhone',   label: '📱 SĐT người thân',     width: 140, filterable: true, filterPlaceholder: 'SĐT...' },
+  { key: 'emergencyRelation',label: '💞 Mối quan hệ',         width: 130 },
+  // [Phase B v5] NHÓM B — Pháp lý CCCD
+  { key: 'cccdNumber',       label: '🆔 Số CCCD',             width: 150, filterable: true, filterPlaceholder: '12 số...' },
+  { key: 'cccdIssueDate',    label: '📅 Ngày cấp CCCD',       width: 130 },
+  { key: 'cccdIssuePlace',   label: '🏛️ Nơi cấp CCCD',         width: 220, filterable: true, filterPlaceholder: 'nơi cấp...' },
+];
+
+const RELATION_OPTIONS = [
+  { value: 'Bố',        label: 'Bố' },
+  { value: 'Mẹ',        label: 'Mẹ' },
+  { value: 'Vợ',        label: 'Vợ' },
+  { value: 'Chồng',     label: 'Chồng' },
+  { value: 'Anh trai',  label: 'Anh trai' },
+  { value: 'Chị gái',   label: 'Chị gái' },
+  { value: 'Em trai',   label: 'Em trai' },
+  { value: 'Em gái',    label: 'Em gái' },
+  { value: 'Bạn',       label: 'Bạn' },
+  { value: 'Khác',      label: 'Khác' },
 ];
 
 const DEPT_EMOJI: Record<string, string> = {
@@ -192,6 +223,12 @@ function getCellValue(s: Staff, key: ColumnKey): string | number {
     case 'leaveUsed':        return s.leaveBalance?.totalUsed ?? 0;
     case 'leaveBalance':     return s.leaveBalance?.balance ?? 0;
     case 'manager':          return s.managerName || '';
+    case 'emergencyContact': return s.emergencyContact || '';
+    case 'emergencyPhone':   return s.emergencyPhone || '';
+    case 'emergencyRelation':return s.emergencyRelation || '';
+    case 'cccdNumber':       return s.cccdNumber || '';
+    case 'cccdIssueDate':    return s.cccdIssueDate || '';
+    case 'cccdIssuePlace':   return s.cccdIssuePlace || '';
     default:                 return '';
   }
 }
@@ -417,20 +454,13 @@ function StaffListContent() {
       } : {}),
     };
 
-    // Cột TÊN: click → popup /staff-edit
+    // Cột TÊN: click → popup /staff-edit (chỉ chữ, KHÔNG avatar 2 chữ)
     if (col.key === 'name') {
       return (
         <td key={col.key} style={baseStyle}
           onClick={(e) => { e.stopPropagation(); openEdit(s); }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>
-            {s.avatarUrl ? (
-              <img src={s.avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />
-            ) : (
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#dbeafe', color: '#1e40af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11 }}>
-                {(s.name || s.username || '?').slice(0, 2).toUpperCase()}
-              </div>
-            )}
+          <div style={{ padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>
             <span style={{ color: '#1e40af', textDecoration: 'underline' }}>{s.name || s.username}</span>
           </div>
         </td>
@@ -691,6 +721,69 @@ function StaffListContent() {
       return <td key={col.key} style={baseStyle}><div style={readonlyText}>{s.managerName || '—'}</div></td>;
     }
 
+    // [Phase B v5] NHÓM A — Khẩn cấp
+    if (col.key === 'emergencyContact') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.emergencyContact} type="text" field="emergencyContact"
+            placeholder="Vũ Ngọc Mẹ"
+            onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+    if (col.key === 'emergencyPhone') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.emergencyPhone} type="phone" field="emergencyPhone"
+            placeholder="0987xxx"
+            onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+    if (col.key === 'emergencyRelation') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.emergencyRelation || ''} type="dropdown" field="emergencyRelation"
+            options={RELATION_OPTIONS}
+            onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+
+    // [Phase B v5] NHÓM B — Pháp lý CCCD
+    if (col.key === 'cccdNumber') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.cccdNumber} type="text" field="cccdNumber"
+            placeholder="001234567890"
+            validate={(v) => {
+              if (!v) return null;
+              if (!/^\d{9}$|^\d{12}$/.test(v)) return 'Số CCCD phải 9 hoặc 12 chữ số';
+              return null;
+            }}
+            onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+    if (col.key === 'cccdIssueDate') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.cccdIssueDate} type="date" field="cccdIssueDate"
+            display={(v) => v ? fmtVN(v as string) : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+    if (col.key === 'cccdIssuePlace') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.cccdIssuePlace} type="text" field="cccdIssuePlace"
+            placeholder="Cục CSQLHC về TTXH"
+            onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+
     return <td key={col.key} style={baseStyle}><div style={readonlyText}>—</div></td>;
   }
 
@@ -778,7 +871,7 @@ function StaffListContent() {
           <table style={{ borderCollapse: 'collapse', fontSize: 13 }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
               <tr style={{ background: '#f9fafb' }}>
-                <th style={{ ...thStyle, width: 40, position: 'sticky', left: 0, zIndex: 11, background: '#f9fafb' }}>STT</th>
+                <th style={{ ...thStyle, width: 40, position: 'sticky', left: 0, zIndex: 11, background: '#f9fafb', textAlign: 'center' }}>STT</th>
                 {COLUMNS.map(col => (
                   <th
                     key={col.key}
@@ -862,6 +955,9 @@ function StaffListContent() {
                       ...tdStyle, width: 40,
                       position: 'sticky' as const, left: 0, zIndex: 2,
                       background: s.active === false ? '#fafafa' : '#fff',
+                      textAlign: 'center',
+                      padding: '10px 6px',
+                      fontWeight: 600,
                     }}>
                       {i + 1}
                     </td>
