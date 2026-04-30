@@ -31,7 +31,17 @@ type StaffData = {
   avatarUrl?: string | null;
   managerName?: string | null;
   contractType?: string | null;
+  // [Phase B v5 — NHÓM A: Khẩn cấp]
+  emergencyContact?: string | null;
+  emergencyPhone?: string | null;
+  emergencyRelation?: string | null;
+  // [Phase B v5 — NHÓM B: Pháp lý CCCD]
+  cccdNumber?: string | null;
+  cccdIssueDate?: string | null;
+  cccdIssuePlace?: string | null;
 };
+
+const RELATION_OPTIONS = ['Bố', 'Mẹ', 'Vợ', 'Chồng', 'Anh trai', 'Chị gái', 'Em trai', 'Em gái', 'Bạn', 'Khác'];
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -126,6 +136,14 @@ function StaffEditContent() {
         probationStartDate: data.probationStartDate || null,
         probationEndDate: data.probationEndDate || null,
         contractSignDate: data.contractSignDate || null,
+        // [Phase B v5 — NHÓM A: Khẩn cấp]
+        emergencyContact: data.emergencyContact || null,
+        emergencyPhone: data.emergencyPhone || null,
+        emergencyRelation: data.emergencyRelation || null,
+        // [Phase B v5 — NHÓM B: Pháp lý CCCD]
+        cccdNumber: data.cccdNumber || null,
+        cccdIssueDate: data.cccdIssueDate || null,
+        cccdIssuePlace: data.cccdIssuePlace || null,
         edited_by: {
           discord_id: editorIdParam || targetId,
           name: editorNameParam,
@@ -275,6 +293,44 @@ function StaffEditContent() {
             <input type="date" value={data.contractSignDate || ''} onChange={(e) => setField('contractSignDate', e.target.value)}
               style={inputStyle(false)} />
             {data.contractSignDate && <div style={hintStyle}>📅 {fmtVN(data.contractSignDate)}</div>}
+          </Row>
+        </Section>
+
+        {/* Section 5: KHẨN CẤP — Phase B v5 NHÓM A */}
+        <Section title="🚨 Liên hệ khẩn cấp">
+          <Row label="Tên người thân">
+            <input type="text" value={data.emergencyContact || ''} onChange={(e) => setField('emergencyContact', e.target.value)}
+              placeholder="VD: Vũ Ngọc Mẹ / Vũ Văn Bố" style={inputStyle(false)} />
+          </Row>
+          <Row label="SĐT người thân">
+            <input type="tel" value={data.emergencyPhone || ''} onChange={(e) => setField('emergencyPhone', e.target.value)}
+              placeholder="VD: 0987654321" style={inputStyle(false)} />
+          </Row>
+          <Row label="Mối quan hệ">
+            <select value={data.emergencyRelation || ''} onChange={(e) => setField('emergencyRelation', e.target.value)}
+              style={{ ...inputStyle(false), background: '#fff', cursor: 'pointer' }}>
+              <option value="">— Chọn —</option>
+              {RELATION_OPTIONS.map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </Row>
+        </Section>
+
+        {/* Section 6: PHÁP LÝ — Phase B v5 NHÓM B */}
+        <Section title="⚖️ Thông tin pháp lý (CCCD)">
+          <Row label="Số CCCD/CMND (9 hoặc 12 chữ số)">
+            <input type="text" value={data.cccdNumber || ''} onChange={(e) => setField('cccdNumber', e.target.value)}
+              placeholder="VD: 001234567890" style={inputStyle(false)} maxLength={12} />
+          </Row>
+          <Row label="Ngày cấp CCCD">
+            <input type="date" value={data.cccdIssueDate || ''} onChange={(e) => setField('cccdIssueDate', e.target.value)}
+              style={inputStyle(false)} />
+            {data.cccdIssueDate && <div style={hintStyle}>📅 {fmtVN(data.cccdIssueDate)}</div>}
+          </Row>
+          <Row label="Nơi cấp CCCD">
+            <input type="text" value={data.cccdIssuePlace || ''} onChange={(e) => setField('cccdIssuePlace', e.target.value)}
+              placeholder="VD: Cục CSQLHC về TTXH" style={inputStyle(false)} />
           </Row>
         </Section>
 

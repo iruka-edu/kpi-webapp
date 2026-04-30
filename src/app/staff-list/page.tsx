@@ -1,14 +1,31 @@
 /**
- * staff-list/page.tsx — Web view toàn bộ NV: table sortable + filter dept + click row → /staff-edit
+ * staff-list/page.tsx — Web view toàn bộ NV: 21 cột + sticky + inline edit Excel-like
  *
  * URL: /staff-list?session=...
+ *
+ * Vai trò:
+ *   - Hiển thị 21 cột thông tin NV (sticky 6 cột đầu, scroll ngang 15 cột phụ)
+ *   - 2 cơ chế edit:
+ *     1. Click TÊN → mở popup /staff-edit cũ (giữ logic 100%)
+ *     2. Click ô khác → inline edit Excel-like (Enter/blur → auto-save)
+ *   - 3 cột phép realtime (Phép/tháng | Đã nghỉ | Còn dư) — sẽ compute ở Phase B2
+ *   - Tooltip cho 3 cột phép giải thích công thức
+ *   - Click cột "Lịch làm" parttime → popup grid 7×2
+ *
  * Pattern: clone holiday-propose (Suspense + FullScreenCard cho loading/error).
+ * Logic cũ (sort, filter, search, dept dropdown, hide inactive) GIỮ NGUYÊN 100%.
  */
 
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { InlineCell } from '@/components/staff/InlineCell';
+import {
+  WorkScheduleModal,
+  summarizeWorkSchedule,
+  type WorkSchedule,
+} from '@/components/staff/WorkScheduleModal';
 
 // ── Types ─────────────────────────────────────────────────────
 type Staff = {
@@ -23,7 +40,7 @@ type Staff = {
   joinedAt?: string;
   workingDuration?: string;
   dateOfBirth?: string | null;
-  numerology?: number | null;
+  numerology?: number | string | null;
   phone?: string | null;
   email?: string | null;
   hometown?: string | null;
@@ -33,6 +50,15 @@ type Staff = {
   probationEndDate?: string | null;
   contractSignDate?: string | null;
   avatarUrl?: string | null;
+  // Field MỚI Phase B (sẽ có sau khi backend cập nhật)
+  workSchedule?: WorkSchedule | null;
+  monthlyLeaveQuota?: number;
+  // Field tính realtime (sẽ có sau Phase B2)
+  leaveBalance?: {
+    monthlyQuota: number;
+    totalUsed: number;
+    balance: number;
+  } | null;
 };
 
 type ListResp = {
@@ -51,7 +77,6 @@ function fmtVN(iso?: string | null): string {
   return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
 }
 
-/** Parse "X năm Y tháng Z ngày" → tổng số ngày (cho sort cột Đã làm) */
 function parseDurationDays(s?: string): number {
   if (!s) return 0;
   let total = 0;
@@ -64,50 +89,112 @@ function parseDurationDays(s?: string): number {
   return total;
 }
 
-/** Lấy giá trị 1 cột để sort/filter — KHÔNG động data gốc */
-function getCellValue(s: Staff, key: ColumnKey): string | number {
-  switch (key) {
-    case 'name':         return s.name || s.username || '';
-    case 'dept':         return s.dept || '';
-    case 'position':     return s.position || '';
-    case 'phone':        return s.phone || '';
-    case 'email':        return s.email || '';
-    case 'dateOfBirth':  return s.dateOfBirth || '';     // ISO YYYY-MM-DD sort được trực tiếp
-    case 'numerology':   return s.numerology ?? -1;       // -1 để trống đẩy xuống cuối khi asc
-    case 'joinedAt':     return s.joinedAt || '';         // ISO sort
-    case 'workingDur':   return parseDurationDays(s.workingDuration); // số ngày
-    case 'active':       return s.active === false ? 0 : 1;
-    default:             return '';
-  }
-}
-
-type ColumnKey = 'name' | 'dept' | 'position' | 'phone' | 'email' | 'dateOfBirth' | 'numerology' | 'joinedAt' | 'workingDur' | 'active';
+// ── Column definitions ───────────────────────────────────────
+type ColumnKey =
+  | 'name' | 'dept' | 'position' | 'contractType' | 'active'
+  | 'phone' | 'email' | 'dateOfBirth' | 'numerology' | 'hometown'
+  | 'bankNumber' | 'bankName' | 'contractSignDate' | 'probationEndDate' | 'workingDur'
+  | 'workSchedule' | 'leaveQuota' | 'leaveUsed' | 'leaveBalance' | 'manager';
 type SortDir = 'asc' | 'desc' | null;
 
 type ColumnDef = {
   key: ColumnKey;
   label: string;
-  width?: number;
+  width: number;
+  sticky?: boolean;       // sticky-left
+  filterable?: boolean;
   filterPlaceholder?: string;
 };
 
+// Sticky 6 cột đầu (STT + 5 cột chính) — Q LOCK: scroll ngang
 const COLUMNS: ColumnDef[] = [
-  { key: 'name',        label: '👤 Họ tên',       filterPlaceholder: 'tên...' },
-  { key: 'dept',        label: '🏢 Phòng ban',    filterPlaceholder: 'dept...' },
-  { key: 'position',    label: '💼 Vị trí',        filterPlaceholder: 'vị trí...' },
-  { key: 'phone',       label: '📞 SĐT',           filterPlaceholder: 'SĐT...' },
-  { key: 'email',       label: '📧 Email',         filterPlaceholder: 'email...' },
-  { key: 'dateOfBirth', label: '🎂 Ngày sinh',    filterPlaceholder: '01-01...' },
-  { key: 'numerology',  label: '🔢 Thần số',       filterPlaceholder: '1-9, 11, 22...' },
-  { key: 'joinedAt',    label: '📅 Bắt đầu làm',  filterPlaceholder: '2017-03...' },
-  { key: 'workingDur',  label: '⏱️ Đã làm',         filterPlaceholder: 'năm/tháng...' },
-  { key: 'active',      label: '🟢 Trạng thái',   filterPlaceholder: 'active/inactive' },
+  // 🟢 STICKY (luôn thấy)
+  { key: 'name',         label: '👤 Họ tên',       width: 180, sticky: true,  filterable: true, filterPlaceholder: 'tên...' },
+  { key: 'dept',         label: '🏢 Phòng ban',    width: 110, sticky: true,  filterable: true, filterPlaceholder: 'dept...' },
+  { key: 'position',     label: '💼 Vị trí',         width: 140, sticky: true,  filterable: true, filterPlaceholder: 'vị trí...' },
+  { key: 'contractType', label: '📋 Loại HĐ',       width: 100, sticky: true,  filterable: true, filterPlaceholder: 'fulltime...' },
+  { key: 'active',       label: '✅ Trạng thái',     width: 110, sticky: true,  filterable: true, filterPlaceholder: 'active...' },
+  // 🟡 SCROLL ngang
+  { key: 'phone',            label: '📞 SĐT',              width: 130, filterable: true, filterPlaceholder: 'SĐT...' },
+  { key: 'email',            label: '📧 Email',            width: 220, filterable: true, filterPlaceholder: 'email...' },
+  { key: 'dateOfBirth',      label: '🎂 Ngày sinh',       width: 120, filterable: true, filterPlaceholder: '01-01...' },
+  { key: 'numerology',       label: '🔢 Thần số',          width: 80,  filterable: true, filterPlaceholder: '...' },
+  { key: 'hometown',         label: '🏠 Quê quán',         width: 140, filterable: true, filterPlaceholder: 'quê...' },
+  { key: 'bankNumber',       label: '💳 Số TK',             width: 160, filterable: true, filterPlaceholder: 'STK...' },
+  { key: 'bankName',         label: '🏦 Ngân hàng',        width: 130, filterable: true, filterPlaceholder: 'bank...' },
+  { key: 'contractSignDate', label: '📅 Ngày bắt đầu',   width: 120, filterable: true, filterPlaceholder: '...' },
+  { key: 'probationEndDate', label: '📅 Hết thử việc',    width: 120, filterable: true, filterPlaceholder: '...' },
+  { key: 'workingDur',       label: '⏱️ Đã làm',           width: 130, filterable: true, filterPlaceholder: 'năm/tháng...' },
+  { key: 'workSchedule',     label: '🗓️ Lịch làm',         width: 180 },
+  { key: 'leaveQuota',       label: '📊 Phép/tháng',      width: 110 },
+  { key: 'leaveUsed',        label: '📈 Đã nghỉ',         width: 100 },
+  { key: 'leaveBalance',     label: '🎯 Còn dư',           width: 100 },
+  { key: 'manager',          label: '👨‍💼 QL trực tiếp',  width: 160 },
 ];
 
 const DEPT_EMOJI: Record<string, string> = {
   Dev: '👨‍💻', Design: '🎨', Content: '✍️', QC: '🔍',
   HR: '👥', Edu: '📚', Mentor: '🎓', 'HĐQT': '👔', Tester: '🧪', CEO: '👑',
 };
+
+const DEPT_OPTIONS = [
+  { value: 'Dev', label: '👨‍💻 Dev' },
+  { value: 'Design', label: '🎨 Design' },
+  { value: 'Content', label: '✍️ Content' },
+  { value: 'QC', label: '🔍 QC' },
+  { value: 'HR', label: '👥 HR' },
+  { value: 'Edu', label: '📚 Edu' },
+  { value: 'Mentor', label: '🎓 Mentor' },
+  { value: 'HĐQT', label: '👔 HĐQT' },
+  { value: 'Tester', label: '🧪 Tester' },
+  { value: 'CEO', label: '👑 CEO' },
+];
+
+const CONTRACT_OPTIONS = [
+  { value: 'fulltime', label: 'Fulltime' },
+  { value: 'parttime', label: 'Parttime' },
+];
+
+const BANK_OPTIONS = [
+  { value: 'Vietcombank', label: 'Vietcombank' },
+  { value: 'Techcombank', label: 'Techcombank' },
+  { value: 'MB',          label: 'MB Bank' },
+  { value: 'BIDV',        label: 'BIDV' },
+  { value: 'Agribank',    label: 'Agribank' },
+  { value: 'ACB',         label: 'ACB' },
+  { value: 'VPBank',      label: 'VPBank' },
+  { value: 'TPBank',      label: 'TPBank' },
+  { value: 'Sacombank',   label: 'Sacombank' },
+  { value: 'VietinBank',  label: 'VietinBank' },
+  { value: 'Khác',        label: 'Khác' },
+];
+
+// ── Sort helper ───────────────────────────────────────────────
+function getCellValue(s: Staff, key: ColumnKey): string | number {
+  switch (key) {
+    case 'name':             return s.name || s.username || '';
+    case 'dept':             return s.dept || '';
+    case 'position':         return s.position || '';
+    case 'contractType':     return s.contractType || '';
+    case 'active':           return s.active === false ? 0 : 1;
+    case 'phone':            return s.phone || '';
+    case 'email':            return s.email || '';
+    case 'dateOfBirth':      return s.dateOfBirth || '';
+    case 'numerology':       return s.numerology != null ? String(s.numerology) : '';
+    case 'hometown':         return s.hometown || '';
+    case 'bankNumber':       return s.bankNumber || '';
+    case 'bankName':         return s.bankName || '';
+    case 'contractSignDate': return s.contractSignDate || '';
+    case 'probationEndDate': return s.probationEndDate || '';
+    case 'workingDur':       return parseDurationDays(s.workingDuration);
+    case 'workSchedule':     return summarizeWorkSchedule(s.workSchedule);
+    case 'leaveQuota':       return s.leaveBalance?.monthlyQuota ?? (s.contractType === 'fulltime' ? 1 : 0);
+    case 'leaveUsed':        return s.leaveBalance?.totalUsed ?? 0;
+    case 'leaveBalance':     return s.leaveBalance?.balance ?? 0;
+    case 'manager':          return s.managerName || '';
+    default:                 return '';
+  }
+}
 
 // ── FullScreen card ──────────────────────────────────────────
 function FullScreenCard({ icon, title, desc }: { icon: string; title: string; desc: string }) {
@@ -141,12 +228,26 @@ function StaffListContent() {
   const [filterDept, setFilterDept] = useState<string>('');
   const [showInactive, setShowInactive] = useState(false);
   const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [colFilters, setColFilters] = useState<Partial<Record<ColumnKey, string>>>({});
 
+  // Modal lịch làm việc
+  const [scheduleStaff, setScheduleStaff] = useState<Staff | null>(null);
+
+  // Local update — patch list khi 1 cell save xong
+  const updateLocalStaff = useCallback((discordId: string, updates: Partial<Staff>) => {
+    setData(prev => ({
+      ...prev,
+      list: (prev.list || []).map(s =>
+        s.discordId === discordId ? { ...s, ...updates } : s
+      ),
+    }));
+  }, []);
+
+  // Load list
   useEffect(() => {
-    if (!sessionToken) {
-      setLoading(false);
-      return;
-    }
+    if (!sessionToken) { setLoading(false); return; }
     (async () => {
       try {
         const res = await fetch('/api/staff/list', {
@@ -166,23 +267,66 @@ function StaffListContent() {
     })();
   }, [sessionToken]);
 
-  // [NEW] Per-column sort + filter
-  const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>(null);
-  const [colFilters, setColFilters] = useState<Partial<Record<ColumnKey, string>>>({});
+  // ── Save 1 field — generic ───────────────────────────────
+  const handleSaveFieldRaw = useCallback(async (
+    staff: Staff,
+    field: string,
+    rawValue: unknown,
+  ): Promise<{ ok: boolean; error?: string }> => {
+    if (!staff.discordId) return { ok: false, error: 'Thiếu discordId' };
+    try {
+      const editorRole = 'HR';
+      const editorName = 'HR Web';
+      const res = await fetch('/api/staff', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-session-token': sessionToken,
+        },
+        body: JSON.stringify({
+          target_id: staff.discordId,
+          [field]: rawValue,
+          edited_by: {
+            discord_id: staff.discordId,
+            name: editorName,
+            role: editorRole,
+          },
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        return { ok: false, error: json.error || `HTTP ${res.status}` };
+      }
+      // Patch local: chỉ field này
+      updateLocalStaff(staff.discordId, { [field]: rawValue } as Partial<Staff>);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : 'Lỗi mạng' };
+    }
+  }, [sessionToken, updateLocalStaff]);
 
-  // Tính depts unique từ list
+  // Wrapper cho InlineCell (chỉ string | boolean)
+  const handleSaveField = useCallback((
+    staff: Staff, field: string, value: string | boolean,
+  ) => handleSaveFieldRaw(staff, field, value), [handleSaveFieldRaw]);
+
+  // ── Save lịch làm việc (workSchedule) ────────────────────
+  const handleSaveSchedule = useCallback(async (ws: WorkSchedule): Promise<{ ok: boolean; error?: string }> => {
+    if (!scheduleStaff) return { ok: false, error: 'Thiếu staff' };
+    // Gửi NGUYÊN object — backend đã accept object
+    return await handleSaveFieldRaw(scheduleStaff, 'workSchedule', ws);
+  }, [scheduleStaff, handleSaveFieldRaw]);
+
+  // ── Filter + Sort ───────────────────────────────────────
   const depts = useMemo(() => {
     const set = new Set<string>();
     (data.list || []).forEach(s => s.dept && set.add(s.dept));
     return Array.from(set).sort();
   }, [data]);
 
-  // Filter + Sort (per-column)
   const filtered = useMemo(() => {
     let list = data.list || [];
 
-    // Global filters (giữ nguyên — dropdown dept + checkbox inactive + global search)
     if (filterDept) list = list.filter(s => s.dept === filterDept);
     if (!showInactive) list = list.filter(s => s.active !== false);
     if (search) {
@@ -197,74 +341,52 @@ function StaffListContent() {
       );
     }
 
-    // Per-column filters (string contain — case insensitive — dùng giá trị HIỂN THỊ cho ngày)
     for (const [colKey, filterVal] of Object.entries(colFilters)) {
       if (!filterVal || !filterVal.trim()) continue;
       const q = filterVal.toLowerCase().trim();
       const key = colKey as ColumnKey;
       list = list.filter(s => {
-        // Cột date hiển thị dạng dd-mm-yyyy → match cả 2 format
-        if (key === 'dateOfBirth' || key === 'joinedAt') {
-          const iso = (s[key as 'dateOfBirth' | 'joinedAt'] || '').toString().toLowerCase();
-          const vn = fmtVN(s[key as 'dateOfBirth' | 'joinedAt']).toLowerCase();
+        if (key === 'dateOfBirth' || key === 'contractSignDate' || key === 'probationEndDate') {
+          const iso = (s[key] || '').toString().toLowerCase();
+          const vn = fmtVN(s[key]).toLowerCase();
           return iso.includes(q) || vn.includes(q);
         }
-        // Cột active: keyword "active"/"inactive"
         if (key === 'active') {
           const status = s.active === false ? 'inactive' : 'active';
           return status.includes(q);
         }
-        // Cột workingDur: filter theo string hiển thị
         if (key === 'workingDur') {
           return (s.workingDuration || '').toLowerCase().includes(q);
         }
-        // Cột numerology: số → string
-        if (key === 'numerology') {
-          return (s.numerology != null ? String(s.numerology) : '').includes(q);
-        }
-        // String column khác
         return String(getCellValue(s, key) || '').toLowerCase().includes(q);
       });
     }
 
-    // Sort (per-column)
     if (sortKey && sortDir) {
-      const sorted = [...list].sort((a, b) => {
+      list = [...list].sort((a, b) => {
         const va = getCellValue(a, sortKey);
         const vb = getCellValue(b, sortKey);
         let cmp = 0;
-        if (typeof va === 'number' && typeof vb === 'number') {
-          cmp = va - vb;
-        } else {
-          // String compare — locale Việt để sort tên có dấu
-          cmp = String(va).localeCompare(String(vb), 'vi', { sensitivity: 'base' });
-        }
+        if (typeof va === 'number' && typeof vb === 'number') cmp = va - vb;
+        else cmp = String(va).localeCompare(String(vb), 'vi', { sensitivity: 'base' });
         return sortDir === 'asc' ? cmp : -cmp;
       });
-      list = sorted;
     }
 
     return list;
   }, [data, filterDept, showInactive, search, colFilters, sortKey, sortDir]);
 
-  // Click header → toggle sort: asc → desc → none
   function toggleSort(key: ColumnKey) {
-    if (sortKey !== key) {
-      setSortKey(key);
-      setSortDir('asc');
-    } else if (sortDir === 'asc') {
-      setSortDir('desc');
-    } else {
-      setSortKey(null);
-      setSortDir(null);
-    }
+    if (sortKey !== key) { setSortKey(key); setSortDir('asc'); }
+    else if (sortDir === 'asc') setSortDir('desc');
+    else { setSortKey(null); setSortDir(null); }
   }
 
   function setColFilter(key: ColumnKey, value: string) {
     setColFilters(prev => ({ ...prev, [key]: value }));
   }
 
-  // Open edit page in new tab
+  // Open popup /staff-edit
   function openEdit(s: Staff) {
     if (!s.discordId) return;
     const params = new URLSearchParams({
@@ -275,26 +397,321 @@ function StaffListContent() {
     window.open(`/staff-edit?${params.toString()}`, '_blank');
   }
 
+  // ── Early returns ─────────────────────────────────────
   if (!sessionToken) {
-    return (
-      <FullScreenCard
-        icon="🔒"
-        title="Cần link từ Discord"
-        desc={'Vui lòng dùng link bot gửi qua DM (lệnh /staff list).\nLink có hiệu lực 30 phút.'}
-      />
-    );
+    return <FullScreenCard icon="🔒" title="Cần link từ Discord" desc={'Vui lòng dùng link bot gửi qua DM (lệnh /staff list).\nLink có hiệu lực 30 phút.'} />;
   }
   if (loading) return <FullScreenCard icon="⏳" title="Đang tải danh sách NV..." desc="" />;
   if (error)   return <FullScreenCard icon="❌" title="Lỗi tải dữ liệu" desc={error} />;
 
+  // ── Render row ────────────────────────────────────────
+  function renderCell(col: ColumnDef, s: Staff, leftOffset: number) {
+    const baseStyle: React.CSSProperties = {
+      width: col.width, minWidth: col.width, maxWidth: col.width,
+      borderRight: '1px solid #f3f4f6', verticalAlign: 'middle',
+      ...(col.sticky ? {
+        position: 'sticky' as const,
+        left: leftOffset,
+        background: s.active === false ? '#fafafa' : '#fff',
+        zIndex: 2,
+      } : {}),
+    };
+
+    // Cột TÊN: click → popup /staff-edit
+    if (col.key === 'name') {
+      return (
+        <td key={col.key} style={baseStyle}
+          onClick={(e) => { e.stopPropagation(); openEdit(s); }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 600 }}>
+            {s.avatarUrl ? (
+              <img src={s.avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+            ) : (
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#dbeafe', color: '#1e40af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11 }}>
+                {(s.name || s.username || '?').slice(0, 2).toUpperCase()}
+              </div>
+            )}
+            <span style={{ color: '#1e40af', textDecoration: 'underline' }}>{s.name || s.username}</span>
+          </div>
+        </td>
+      );
+    }
+
+    // Cột DEPT: dropdown
+    if (col.key === 'dept') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.dept || ''}
+            type="dropdown"
+            field="dept"
+            options={DEPT_OPTIONS}
+            display={(v) => v ? `${DEPT_EMOJI[v as string] || '📁'} ${v}` : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+
+    // Cột Position: text
+    if (col.key === 'position') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.position} type="text" field="position" onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+
+    // Cột contractType: dropdown
+    if (col.key === 'contractType') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.contractType || ''}
+            type="dropdown"
+            field="contractType"
+            options={CONTRACT_OPTIONS}
+            display={(v) => v ? (v === 'fulltime' ? 'Fulltime' : v === 'parttime' ? 'Parttime' : String(v)) : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+
+    // Cột Active: toggle
+    if (col.key === 'active') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.active !== false} type="toggle" field="active" onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+
+    // Phone
+    if (col.key === 'phone') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.phone} type="phone" field="phone" placeholder="0912xxx" onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+
+    // Email
+    if (col.key === 'email') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.email} type="email" field="email" placeholder="abc@gmail.com" onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+
+    // Dates
+    if (col.key === 'dateOfBirth') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.dateOfBirth}
+            type="date"
+            field="dateOfBirth"
+            display={(v) => v ? fmtVN(v as string) : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+    if (col.key === 'contractSignDate') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.contractSignDate}
+            type="date"
+            field="contractSignDate"
+            display={(v) => v ? fmtVN(v as string) : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+    if (col.key === 'probationEndDate') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.probationEndDate}
+            type="date"
+            field="probationEndDate"
+            display={(v) => v ? fmtVN(v as string) : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+
+    // Numerology (text vì có dấu phẩy)
+    if (col.key === 'numerology') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.numerology}
+            type="text"
+            field="numerology"
+            display={(v) => v ? <span style={badgeNumero}>{String(v)}</span> : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+
+    // Hometown
+    if (col.key === 'hometown') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.hometown} type="text" field="hometown" onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+
+    // Bank
+    if (col.key === 'bankNumber') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell value={s.bankNumber} type="text" field="bankNumber" onSave={(f, v) => handleSaveField(s, f, v)} />
+        </td>
+      );
+    }
+    if (col.key === 'bankName') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.bankName || ''}
+            type="dropdown"
+            field="bankName"
+            options={BANK_OPTIONS}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+
+    // Working duration: read-only
+    if (col.key === 'workingDur') {
+      return <td key={col.key} style={baseStyle}><div style={readonlyText}>{s.workingDuration || '—'}</div></td>;
+    }
+
+    // workSchedule: click → popup
+    if (col.key === 'workSchedule') {
+      const isParttime = s.contractType === 'parttime';
+      const summary = summarizeWorkSchedule(s.workSchedule);
+      return (
+        <td key={col.key} style={baseStyle}>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isParttime) return;
+              setScheduleStaff(s);
+            }}
+            style={{
+              padding: '6px 10px',
+              cursor: isParttime ? 'pointer' : 'default',
+              fontSize: 12,
+              color: isParttime
+                ? (summary === 'Chưa có lịch' ? '#d97706' : '#059669')
+                : '#6b7280',
+            }}
+            title={isParttime ? 'Click để sửa lịch' : 'Fulltime — lịch mặc định T2-T7 sáng'}
+          >
+            {isParttime ? (
+              summary === 'Chưa có lịch' ? '⚠️ Chưa có lịch' : `🟢 ${summary}`
+            ) : '🟢 T2-T7 sáng'}
+          </div>
+        </td>
+      );
+    }
+
+    // Phép — read-only with tooltip
+    if (col.key === 'leaveQuota') {
+      const q = s.leaveBalance?.monthlyQuota ?? (s.contractType === 'fulltime' ? 1 : 0);
+      return (
+        <td key={col.key} style={baseStyle}>
+          <div
+            style={{ ...readonlyText, textAlign: 'center' }}
+            title="Quota tháng theo loại HĐ. Fulltime=1 ngày/tháng, Parttime=0"
+          >
+            {q}
+          </div>
+        </td>
+      );
+    }
+    if (col.key === 'leaveUsed') {
+      const used = s.leaveBalance?.totalUsed ?? 0;
+      return (
+        <td key={col.key} style={baseStyle}>
+          <div
+            style={{ ...readonlyText, textAlign: 'center' }}
+            title="Tổng ngày phép đã được duyệt từ ngày bắt đầu làm"
+          >
+            {used}
+          </div>
+        </td>
+      );
+    }
+    if (col.key === 'leaveBalance') {
+      const lb = s.leaveBalance;
+      const balance = lb?.balance ?? 0;
+      const color = balance > 0 ? '#16a34a' : balance === 0 ? '#d97706' : '#dc2626';
+      const bg = balance > 0 ? '#dcfce7' : balance === 0 ? '#fef3c7' : '#fee2e2';
+      const tooltip = lb
+        ? (balance < 0
+          ? `Tích lũy ${lb.monthlyQuota * 0 + (lb.totalUsed + balance)} − Đã nghỉ ${lb.totalUsed} = ${balance}\nNỢ ${Math.abs(balance)} ngày — có thể trừ vào lương`
+          : `Tích lũy ${lb.totalUsed + balance} − Đã nghỉ ${lb.totalUsed} = ${balance} ngày`)
+        : 'Chưa có dữ liệu phép';
+      return (
+        <td key={col.key} style={baseStyle}>
+          <div
+            style={{
+              padding: '4px 10px',
+              textAlign: 'center',
+              background: bg,
+              color,
+              fontWeight: 600,
+              borderRadius: 12,
+              margin: '4px 6px',
+              fontSize: 12,
+            }}
+            title={tooltip}
+          >
+            {balance > 0 ? `+${balance}` : balance}
+            {balance < 0 ? ' NỢ' : ''}
+          </div>
+        </td>
+      );
+    }
+
+    // Manager — read-only
+    if (col.key === 'manager') {
+      return <td key={col.key} style={baseStyle}><div style={readonlyText}>{s.managerName || '—'}</div></td>;
+    }
+
+    return <td key={col.key} style={baseStyle}><div style={readonlyText}>—</div></td>;
+  }
+
+  // Tính left offset cho sticky cells
+  const stickyOffsets: Record<string, number> = {};
+  let acc = 40; // STT width
+  for (const col of COLUMNS) {
+    if (col.sticky) {
+      stickyOffsets[col.key] = acc;
+      acc += col.width;
+    }
+  }
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '24px 12px', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: 'min(1800px, 98vw)', margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ maxWidth: '100%', margin: '0 auto' }}>
 
         {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #1e3a5f, #3b5a85)', color: '#fff',
-          padding: '20px 24px', borderRadius: 12, marginBottom: 18,
+          padding: '20px 24px', borderRadius: 12, marginBottom: 14,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
         }}>
           <div>
@@ -305,20 +722,18 @@ function StaffListContent() {
               Tổng: <b>{data.total}</b> · Active: <b>{data.active}</b> · Inactive: <b>{data.inactive}</b>
             </div>
           </div>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>
-            💡 Click vào 1 hàng để mở form sửa chi tiết
+          <div style={{ fontSize: 12, opacity: 0.85 }}>
+            💡 Click TÊN → popup chi tiết · Click ô khác → sửa nhanh (Enter/blur để lưu)
           </div>
         </div>
 
         {/* Filter bar */}
         <div style={{
-          background: '#fff', padding: 14, borderRadius: 10, marginBottom: 14,
+          background: '#fff', padding: 12, borderRadius: 10, marginBottom: 12,
           border: '1px solid #e5e7eb', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center',
         }}>
           <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            type="text" value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍 Tìm theo tên, dept, email, SĐT..."
             style={{
               flex: 1, minWidth: 220, padding: '8px 12px', border: '1.5px solid #d1d5db',
@@ -326,22 +741,18 @@ function StaffListContent() {
             }}
           />
           <select
-            value={filterDept}
-            onChange={(e) => setFilterDept(e.target.value)}
+            value={filterDept} onChange={(e) => setFilterDept(e.target.value)}
             style={{
               padding: '8px 12px', border: '1.5px solid #d1d5db', borderRadius: 8,
               fontSize: 14, color: '#111827', background: '#fff', cursor: 'pointer',
             }}
           >
             <option value="">🏢 Tất cả phòng ban</option>
-            {depts.map(d => (
-              <option key={d} value={d}>{DEPT_EMOJI[d] || '📁'} {d}</option>
-            ))}
+            {depts.map(d => (<option key={d} value={d}>{DEPT_EMOJI[d] || '📁'} {d}</option>))}
           </select>
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#374151', cursor: 'pointer' }}>
             <input
-              type="checkbox"
-              checked={showInactive}
+              type="checkbox" checked={showInactive}
               onChange={(e) => setShowInactive(e.target.checked)}
               style={{ width: 16, height: 16, cursor: 'pointer' }}
             />
@@ -352,22 +763,36 @@ function StaffListContent() {
           </span>
         </div>
 
-        {/* Hint sort/filter */}
+        {/* Hint */}
         <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>
-          💡 Click tiêu đề cột để <b>sắp xếp</b> (asc → desc → tắt). Gõ ô nhỏ dưới mỗi cột để <b>lọc</b> riêng cột đó. Nhiều bộ lọc có thể chạy cùng lúc.
+          💡 Click tiêu đề cột để <b>sắp xếp</b>. Gõ ô lọc dưới mỗi cột để <b>lọc riêng</b>. Hover các cột phép để xem công thức.
         </div>
 
         {/* Table */}
-        <div style={{ background: '#fff', borderRadius: 10, overflow: 'auto', border: '1px solid #e5e7eb' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              {/* Row 1: header sortable */}
-              <tr style={{ background: '#f9fafb', textAlign: 'left' }}>
-                <th style={{ ...thStyle, cursor: 'default' }}>STT</th>
+        <div style={{
+          background: '#fff', borderRadius: 10,
+          overflow: 'auto',
+          border: '1px solid #e5e7eb',
+          maxHeight: 'calc(100vh - 220px)',
+        }}>
+          <table style={{ borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+              <tr style={{ background: '#f9fafb' }}>
+                <th style={{ ...thStyle, width: 40, position: 'sticky', left: 0, zIndex: 11, background: '#f9fafb' }}>STT</th>
                 {COLUMNS.map(col => (
                   <th
                     key={col.key}
-                    style={{ ...thStyle, cursor: 'pointer', userSelect: 'none' }}
+                    style={{
+                      ...thStyle,
+                      width: col.width, minWidth: col.width, maxWidth: col.width,
+                      cursor: 'pointer', userSelect: 'none',
+                      ...(col.sticky ? {
+                        position: 'sticky' as const,
+                        left: stickyOffsets[col.key],
+                        background: '#f9fafb',
+                        zIndex: 11,
+                      } : {}),
+                    }}
                     onClick={() => toggleSort(col.key)}
                     title="Click để sắp xếp"
                   >
@@ -382,78 +807,65 @@ function StaffListContent() {
                   </th>
                 ))}
               </tr>
-              {/* Row 2: filter inputs */}
               <tr style={{ background: '#fafbfc' }}>
-                <th style={{ ...thStyle, padding: '4px 6px' }}></th>
+                <th style={{ ...thStyle, padding: '4px 6px', position: 'sticky', left: 0, zIndex: 11, background: '#fafbfc' }}></th>
                 {COLUMNS.map(col => (
-                  <th key={`f_${col.key}`} style={{ ...thStyle, padding: '4px 6px', fontWeight: 400 }}>
-                    <input
-                      type="text"
-                      value={colFilters[col.key] || ''}
-                      onChange={(e) => setColFilter(col.key, e.target.value)}
-                      placeholder={col.filterPlaceholder || '...'}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        width: '100%', padding: '4px 8px', fontSize: 11,
-                        border: '1px solid #e5e7eb', borderRadius: 4,
-                        outline: 'none', color: '#374151', background: '#fff',
-                      }}
-                    />
+                  <th
+                    key={`f_${col.key}`}
+                    style={{
+                      ...thStyle, padding: '4px 6px', fontWeight: 400,
+                      width: col.width,
+                      ...(col.sticky ? {
+                        position: 'sticky' as const,
+                        left: stickyOffsets[col.key],
+                        background: '#fafbfc',
+                        zIndex: 11,
+                      } : {}),
+                    }}
+                  >
+                    {col.filterable ? (
+                      <input
+                        type="text"
+                        value={colFilters[col.key] || ''}
+                        onChange={(e) => setColFilter(col.key, e.target.value)}
+                        placeholder={col.filterPlaceholder || '...'}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%', padding: '4px 8px', fontSize: 11,
+                          border: '1px solid #e5e7eb', borderRadius: 4,
+                          outline: 'none', color: '#374151', background: '#fff',
+                        }}
+                      />
+                    ) : <span style={{ fontSize: 10, color: '#9ca3af' }}>—</span>}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={COLUMNS.length + 1} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>
-                  _Không có nhân viên nào khớp filter_
-                </td></tr>
+                <tr>
+                  <td colSpan={COLUMNS.length + 1} style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>
+                    _Không có nhân viên nào khớp filter_
+                  </td>
+                </tr>
               ) : (
                 filtered.map((s, i) => (
                   <tr
                     key={s.username}
-                    onClick={() => openEdit(s)}
                     style={{
                       borderTop: '1px solid #f3f4f6',
-                      cursor: 'pointer',
-                      opacity: s.active === false ? 0.55 : 1,
-                      transition: 'background 0.1s',
+                      opacity: s.active === false ? 0.6 : 1,
+                      background: s.active === false ? '#fafafa' : '#fff',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#eff6ff')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                   >
-                    <td style={tdStyle}>{i + 1}</td>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {s.avatarUrl ? (
-                          <img src={s.avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />
-                        ) : (
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#dbeafe', color: '#1e40af', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11 }}>
-                            {(s.name || s.username || '?').slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <span>{s.name || s.username}</span>
-                      </div>
+                    <td style={{
+                      ...tdStyle, width: 40,
+                      position: 'sticky' as const, left: 0, zIndex: 2,
+                      background: s.active === false ? '#fafafa' : '#fff',
+                    }}>
+                      {i + 1}
                     </td>
-                    <td style={tdStyle}>{DEPT_EMOJI[s.dept || ''] || '📁'} {s.dept || '—'}</td>
-                    <td style={tdStyle}>{s.position || '—'}</td>
-                    <td style={tdStyle}>{s.phone || '—'}</td>
-                    <td style={tdStyle}>{s.email || '—'}</td>
-                    <td style={tdStyle}>{fmtVN(s.dateOfBirth) || '—'}</td>
-                    <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 600 }}>
-                      {s.numerology != null ? (
-                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 10px', borderRadius: 12, fontSize: 12 }}>{s.numerology}</span>
-                      ) : '—'}
-                    </td>
-                    <td style={tdStyle}>{fmtVN(s.joinedAt) || '—'}</td>
-                    <td style={tdStyle}>{s.workingDuration || '—'}</td>
-                    <td style={tdStyle}>
-                      {s.active === false ? (
-                        <span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>🔴 Inactive</span>
-                      ) : (
-                        <span style={{ background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>✅ Active</span>
-                      )}
-                    </td>
+                    {COLUMNS.map(col => renderCell(col, s, stickyOffsets[col.key] ?? 0))}
                   </tr>
                 ))
               )}
@@ -463,24 +875,44 @@ function StaffListContent() {
 
         {/* Footer note */}
         <div style={{
-          marginTop: 14, padding: 12, background: '#eff6ff',
+          marginTop: 12, padding: 10, background: '#eff6ff',
           border: '1px solid #93c5fd', borderRadius: 8,
           fontSize: 12, color: '#1e40af',
         }}>
-          💡 Click 1 hàng để mở form sửa chi tiết. Tài khoản ngân hàng + ngày thử việc + ngày ký HĐ chỉ hiện trong form chi tiết để tránh table dài.
+          💡 <b>Click TÊN nhân viên</b> để mở form chi tiết (sửa CCCD, người thân...). <b>Click ô khác</b> để sửa nhanh — Enter hoặc click ra ngoài để lưu.
         </div>
       </div>
+
+      {/* Modal lịch làm việc — mount/unmount theo scheduleStaff */}
+      {scheduleStaff && (
+        <WorkScheduleModal
+          key={scheduleStaff.discordId || scheduleStaff.username}
+          onClose={() => setScheduleStaff(null)}
+          onSave={handleSaveSchedule}
+          staffName={scheduleStaff.name || scheduleStaff.username || ''}
+          initial={scheduleStaff.workSchedule}
+        />
+      )}
     </div>
   );
 }
 
+// ── Styles ────────────────────────────────────────────────────
 const thStyle: React.CSSProperties = {
-  padding: '12px 14px', fontSize: 11, fontWeight: 700, color: '#374151',
+  padding: '10px 12px', fontSize: 11, fontWeight: 700, color: '#374151',
   textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '2px solid #e5e7eb',
-  whiteSpace: 'nowrap',
+  whiteSpace: 'nowrap', textAlign: 'left',
 };
 const tdStyle: React.CSSProperties = {
-  padding: '10px 14px', color: '#111827', whiteSpace: 'nowrap',
+  padding: 0, color: '#111827', whiteSpace: 'nowrap',
+  borderRight: '1px solid #f3f4f6',
+};
+const readonlyText: React.CSSProperties = {
+  padding: '6px 10px', color: '#6b7280', fontSize: 13,
+};
+const badgeNumero: React.CSSProperties = {
+  background: '#fef3c7', color: '#92400e',
+  padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600,
 };
 
 export default function Page() {

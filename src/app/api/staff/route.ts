@@ -10,9 +10,20 @@
 import { NextResponse } from 'next/server';
 
 // ── Types ─────────────────────────────────────────────────────
+type WorkSchedulePayload = {
+  type: 'fulltime' | 'parttime';
+  workDays: Record<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun',
+    'fullday' | 'morning' | 'afternoon' | 'off'>;
+};
+
 type StaffPayload = {
   target_id: string;                   // discordId NV cần update
-  // Cơ bản
+  // [Phase B v5] Cơ bản — cho phép inline edit qua /staff-list
+  name?: string | null;
+  dept?: string | null;
+  contractType?: 'fulltime' | 'parttime' | null;
+  active?: boolean | null;
+  // Cá nhân
   position?: string | null;
   dateOfBirth?: string | null;         // YYYY-MM-DD
   // Liên lạc
@@ -27,8 +38,18 @@ type StaffPayload = {
   probationEndDate?: string | null;    // YYYY-MM-DD
   contractSignDate?: string | null;    // YYYY-MM-DD
   // Auto-compute / khác
-  numerology?: number | null;
+  numerology?: number | string | null;
   avatarUrl?: string | null;
+  // [Phase B v5] Lịch làm việc parttime
+  workSchedule?: WorkSchedulePayload | string | null;
+  // [Phase B v5 — NHÓM A: Khẩn cấp]
+  emergencyContact?: string | null;
+  emergencyPhone?: string | null;
+  emergencyRelation?: string | null;
+  // [Phase B v5 — NHÓM B: Pháp lý CCCD]
+  cccdNumber?: string | null;
+  cccdIssueDate?: string | null;
+  cccdIssuePlace?: string | null;
   edited_by: {
     discord_id: string;
     name: string;
