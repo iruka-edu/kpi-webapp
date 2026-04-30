@@ -264,7 +264,6 @@ function StaffListContent() {
   // Filter state
   const [filterDept, setFilterDept] = useState<string>('');
   const [showInactive, setShowInactive] = useState(false);
-  const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [colFilters, setColFilters] = useState<Partial<Record<ColumnKey, string>>>({});
@@ -366,17 +365,6 @@ function StaffListContent() {
 
     if (filterDept) list = list.filter(s => s.dept === filterDept);
     if (!showInactive) list = list.filter(s => s.active !== false);
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(s =>
-        (s.name || '').toLowerCase().includes(q) ||
-        (s.username || '').toLowerCase().includes(q) ||
-        (s.dept || '').toLowerCase().includes(q) ||
-        (s.position || '').toLowerCase().includes(q) ||
-        (s.email || '').toLowerCase().includes(q) ||
-        (s.phone || '').toLowerCase().includes(q)
-      );
-    }
 
     for (const [colKey, filterVal] of Object.entries(colFilters)) {
       if (!filterVal || !filterVal.trim()) continue;
@@ -411,7 +399,7 @@ function StaffListContent() {
     }
 
     return list;
-  }, [data, filterDept, showInactive, search, colFilters, sortKey, sortDir]);
+  }, [data, filterDept, showInactive, colFilters, sortKey, sortDir]);
 
   function toggleSort(key: ColumnKey) {
     if (sortKey !== key) { setSortKey(key); setSortDir('asc'); }
@@ -825,14 +813,6 @@ function StaffListContent() {
           background: '#fff', padding: 12, borderRadius: 10, marginBottom: 12,
           border: '1px solid #e5e7eb', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center',
         }}>
-          <input
-            type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍 Tìm theo tên, dept, email, SĐT..."
-            style={{
-              flex: 1, minWidth: 220, padding: '8px 12px', border: '1.5px solid #d1d5db',
-              borderRadius: 8, fontSize: 14, color: '#111827', outline: 'none',
-            }}
-          />
           <select
             value={filterDept} onChange={(e) => setFilterDept(e.target.value)}
             style={{
@@ -851,7 +831,7 @@ function StaffListContent() {
             />
             Hiện inactive
           </label>
-          <span style={{ fontSize: 13, color: '#6b7280' }}>
+          <span style={{ fontSize: 13, color: '#6b7280', marginLeft: 'auto' }}>
             Hiển thị: <b>{filtered.length}</b>/{data.total}
           </span>
         </div>
