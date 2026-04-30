@@ -262,6 +262,7 @@ function StaffListContent() {
   const [data, setData] = useState<ListResp>({ ok: false });
 
   // Filter state
+  const [viewMode, setViewMode] = useState<'all' | 'active' | 'inactive'>('active'); // mặc định: chỉ active
   const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [colFilters, setColFilters] = useState<Partial<Record<ColumnKey, string>>>({});
@@ -355,6 +356,11 @@ function StaffListContent() {
   const filtered = useMemo(() => {
     let list = data.list || [];
 
+    // Lọc theo viewMode (mặc định: chỉ active)
+    if (viewMode === 'active')   list = list.filter(s => s.active !== false);
+    if (viewMode === 'inactive') list = list.filter(s => s.active === false);
+    // viewMode === 'all' → không filter
+
     for (const [colKey, filterVal] of Object.entries(colFilters)) {
       if (!filterVal || !filterVal.trim()) continue;
       const q = filterVal.toLowerCase().trim();
@@ -388,7 +394,7 @@ function StaffListContent() {
     }
 
     return list;
-  }, [data, colFilters, sortKey, sortDir]);
+  }, [data, viewMode, colFilters, sortKey, sortDir]);
 
   function toggleSort(key: ColumnKey) {
     if (sortKey !== key) { setSortKey(key); setSortDir('asc'); }
@@ -785,15 +791,24 @@ function StaffListContent() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
         }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>
               👥 Danh sách nhân viên IruKa
             </div>
-            <div style={{ fontSize: 13, opacity: 0.9 }}>
-              Tổng: <b>{data.total}</b> · Active: <b>{data.active}</b> · Inactive: <b>{data.inactive}</b>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={() => setViewMode('all')} style={pillStyle(viewMode === 'all')}>
+                📊 Tổng: <b>{data.total ?? 0}</b>
+              </button>
+              <button onClick={() => setViewMode('active')} style={pillStyle(viewMode === 'active')}>
+                ✅ Active: <b>{data.active ?? 0}</b>
+              </button>
+              <button onClick={() => setViewMode('inactive')} style={pillStyle(viewMode === 'inactive')}>
+                🔴 Inactive: <b>{data.inactive ?? 0}</b>
+              </button>
             </div>
           </div>
-          <div style={{ fontSize: 12, opacity: 0.85 }}>
-            💡 Click TÊN → popup chi tiết · Click ô khác → sửa nhanh (Enter/blur để lưu)
+          <div style={{ fontSize: 12, opacity: 0.85, textAlign: 'right' }}>
+            💡 Click TÊN → popup chi tiết<br/>
+            Click ô khác → sửa nhanh (Enter/blur lưu)
           </div>
         </div>
 
@@ -935,6 +950,23 @@ function StaffListContent() {
 }
 
 // ── Styles ────────────────────────────────────────────────────
+// Pill button cho filter Tổng/Active/Inactive trong header
+function pillStyle(active: boolean): React.CSSProperties {
+  return {
+    background: active ? '#fff' : 'rgba(255,255,255,0.15)',
+    color: active ? '#1e3a5f' : '#fff',
+    border: active ? '1.5px solid #fff' : '1.5px solid rgba(255,255,255,0.25)',
+    padding: '6px 14px',
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'all 0.15s',
+    boxShadow: active ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
+  };
+}
+
 const thStyle: React.CSSProperties = {
   padding: '10px 12px', fontSize: 11, fontWeight: 700, color: '#374151',
   textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '2px solid #e5e7eb',
