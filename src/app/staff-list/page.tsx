@@ -116,15 +116,15 @@ type ColumnDef = {
   filterPlaceholder?: string;
 };
 
-// Sticky 4 cột đầu (STT + 4 cột chính) — scroll ngang hiện thêm cột quan trọng
+// Sticky 5 cột đầu (STT + 5 cột chính) — Excel-like freeze panes
 const COLUMNS: ColumnDef[] = [
-  // 🟢 STICKY (luôn thấy — CEO nhìn vào là thấy ngay)
+  // 🟢 STICKY (luôn thấy — CEO nhìn vào là thấy ngay, scroll ngang KHÔNG ẩn)
   { key: 'name',             label: '👤 Họ tên',        width: 180, sticky: true, filterable: true, filterPlaceholder: 'tên...' },
   { key: 'dept',             label: '🏢 Phòng ban',     width: 110, sticky: true, filterable: true, filterPlaceholder: 'dept...' },
   { key: 'position',         label: '💼 Vị trí',          width: 140, sticky: true, filterable: true, filterPlaceholder: 'vị trí...' },
   { key: 'contractType',     label: '📋 Loại HĐ',        width: 100, sticky: true, filterable: true, filterPlaceholder: 'fulltime...' },
+  { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180, sticky: true },
   // 🟡 SCROLL — nhóm quan trọng, CEO thấy đầu tiên khi scroll
-  { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180 },
   { key: 'contractSignDate', label: '📅 Ngày vào làm',  width: 120, filterable: true, filterPlaceholder: '...' },
   { key: 'probationEndDate', label: '📅 Hết thử việc',  width: 120, filterable: true, filterPlaceholder: '...' },
   { key: 'workingDur',       label: '⏱️ Đã làm',          width: 130, filterable: true, filterPlaceholder: 'năm/tháng...' },
