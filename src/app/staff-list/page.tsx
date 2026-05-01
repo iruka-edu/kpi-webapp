@@ -18,7 +18,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { InlineCell } from '@/components/staff/InlineCell';
 import {
@@ -284,22 +284,6 @@ function StaffListContent() {
 
   // Modal lịch làm việc
   const [scheduleStaff, setScheduleStaff] = useState<Staff | null>(null);
-
-  // Two-table sticky pattern: 2 wrapper riêng cho thead và body
-  // → Sync scrollLeft khi user kéo body để header chạy theo
-  const headerWrapperRef = useRef<HTMLDivElement>(null);
-  const bodyWrapperRef = useRef<HTMLDivElement>(null);
-  const handleBodyScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    if (headerWrapperRef.current) {
-      headerWrapperRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  }, []);
-  // Sync ngược: nếu user lỡ scroll trên header (rare nhưng possible với touchpad/wheel)
-  const handleHeaderScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    if (bodyWrapperRef.current && bodyWrapperRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
-      bodyWrapperRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  }, []);
 
   // Local update — patch list khi 1 cell save xong
   const updateLocalStaff = useCallback((discordId: string, updates: Partial<Staff>) => {
@@ -896,33 +880,20 @@ function StaffListContent() {
           {' '}<b>Click TÊN nhân viên</b> để mở form chi tiết (sửa CCCD, người thân...). <b>Click ô khác</b> để sửa nhanh — Enter hoặc click ra ngoài để lưu.
         </div>
 
-        {/* TWO-TABLE STICKY PATTERN
-            Lý do: với 1 wrapper + overflow-x:auto, browser bắt buộc tạo vertical scroll
-            context (per CSS spec) → thead position:sticky không thể "thoát" lên page viewport.
-            Combo overflow-y:clip có nghe nhưng Chrome render không nhất quán cho sticky.
-            Pattern AG-Grid/MUI DataTable: tách 2 bảng riêng, dùng <colgroup> để khớp cột,
-            sync scrollLeft qua JS. Vertical sticky thead xử lý ở wrapper-level (sticky top:0),
-            horizontal sticky cells xử lý ở table-cell-level (sticky left:offset).
-            Cả 2 chiều đều hoạt động độc lập, không xung đột. */}
-
-        {/* Header table — sticky top:0 → đứng yên khi page scroll dọc */}
-        <div
-          ref={headerWrapperRef}
-          onScroll={handleHeaderScroll}
-          style={{
-            position: 'sticky', top: 0, zIndex: 50,
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderRadius: '10px 10px 0 0',
-            overflow: 'hidden', // ẩn scrollbar; scrollLeft set qua JS từ body sync
-          }}
-        >
-          <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 13, tableLayout: 'fixed' }}>
-            <colgroup>
-              <col style={{ width: 40 }} />
-              {COLUMNS.map(c => <col key={c.key} style={{ width: c.width }} />)}
-            </colgroup>
-            <thead>
+        {/* Single table with bounded scroll — pattern Excel freeze panes
+            - maxHeight ≈ 85% viewport: bảng làm nội dung chính của trang
+            - overflow:auto: cả thead sticky (top:0) lẫn cột sticky (left:offset)
+              hoạt động trong cùng 1 scroll context của wrapper → 100% reliable
+            - Bounded scroll trong wrapper khác với page scroll, NHƯNG đây là cách
+              Excel/Google Sheets làm freeze panes: vùng bảng có khung riêng */}
+        <div style={{
+          background: '#fff', borderRadius: 10,
+          overflow: 'auto',
+          border: '1px solid #e5e7eb',
+          maxHeight: 'calc(100vh - 180px)', // chiếm ~80% viewport, chừa space cho navy header + hint
+        }}>
+          <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
               <tr style={{ background: '#f9fafb' }}>
                 <th style={{ ...thStyle, width: 40, position: 'sticky', left: 0, zIndex: 11, background: '#f9fafb', textAlign: 'center' }}>STT</th>
                 {COLUMNS.map(col => (
@@ -989,26 +960,6 @@ function StaffListContent() {
                 ))}
               </tr>
             </thead>
-          </table>
-        </div>
-
-        {/* Body table — overflow-x:auto cho user scroll ngang; onScroll sync sang header */}
-        <div
-          ref={bodyWrapperRef}
-          onScroll={handleBodyScroll}
-          style={{
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderTop: 'none',
-            borderRadius: '0 0 10px 10px',
-            overflowX: 'auto',
-          }}
-        >
-          <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 13, tableLayout: 'fixed' }}>
-            <colgroup>
-              <col style={{ width: 40 }} />
-              {COLUMNS.map(c => <col key={c.key} style={{ width: c.width }} />)}
-            </colgroup>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
@@ -1021,7 +972,6 @@ function StaffListContent() {
                   <tr
                     key={s.username}
                     style={{
-                      // border-collapse:separate ko render border trên <tr>; chuyển sang borderBottom của <td>
                       opacity: s.active === false ? 0.6 : 1,
                       background: s.active === false ? '#fafafa' : '#fff',
                     }}
