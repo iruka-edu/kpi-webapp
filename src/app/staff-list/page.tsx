@@ -285,6 +285,20 @@ function StaffListContent() {
   // Modal lịch làm việc
   const [scheduleStaff, setScheduleStaff] = useState<Staff | null>(null);
 
+  // Safeguard tuyệt đối: chặn page horizontal scroll khi mounted ở trang này.
+  // Dù element nào lỡ wider hơn viewport, page vẫn KHÔNG scroll ngang được.
+  // Cleanup khi unmount để không ảnh hưởng các trang khác.
+  useEffect(() => {
+    const prevHtmlOverflowX = document.documentElement.style.overflowX;
+    const prevBodyOverflowX = document.body.style.overflowX;
+    document.documentElement.style.overflowX = 'hidden';
+    document.body.style.overflowX = 'hidden';
+    return () => {
+      document.documentElement.style.overflowX = prevHtmlOverflowX;
+      document.body.style.overflowX = prevBodyOverflowX;
+    };
+  }, []);
+
   // Local update — patch list khi 1 cell save xong
   const updateLocalStaff = useCallback((discordId: string, updates: Partial<Staff>) => {
     setData(prev => ({
@@ -843,9 +857,9 @@ function StaffListContent() {
   }
 
   return (
-    // maxWidth: 100% + boxSizing: border-box → khóa outer = body's content area (không tính vertical scrollbar)
-    // → header card + bảng đều nằm gọn viewport, không tràn phải
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%' }}>
+    // Lề trái/phải = 16px (1rem) để header card + bảng có khoảng cách rõ ràng với mép màn hình.
+    // boxSizing: border-box + maxWidth: 100% → outer luôn = body's content area, không tràn.
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 16px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%' }}>
       <div style={{ maxWidth: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
 
         {/* Header */}
