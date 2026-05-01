@@ -843,9 +843,8 @@ function StaffListContent() {
   }
 
   return (
-    // 100vw bao gồm cả vertical scrollbar (~17px) → bị che mép phải. Dùng 100% để chỉ lấy content area của body.
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%' }}>
-      <div style={{ maxWidth: '100%', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ maxWidth: '100%', margin: '0 auto' }}>
 
         {/* Header */}
         <div style={{
@@ -882,13 +881,14 @@ function StaffListContent() {
         </div>
 
         {/* Table:
-            - width 100% + maxWidth 100% + boxSizing: ép khung bảng KHÔNG vượt parent (= viewport).
-            - overflowX: auto: thông tin dài bị ẩn → kéo ngang để xem thêm cột bên phải/trái.
-            - overflowY: visible: phần dọc do page scroll lo → không bị bó hẹp trong khung con. */}
+            - overflow-x: auto → horizontal scroll trong khung; sticky cột ngang work.
+            - overflow-y: clip → KHÔNG tạo vertical scroll container → thead có thể stick vào page
+              khi cuộn dọc (top: 0 sẽ tham chiếu page viewport, không phải wrapper).
+              Khác 'visible' (có CSS quirk compute-to-auto), 'clip' chặn nội dung mà không tạo scroll context.
+            - Không set maxHeight → wrapper height = table height → page scroll lo phần dọc. */}
         <div style={{
           background: '#fff', borderRadius: 10,
-          width: '100%', maxWidth: '100%', boxSizing: 'border-box',
-          overflowX: 'auto', overflowY: 'visible',
+          overflowX: 'auto', overflowY: 'clip',
           border: '1px solid #e5e7eb',
         }}>
           {/* border-collapse: separate là điều kiện CẦN cho position:sticky trên <td>.
