@@ -304,6 +304,7 @@ function LeaveProposeContent() {
           </div>
           <div style={{ fontSize: 13, opacity: 0.95 }}>
             Chào <b>{member.name}</b> ({member.dept})
+            {isPartime && <> • Có thể <b>hoán đổi lịch</b> hoặc xin nghỉ thêm</>}
             {!isPartime && leaveBalance && (
               <> • Phép còn dư: <span style={{
                 display: 'inline-block', padding: '2px 10px', borderRadius: 12,
@@ -319,7 +320,11 @@ function LeaveProposeContent() {
             borderRadius: 10, padding: '10px 14px', marginTop: 10, fontSize: 12, lineHeight: 1.6,
           }}>
             👨‍💼 Đơn này gửi cho: <b>{member.managerName || 'CEO (fallback)'}</b><br/>
-            📋 Đồng thời CC: <b>CEO + HR</b> để theo dõi
+            {isPartime ? (
+              <>💡 Hoán đổi thuần (làm bù = nghỉ) → <b>KHÔNG trừ phép</b>. Nghỉ nhiều hơn bù → <b>NỢ</b>.</>
+            ) : (
+              <>📋 Đồng thời CC: <b>CEO + HR</b> để theo dõi</>
+            )}
           </div>
         </div>
 
@@ -393,10 +398,25 @@ function LeaveProposeContent() {
           />
         )}
 
+        {/* ── TÌNH TRẠNG PHÉP PARTTIME (chỉ parttime) ── */}
+        {isPartime && (
+          <PartimeBalanceCard
+            cumulativeOff={leaveBalance?.totalUsed ?? 0}
+            requestingOff={partimeNet?.net ?? 0}
+          />
+        )}
+
         {/* ── HISTORY ── */}
         <div style={section}>
-          <div style={sectionTitle}>📜 Lịch sử xin nghỉ gần nhất của bạn</div>
-          <HistoryTable history={history} />
+          <div style={sectionTitle}>
+            {isPartime ? '📜 Lịch sử xin nghỉ + hoán đổi gần nhất' : '📜 Lịch sử xin nghỉ gần nhất của bạn'}
+          </div>
+          <HistoryTable history={history} parttimeMode={isPartime} />
+          {isPartime && (
+            <div style={{ ...hint, marginTop: 8 }}>
+              💡 Cột &ldquo;Net trừ&rdquo; = số ngày phép thực sự bị trừ (sau khi tính bù). 0 = hoán đổi thuần.
+            </div>
+          )}
         </div>
 
         {/* ── Submit ── */}
@@ -600,39 +620,110 @@ function PreviewRow({ label, value, valueColor }: { label: string; value: string
   );
 }
 
-function HistoryTable({ history }: { history: HistoryItem[] }) {
+// ── Tình trạng phép parttime: 4 dòng + hint ──
+// 'Phép tháng' = 0 (parttime không có quota), 'Đã nghỉ ngoài lịch' = totalUsed (bot trả).
+// 'Đang xin' = net của đơn này (đã trừ bù). 'Sau đơn này' = totalUsed + net.
+function PartimeBalanceCard({ cumulativeOff, requestingOff }: {
+  cumulativeOff: number;
+  requestingOff: number;
+}) {
+  const after = cumulativeOff + requestingOff;
+  const afterColor = after === 0 ? '#16a34a' : after <= 2 ? '#f59e0b' : '#dc2626';
+  const afterLabel = after === 0 ? '0 buổi 🟢' : after <= 2 ? `${after} buổi nợ 🟠` : `${after} buổi nợ 🔴`;
+  return (
+    <div style={section}>
+      <div style={sectionTitle}>📊 Tình trạng phép parttime của bạn</div>
+      <div style={{
+        background: '#fafbfc', border: '1px solid #e5e7eb',
+        borderRadius: 10, padding: '12px 14px',
+      }}>
+        <PreviewRow
+          label="📊 Phép tháng:"
+          value="0 ngày  (parttime — theo lịch hoán đổi)"
+        />
+        <PreviewRow
+          label="📈 Đã nghỉ ngoài lịch (cộng dồn):"
+          value={`${cumulativeOff} buổi`}
+        />
+        <PreviewRow
+          label="➕ Đang xin (đơn này):"
+          value={requestingOff === 0 ? '0 buổi 🟢' : `${requestingOff} buổi`}
+        />
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          padding: '8px 0 4px',
+          borderTop: '1px dashed rgba(0,0,0,0.1)', marginTop: 6,
+          fontSize: 14,
+        }}>
+          <span style={{ color: '#4b5563', flex: 1 }}>🎯 Sau đơn này:</span>
+          <span style={{ fontWeight: 900, fontSize: 16, color: afterColor }}>{afterLabel}</span>
+        </div>
+      </div>
+      <div style={{ ...hint, marginTop: 8 }}>
+        💡 Parttime KHÔNG có phép tháng — chỉ tính nợ khi nghỉ NGOÀI lịch (không bù đủ). Lịch nghỉ cố định (ngày off) KHÔNG cộng vào đây.
+      </div>
+    </div>
+  );
+}
+
+// ── Format chi tiết history cho parttime: "🟦 Bù T4 chiều · 🔴 Nghỉ T6 sáng" ──
+function formatHistoryDetail(h: HistoryItem): string {
+  const detail = (h as HistoryItem & { days_detail?: DayDetailItem[] | null }).days_detail;
+  if (!detail || !Array.isArray(detail) || detail.length === 0) {
+    return h.leaveDate || '—';
+  }
+  const parts = detail.map(d => {
+    const m = d.date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return '';
+    const dow = ['CN','T2','T3','T4','T5','T6','T7'][new Date(+m[1], +m[2]-1, +m[3]).getDay()];
+    const buoi = d.type === 'full' ? 'cả ngày' : d.type === 'morning' ? 'sáng' : 'chiều';
+    const icon = d.action === 'work_swap' ? '🟦 Bù' : '🔴 Nghỉ';
+    return `${icon} ${dow} ${buoi}`;
+  }).filter(Boolean);
+  return parts.join(' · ');
+}
+
+function HistoryTable({ history, parttimeMode }: { history: HistoryItem[]; parttimeMode?: boolean }) {
   if (history.length === 0) {
     return <div style={{ padding: 16, textAlign: 'center', color: '#9ca3af', fontStyle: 'italic', fontSize: 12 }}>_Chưa có phiếu nào_</div>;
   }
+  const totalLabel = parttimeMode ? 'Net trừ' : 'Tổng';
+  const detailLabel = parttimeMode ? 'Chi tiết' : 'Khoảng nghỉ';
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
       <thead>
         <tr style={{ background: '#f9fafb' }}>
           <th style={historyTh}>Ngày xin</th>
-          <th style={historyTh}>Khoảng nghỉ</th>
-          <th style={{ ...historyTh, textAlign: 'center' }}>Tổng</th>
+          <th style={historyTh}>{detailLabel}</th>
+          <th style={{ ...historyTh, textAlign: 'center' }}>{totalLabel}</th>
           <th style={historyTh}>Trạng thái</th>
           <th style={historyTh}>Người duyệt</th>
         </tr>
       </thead>
       <tbody>
-        {history.map(h => (
-          <tr key={h.id}>
-            <td style={historyTd}>{fmtVNFromTimestamp(h.createdAt)}</td>
-            <td style={historyTd}>{h.leaveDate || '—'}</td>
-            <td style={{ ...historyTd, textAlign: 'center', fontWeight: 700 }}>
-              {h.totalDays != null ? h.totalDays : '—'}
-            </td>
-            <td style={historyTd}>
-              <span style={{
-                display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700,
-                background: h.status === 'approved' ? '#dcfce7' : h.status === 'rejected' ? '#fee2e2' : '#fef3c7',
-                color: h.status === 'approved' ? '#16a34a' : h.status === 'rejected' ? '#dc2626' : '#d97706',
-              }}>{h.status === 'approved' ? 'DUYỆT' : h.status === 'rejected' ? 'TỪ CHỐI' : 'CHỜ DUYỆT'}</span>
-            </td>
-            <td style={historyTd}>{h.approverName || '—'}</td>
-          </tr>
-        ))}
+        {history.map(h => {
+          const totalVal = h.totalDays;
+          const totalColor = parttimeMode
+            ? (totalVal === 0 ? '#16a34a' : totalVal != null && totalVal > 0 ? '#dc2626' : '#1e3a5f')
+            : '#1e3a5f';
+          return (
+            <tr key={h.id}>
+              <td style={historyTd}>{fmtVNFromTimestamp(h.createdAt)}</td>
+              <td style={historyTd}>{parttimeMode ? formatHistoryDetail(h) : (h.leaveDate || '—')}</td>
+              <td style={{ ...historyTd, textAlign: 'center', fontWeight: 700, color: totalColor }}>
+                {totalVal != null ? totalVal : '—'}
+              </td>
+              <td style={historyTd}>
+                <span style={{
+                  display: 'inline-block', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700,
+                  background: h.status === 'approved' ? '#dcfce7' : h.status === 'rejected' ? '#fee2e2' : '#fef3c7',
+                  color: h.status === 'approved' ? '#16a34a' : h.status === 'rejected' ? '#dc2626' : '#d97706',
+                }}>{h.status === 'approved' ? 'DUYỆT' : h.status === 'rejected' ? 'TỪ CHỐI' : 'CHỜ DUYỆT'}</span>
+              </td>
+              <td style={historyTd}>{h.approverName || '—'}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
