@@ -858,18 +858,20 @@ function StaffListContent() {
 
   return (
     // Lề trái/phải = 16px (1rem) để header card + bảng có khoảng cách rõ ràng với mép màn hình.
-    // boxSizing: border-box + maxWidth: 100% → outer luôn = body's content area, không tràn.
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 16px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%' }}>
-      <div style={{ maxWidth: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+    // overflow: hidden → đảm bảo không có element nào tràn ra ngoài viewport theo chiều ngang.
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 16px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%', overflowX: 'hidden' }}>
+      <div style={{ maxWidth: '100%', margin: '0 auto', boxSizing: 'border-box', overflowX: 'hidden' }}>
 
         {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #1e3a5f, #3b5a85)', color: '#fff',
           padding: '20px 24px', borderRadius: 12, marginBottom: 14,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+          boxSizing: 'border-box', width: '100%', minWidth: 0,
         }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>
+          {/* Phần trái: tiêu đề + filter pills — co lại được khi màn hình hẹp */}
+          <div style={{ flexShrink: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, whiteSpace: 'nowrap' }}>
               👥 Danh sách nhân viên IruKa
             </div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -884,7 +886,8 @@ function StaffListContent() {
               </button>
             </div>
           </div>
-          <div style={{ fontSize: 12, opacity: 0.85, textAlign: 'right' }}>
+          {/* Phần phải: hướng dẫn — flex-shrink + minWidth:0 để không tràn ra ngoài header */}
+          <div style={{ fontSize: 12, opacity: 0.85, textAlign: 'right', flexShrink: 1, minWidth: 0, wordBreak: 'keep-all' }}>
             💡 Click TÊN → popup chi tiết<br/>
             Click ô khác → sửa nhanh (Enter/blur lưu)
           </div>
