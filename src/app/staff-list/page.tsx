@@ -944,9 +944,15 @@ function StaffListContent() {
                       
                       {/* Tooltip Popup */}
                       {col.tooltip && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-slate-800 text-white text-[11px] font-normal rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-center pointer-events-none break-words whitespace-normal leading-relaxed">
+                        <div 
+                          className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-56 p-2 text-white text-[11px] font-normal rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[999] text-center pointer-events-none break-words whitespace-normal leading-relaxed"
+                          style={{ background: '#1e293b' }}
+                        >
                           {col.tooltip}
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800"></div>
+                          <div 
+                            className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent"
+                            style={{ borderBottomColor: '#1e293b' }}
+                          ></div>
                         </div>
                       )}
                     </span>
