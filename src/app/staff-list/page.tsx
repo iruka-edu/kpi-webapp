@@ -436,7 +436,9 @@ function StaffListContent() {
   function renderCell(col: ColumnDef, s: Staff, leftOffset: number) {
     const baseStyle: React.CSSProperties = {
       width: col.width, minWidth: col.width, maxWidth: col.width,
-      borderRight: '1px solid #f3f4f6', verticalAlign: 'middle',
+      borderRight: '1px solid #f3f4f6',
+      borderBottom: '1px solid #f3f4f6', // separator hàng (vì <tr> ko render border khi border-collapse:separate)
+      verticalAlign: 'middle',
       ...(col.sticky ? {
         position: 'sticky' as const,
         left: leftOffset,
@@ -874,7 +876,9 @@ function StaffListContent() {
           border: '1px solid #e5e7eb',
           maxHeight: 'calc(100vh - 220px)',
         }}>
-          <table style={{ borderCollapse: 'collapse', fontSize: 13 }}>
+          {/* border-collapse: separate là điều kiện CẦN cho position:sticky trên <td>.
+              Nếu để 'collapse', Chrome/Safari cũ không tôn trọng sticky → cột không cố định được. */}
+          <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
               <tr style={{ background: '#f9fafb' }}>
                 <th style={{ ...thStyle, width: 40, position: 'sticky', left: 0, zIndex: 11, background: '#f9fafb', textAlign: 'center' }}>STT</th>
@@ -952,7 +956,7 @@ function StaffListContent() {
                   <tr
                     key={s.username}
                     style={{
-                      borderTop: '1px solid #f3f4f6',
+                      // border-collapse:separate ko render border trên <tr>; chuyển sang borderBottom của <td> bên dưới
                       opacity: s.active === false ? 0.6 : 1,
                       background: s.active === false ? '#fafafa' : '#fff',
                     }}
@@ -1025,6 +1029,7 @@ const thStyle: React.CSSProperties = {
 const tdStyle: React.CSSProperties = {
   padding: 0, color: '#111827', whiteSpace: 'nowrap',
   borderRight: '1px solid #f3f4f6',
+  borderBottom: '1px solid #f3f4f6', // thay borderTop ở <tr> (separate ko render row-border)
 };
 const readonlyText: React.CSSProperties = {
   padding: '6px 10px', color: '#6b7280', fontSize: 13,
