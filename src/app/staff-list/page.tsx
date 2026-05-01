@@ -932,7 +932,7 @@ function StaffListContent() {
                       } : {}),
                     }}
                     onClick={() => toggleSort(col.key)}
-                    className="group relative"
+                    className="group relative hover:!z-50"
                   >
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       {col.label}
