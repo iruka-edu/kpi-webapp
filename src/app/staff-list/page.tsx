@@ -56,6 +56,7 @@ type Staff = {
   // Field tính realtime (sẽ có sau Phase B2)
   leaveBalance?: {
     monthlyQuota: number;
+    totalAccrued?: number; // Bot Phase B v6 — tổng phép tích lũy (anniversary + 0.5 nếu lẻ ≥ 15)
     totalUsed: number;
     balance: number;
   } | null;
@@ -97,13 +98,24 @@ function parseDurationDays(s?: string): number {
   return total;
 }
 
+// Lấy số phép tích lũy từ bot. Nếu bot chưa cung cấp `totalAccrued` (deploy chậm),
+// fallback dùng `totalUsed + balance` (vẫn đúng vì bot đã đảm bảo balance = accrued − used).
+// Nếu thiếu cả `joinedAt` và data bot → trả null để báo "Thiếu ngày" trong cột.
+function getAccrued(s: Staff): number | null {
+  if (s.contractType !== 'fulltime') return 0;
+  const lb = s.leaveBalance;
+  if (lb && typeof lb.totalAccrued === 'number') return lb.totalAccrued;
+  if (lb) return lb.totalUsed + lb.balance;
+  return s.joinedAt ? 0 : null;
+}
+
 // ── Column definitions ───────────────────────────────────────
 type ColumnKey =
   | 'name' | 'dept' | 'position' | 'contractType' | 'active'
   | 'phone' | 'email' | 'dateOfBirth' | 'numerology' | 'hometown'
   | 'bankNumber' | 'bankName'
   | 'joinedAt' | 'probationStartDate' | 'probationEndDate' | 'contractSignDate' | 'workingDur'
-  | 'workSchedule' | 'leaveQuota' | 'leaveUsed' | 'leaveBalance' | 'manager'
+  | 'workSchedule' | 'leaveQuota' | 'leaveAccrued' | 'leaveUsed' | 'leaveBalance' | 'manager'
   | 'emergencyContact' | 'emergencyPhone' | 'emergencyRelation'
   | 'cccdNumber' | 'cccdIssueDate' | 'cccdIssuePlace';
 type SortDir = 'asc' | 'desc' | null;
@@ -126,9 +138,10 @@ const COLUMNS: ColumnDef[] = [
   { key: 'position',         label: '🏢 Phòng ban',     width: 140, sticky: true, filterable: true, filterPlaceholder: 'phòng ban...', tooltip: 'Đang tính dựa trên phòng ban, khối trực thuộc' },
   { key: 'contractType',     label: '📋 Loại HĐ',        width: 100, sticky: true, filterable: true, filterPlaceholder: 'fulltime...' },
   { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180, sticky: true, tooltip: 'Khung thời gian và lịch làm việc áp dụng cho nhân sự' },
-  { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110, tooltip: 'Quỹ phép năm được cấp dựa trên số tháng làm việc (theo hợp đồng fulltime). Tính từ ngày bắt đầu làm việc.' },
-  { key: 'leaveUsed',        label: '📈 Đã nghỉ',       width: 100, tooltip: 'Tổng số ngày phép đã sử dụng trong năm nay (đồng bộ tự động từ lệnh /leave của Bot).' },
-  { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100, tooltip: 'Số phép còn lại = Tổng phép/tháng - Đã nghỉ' },
+  { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110, tooltip: 'Số ngày phép được cấp mỗi tháng. Fulltime = 1 ngày/tháng, Parttime = 0.' },
+  { key: 'leaveAccrued',     label: '📦 Tích lũy',      width: 100, tooltip: 'Tổng phép tích lũy = số tháng đủ × phép/tháng + 0.5 nếu phần lẻ ≥ 15 ngày. Tính từ ngày vào làm theo lịch.' },
+  { key: 'leaveUsed',        label: '📈 Đã nghỉ',       width: 100, tooltip: 'Tổng số ngày phép đã được duyệt (đồng bộ tự động từ lệnh /leave của Bot).' },
+  { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100, tooltip: 'Số phép còn lại = Tích lũy (số tháng làm × phép/tháng) − Đã nghỉ' },
   { key: 'manager',          label: '👨‍💼 QL trực tiếp', width: 160, tooltip: 'Người quản lý trực tiếp phê duyệt phép và công tác' },
   // 🟡 SCROLL — nhóm vòng đời HĐ (4 cột date theo thứ tự thời gian)
   { key: 'joinedAt',           label: '📅 Ngày vào làm',   width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày đầu tiên đi làm (để bắt đầu tính lương thử việc/chính thức)' },
@@ -236,6 +249,7 @@ function getCellValue(s: Staff, key: ColumnKey): string | number {
     case 'workingDur':       return parseDurationDays(s.workingDuration);
     case 'workSchedule':     return summarizeWorkSchedule(s.workSchedule);
     case 'leaveQuota':       return s.leaveBalance?.monthlyQuota ?? (s.contractType === 'fulltime' ? 1 : 0);
+    case 'leaveAccrued':     return getAccrued(s) ?? -1;
     case 'leaveUsed':        return s.leaveBalance?.totalUsed ?? 0;
     case 'leaveBalance':     return s.leaveBalance?.balance ?? 0;
     case 'manager':          return s.managerName || '';
@@ -724,9 +738,34 @@ function StaffListContent() {
         <td key={col.key} style={baseStyle}>
           <div
             style={{ ...readonlyText, textAlign: 'center' }}
-            title="Quota tháng theo loại HĐ. Fulltime=1 ngày/tháng, Parttime=0"
+            title="Số ngày phép được cấp mỗi tháng. Fulltime = 1, Parttime = 0"
           >
             {q}
+          </div>
+        </td>
+      );
+    }
+    if (col.key === 'leaveAccrued') {
+      const accrued = getAccrued(s);
+      if (accrued === null) {
+        return (
+          <td key={col.key} style={baseStyle}>
+            <div
+              style={{ ...readonlyText, textAlign: 'center', color: '#dc2626', fontSize: 11 }}
+              title="Chưa có ngày vào làm — nhân sự cần bổ sung"
+            >
+              Thiếu ngày
+            </div>
+          </td>
+        );
+      }
+      return (
+        <td key={col.key} style={baseStyle}>
+          <div
+            style={{ ...readonlyText, textAlign: 'center', fontWeight: 600 }}
+            title="Tổng phép tích lũy đến hôm nay (bot tính từ ngày vào làm)"
+          >
+            {accrued}
           </div>
         </td>
       );
@@ -737,7 +776,7 @@ function StaffListContent() {
         <td key={col.key} style={baseStyle}>
           <div
             style={{ ...readonlyText, textAlign: 'center' }}
-            title="Tổng ngày phép đã được duyệt từ ngày bắt đầu làm"
+            title="Tổng số ngày phép đã được duyệt (đồng bộ từ Bot)"
           >
             {used}
           </div>
@@ -749,10 +788,11 @@ function StaffListContent() {
       const balance = lb?.balance ?? 0;
       const color = balance > 0 ? '#16a34a' : balance === 0 ? '#d97706' : '#dc2626';
       const bg = balance > 0 ? '#dcfce7' : balance === 0 ? '#fef3c7' : '#fee2e2';
+      const accrued = lb?.totalAccrued ?? (lb ? lb.totalUsed + lb.balance : 0);
       const tooltip = lb
         ? (balance < 0
-          ? `Tích lũy ${lb.monthlyQuota * 0 + (lb.totalUsed + balance)} − Đã nghỉ ${lb.totalUsed} = ${balance}\nNỢ ${Math.abs(balance)} ngày — có thể trừ vào lương`
-          : `Tích lũy ${lb.totalUsed + balance} − Đã nghỉ ${lb.totalUsed} = ${balance} ngày`)
+          ? `Tích lũy ${accrued} − Đã nghỉ ${lb.totalUsed} = ${balance}\nNỢ ${Math.abs(balance)} ngày — có thể trừ vào lương`
+          : `Tích lũy ${accrued} − Đã nghỉ ${lb.totalUsed} = ${balance} ngày`)
         : 'Chưa có dữ liệu phép';
       return (
         <td key={col.key} style={baseStyle}>

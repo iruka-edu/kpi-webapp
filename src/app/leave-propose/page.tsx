@@ -31,7 +31,7 @@ type Member = {
   managerName?: string | null;
   managerDiscordId?: string | null;
 };
-type LeaveBalance = { monthlyQuota: number; totalUsed: number; balance: number };
+type LeaveBalance = { monthlyQuota: number; totalAccrued?: number; totalUsed: number; balance: number };
 type HistoryItem = {
   id: string;
   createdAt: number;
@@ -277,8 +277,10 @@ function LeaveProposeContent() {
     );
   }
 
-  // ── Tính "tích lũy" (chỉ hiện cho fulltime) ──
-  const tichLuy = leaveBalance ? (leaveBalance.totalUsed + leaveBalance.balance) : 0;
+  // ── Tính "tích lũy" (chỉ hiện cho fulltime) — ưu tiên field từ bot, fallback compute ──
+  const tichLuy = leaveBalance
+    ? (leaveBalance.totalAccrued ?? leaveBalance.totalUsed + leaveBalance.balance)
+    : 0;
   const balanceColor = leaveBalance
     ? (leaveBalance.balance > 0 ? '#16a34a' : leaveBalance.balance === 0 ? '#f59e0b' : '#dc2626')
     : '#6b7280';
