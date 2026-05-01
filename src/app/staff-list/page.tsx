@@ -857,10 +857,9 @@ function StaffListContent() {
   }
 
   return (
-    // ROOT CAUSE: <main> trong layout có padding: "28px 32px 60px" → 32px hai bên và 28px trên
-    // Dùng negative margin để trang này "thoát" khỏi padding của main, chiếm đủ chiều ngang màn hình
-    // width: calc(100% + 64px) bù lại 32px*2 hai bên | margin-left: -32px | padding: 12px bên trong
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '12px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: 'calc(100% + 64px)', marginLeft: '-32px', marginTop: '-28px' }}>
+    // <main> giờ không còn padding (đã fix ở ClientMainWrapper) → trang chiếm đủ chiều rộng
+    // padding: 12px để header + bảng có khoảng cách với mép màn hình
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '12px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: '100%' }}>
 
         {/* Header */}
         <div style={{
