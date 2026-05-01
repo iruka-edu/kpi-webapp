@@ -833,8 +833,9 @@ function StaffListContent() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: '100%', margin: '0 auto' }}>
+    // boxSizing + maxWidth 100vw: khóa toàn bộ trang trong viewport, không cho bảng rộng kéo cả page rộng theo
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100vw' }}>
+      <div style={{ maxWidth: '100%', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
 
         {/* Header */}
         <div style={{
@@ -870,10 +871,14 @@ function StaffListContent() {
           {' '}<b>Click TÊN nhân viên</b> để mở form chi tiết (sửa CCCD, người thân...). <b>Click ô khác</b> để sửa nhanh — Enter hoặc click ra ngoài để lưu.
         </div>
 
-        {/* Table — bỏ maxHeight để bảng kéo dài theo trang web (page scroll thay vì scroll trong khung) */}
+        {/* Table:
+            - width 100% + maxWidth 100% + boxSizing: ép khung bảng KHÔNG vượt parent (= viewport).
+            - overflowX: auto: thông tin dài bị ẩn → kéo ngang để xem thêm cột bên phải/trái.
+            - overflowY: visible: phần dọc do page scroll lo → không bị bó hẹp trong khung con. */}
         <div style={{
           background: '#fff', borderRadius: 10,
-          overflow: 'auto',
+          width: '100%', maxWidth: '100%', boxSizing: 'border-box',
+          overflowX: 'auto', overflowY: 'visible',
           border: '1px solid #e5e7eb',
         }}>
           {/* border-collapse: separate là điều kiện CẦN cho position:sticky trên <td>.
