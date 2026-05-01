@@ -115,31 +115,32 @@ type ColumnDef = {
   sticky?: boolean;       // sticky-left
   filterable?: boolean;
   filterPlaceholder?: string;
+  tooltip?: string;       // Popup giải thích logic cột
 };
 
 // Sticky 5 cột đầu (STT + 5 cột chính) — Excel-like freeze panes
 const COLUMNS: ColumnDef[] = [
   // 🟢 STICKY (luôn thấy — CEO nhìn vào là thấy ngay, scroll ngang KHÔNG ẩn)
   { key: 'name',             label: '👤 Họ tên',        width: 180, sticky: true, filterable: true, filterPlaceholder: 'tên...' },
-  { key: 'dept',             label: '💼 Vị trí',        width: 110, sticky: true, filterable: true, filterPlaceholder: 'vị trí...' },
-  { key: 'position',         label: '🏢 Phòng ban',     width: 140, sticky: true, filterable: true, filterPlaceholder: 'phòng ban...' },
+  { key: 'dept',             label: '💼 Vị trí',        width: 110, sticky: true, filterable: true, filterPlaceholder: 'vị trí...', tooltip: 'Dropdown phòng ban/khối trực thuộc (lấy từ dữ liệu Bot)' },
+  { key: 'position',         label: '🏢 Phòng ban',     width: 140, sticky: true, filterable: true, filterPlaceholder: 'phòng ban...', tooltip: 'Chức danh chi tiết của nhân sự trong bộ phận (nhập tự do)' },
   { key: 'contractType',     label: '📋 Loại HĐ',        width: 100, sticky: true, filterable: true, filterPlaceholder: 'fulltime...' },
-  { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180, sticky: true },
-  { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110 },
-  { key: 'leaveUsed',        label: '📈 Đã nghỉ',       width: 100 },
-  { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100 },
-  { key: 'manager',          label: '👨‍💼 QL trực tiếp', width: 160 },
+  { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180, sticky: true, tooltip: 'Khung thời gian và lịch làm việc áp dụng cho nhân sự' },
+  { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110, tooltip: 'Quỹ phép năm được cấp dựa trên số tháng làm việc (theo hợp đồng fulltime). Tính từ ngày ký hợp đồng.' },
+  { key: 'leaveUsed',        label: '📈 Đã nghỉ',       width: 100, tooltip: 'Tổng số ngày phép đã sử dụng trong năm nay (đồng bộ tự động từ lệnh /leave của Bot).' },
+  { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100, tooltip: 'Số phép còn lại = Phép/tháng - Đã nghỉ' },
+  { key: 'manager',          label: '👨‍💼 QL trực tiếp', width: 160, tooltip: 'Người quản lý trực tiếp phê duyệt phép và công tác' },
   // 🟡 SCROLL — nhóm vòng đời HĐ (4 cột date theo thứ tự thời gian)
-  { key: 'joinedAt',           label: '📅 Ngày vào làm',   width: 130, filterable: true, filterPlaceholder: '...' },
+  { key: 'joinedAt',           label: '📅 Ngày vào làm',   width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày đầu tiên đi làm (để bắt đầu tính lương thử việc/chính thức)' },
   { key: 'probationStartDate', label: '📝 Ngày thử việc', width: 130, filterable: true, filterPlaceholder: '...' },
-  { key: 'probationEndDate',   label: '📅 Hết thử việc',  width: 130, filterable: true, filterPlaceholder: '...' },
-  { key: 'contractSignDate',   label: '✍️ Ngày ký HĐ',     width: 130, filterable: true, filterPlaceholder: '...' },
-  { key: 'workingDur',         label: '⏱️ Đã làm',           width: 130, filterable: true, filterPlaceholder: 'năm/tháng...' },
+  { key: 'probationEndDate',   label: '📅 Hết thử việc',  width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày kết thúc thử việc và đánh giá lên chính thức' },
+  { key: 'contractSignDate',   label: '✍️ Ngày ký HĐ',     width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày ký hợp đồng chính thức, bắt đầu tính quỹ phép năm' },
+  { key: 'workingDur',         label: '⏱️ Đã làm',           width: 130, filterable: true, filterPlaceholder: 'năm/tháng...', tooltip: 'Tổng thời gian làm việc thực tế tính từ "Ngày vào làm" đến hiện tại' },
   // 🔵 SCROLL — thông tin liên lạc & cá nhân
   { key: 'phone',            label: '📞 SĐT',               width: 130, filterable: true, filterPlaceholder: 'SĐT...' },
   { key: 'email',            label: '📧 Email',             width: 220, filterable: true, filterPlaceholder: 'email...' },
   { key: 'dateOfBirth',      label: '🎂 Ngày sinh',        width: 120, filterable: true, filterPlaceholder: '01-01...' },
-  { key: 'numerology',       label: '🔢 Thần số',           width: 80,  filterable: true, filterPlaceholder: '...' },
+  { key: 'numerology',       label: '🔢 Thần số',           width: 80,  filterable: true, filterPlaceholder: '...', tooltip: 'Con số chủ đạo (Thần số học) tính từ Ngày sinh dương lịch' },
   { key: 'hometown',         label: '🏠 Quê quán',          width: 140, filterable: true, filterPlaceholder: 'quê...' },
   { key: 'bankNumber',       label: '💳 Số TK',              width: 160, filterable: true, filterPlaceholder: 'STK...' },
   { key: 'bankName',         label: '🏦 Ngân hàng',         width: 130, filterable: true, filterPlaceholder: 'bank...' },
@@ -152,7 +153,7 @@ const COLUMNS: ColumnDef[] = [
   { key: 'cccdIssueDate',    label: '📅 Ngày cấp CCCD',      width: 130 },
   { key: 'cccdIssuePlace',   label: '🏛️ Nơi cấp CCCD',        width: 220, filterable: true, filterPlaceholder: 'nơi cấp...' },
   // ⬛ CUỐI CÙNG bên tay phải — Active/Inactive
-  { key: 'active', label: '✅ Trạng thái', width: 110, filterable: true, filterPlaceholder: 'active...' },
+  { key: 'active', label: '✅ Trạng thái', width: 110, filterable: true, filterPlaceholder: 'active...', tooltip: 'Trạng thái hoạt động (Active = Đang làm, Inactive = Đã nghỉ)' },
 ];
 
 // Key của cột sticky cuối cùng → tô border phải đậm để phân ranh giới "đứng yên" vs "trượt"
@@ -919,6 +920,7 @@ function StaffListContent() {
                     key={col.key}
                     style={{
                       ...thStyle,
+                      overflow: 'visible', // Cho phép tooltip popup tràn ra ngoài
                       width: col.width, minWidth: col.width, maxWidth: col.width,
                       cursor: 'pointer', userSelect: 'none',
                       ...(col.key === LAST_STICKY_KEY ? { borderRight: STICKY_DIVIDER_BORDER } : {}),
@@ -930,7 +932,7 @@ function StaffListContent() {
                       } : {}),
                     }}
                     onClick={() => toggleSort(col.key)}
-                    title="Click để sắp xếp"
+                    className="group relative"
                   >
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       {col.label}
@@ -939,6 +941,14 @@ function StaffListContent() {
                           ? (sortDir === 'asc' ? '▲' : sortDir === 'desc' ? '▼' : '⇅')
                           : '⇅'}
                       </span>
+                      
+                      {/* Tooltip Popup */}
+                      {col.tooltip && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 bg-slate-800 text-white text-[11px] font-normal rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-center pointer-events-none break-words whitespace-normal leading-relaxed">
+                          {col.tooltip}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800"></div>
+                        </div>
+                      )}
                     </span>
                   </th>
                 ))}
