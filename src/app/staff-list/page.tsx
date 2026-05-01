@@ -541,7 +541,15 @@ function StaffListContent() {
             value={s.contractSignDate}
             type="date"
             field="contractSignDate"
-            display={(v) => v ? fmtVN(v as string) : '—'}
+            display={(v) => {
+              if (v) return fmtVN(v as string);
+              if (s.joinedAt) return (
+                <span title="Ngày bot tự ghi nhận lúc thêm NV — chưa có ngày ký HĐ chính thức">
+                  {fmtVN(s.joinedAt)} <span style={{ color: '#9ca3af', fontSize: 10 }}>(tự động)</span>
+                </span>
+              );
+              return '—';
+            }}
             onSave={(f, v) => handleSaveField(s, f, v)}
           />
         </td>
