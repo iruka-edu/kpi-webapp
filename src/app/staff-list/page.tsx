@@ -122,19 +122,19 @@ type ColumnDef = {
 const COLUMNS: ColumnDef[] = [
   // 🟢 STICKY (luôn thấy — CEO nhìn vào là thấy ngay, scroll ngang KHÔNG ẩn)
   { key: 'name',             label: '👤 Họ tên',        width: 180, sticky: true, filterable: true, filterPlaceholder: 'tên...' },
-  { key: 'dept',             label: '💼 Vị trí',        width: 110, sticky: true, filterable: true, filterPlaceholder: 'vị trí...', tooltip: 'Dropdown phòng ban/khối trực thuộc (lấy từ dữ liệu Bot)' },
-  { key: 'position',         label: '🏢 Phòng ban',     width: 140, sticky: true, filterable: true, filterPlaceholder: 'phòng ban...', tooltip: 'Chức danh chi tiết của nhân sự trong bộ phận (nhập tự do)' },
+  { key: 'dept',             label: '💼 Vị trí',        width: 110, sticky: true, filterable: true, filterPlaceholder: 'vị trí...', tooltip: 'Đang tính dựa theo vị trí phụ trách' },
+  { key: 'position',         label: '🏢 Phòng ban',     width: 140, sticky: true, filterable: true, filterPlaceholder: 'phòng ban...', tooltip: 'Đang tính dựa trên phòng ban, khối trực thuộc' },
   { key: 'contractType',     label: '📋 Loại HĐ',        width: 100, sticky: true, filterable: true, filterPlaceholder: 'fulltime...' },
   { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180, sticky: true, tooltip: 'Khung thời gian và lịch làm việc áp dụng cho nhân sự' },
-  { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110, tooltip: 'Quỹ phép năm được cấp dựa trên số tháng làm việc (theo hợp đồng fulltime). Tính từ ngày ký hợp đồng.' },
+  { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110, tooltip: 'Quỹ phép năm được cấp dựa trên số tháng làm việc (theo hợp đồng fulltime). Tính từ ngày bắt đầu làm việc.' },
   { key: 'leaveUsed',        label: '📈 Đã nghỉ',       width: 100, tooltip: 'Tổng số ngày phép đã sử dụng trong năm nay (đồng bộ tự động từ lệnh /leave của Bot).' },
-  { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100, tooltip: 'Số phép còn lại = Phép/tháng - Đã nghỉ' },
+  { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100, tooltip: 'Số phép còn lại = Tổng phép/tháng - Đã nghỉ' },
   { key: 'manager',          label: '👨‍💼 QL trực tiếp', width: 160, tooltip: 'Người quản lý trực tiếp phê duyệt phép và công tác' },
   // 🟡 SCROLL — nhóm vòng đời HĐ (4 cột date theo thứ tự thời gian)
   { key: 'joinedAt',           label: '📅 Ngày vào làm',   width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày đầu tiên đi làm (để bắt đầu tính lương thử việc/chính thức)' },
   { key: 'probationStartDate', label: '📝 Ngày thử việc', width: 130, filterable: true, filterPlaceholder: '...' },
   { key: 'probationEndDate',   label: '📅 Hết thử việc',  width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày kết thúc thử việc và đánh giá lên chính thức' },
-  { key: 'contractSignDate',   label: '✍️ Ngày ký HĐ',     width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày ký hợp đồng chính thức, bắt đầu tính quỹ phép năm' },
+  { key: 'contractSignDate',   label: '✍️ Ngày ký HĐ',     width: 130, filterable: true, filterPlaceholder: '...', tooltip: 'Ngày ký hợp đồng chính thức' },
   { key: 'workingDur',         label: '⏱️ Đã làm',           width: 130, filterable: true, filterPlaceholder: 'năm/tháng...', tooltip: 'Tổng thời gian làm việc thực tế tính từ "Ngày vào làm" đến hiện tại' },
   // 🔵 SCROLL — thông tin liên lạc & cá nhân
   { key: 'phone',            label: '📞 SĐT',               width: 130, filterable: true, filterPlaceholder: 'SĐT...' },
