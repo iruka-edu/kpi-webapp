@@ -26,7 +26,10 @@ export default function ClientMainWrapper({ children }: { children: React.ReactN
       <Sidebar />
       <main
         className="flex-1 text-slate-800 min-h-screen"
-        style={{ padding: isFullWidthPage ? "0" : "28px 32px 60px" }}
+        style={{ 
+          padding: isFullWidthPage ? "0" : "28px 32px 60px",
+          minWidth: 0 // CRITICAL: Ngăn flex item (main) phình to theo width thực tế của bảng bên trong
+        }}
       >
         {children}
       </main>

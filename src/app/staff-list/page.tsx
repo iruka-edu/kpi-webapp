@@ -857,16 +857,14 @@ function StaffListContent() {
   }
 
   return (
-    // <main> giờ không còn padding (đã fix ở ClientMainWrapper) → trang chiếm đủ chiều rộng
-    // padding: 12px để header + bảng có khoảng cách với mép màn hình
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '12px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: '100%' }}>
+    // Wrapper ngoài cùng của trang: chỉ cần padding, không cần hack width nữa vì <main> đã có minWidth: 0
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px', fontFamily: 'Inter, sans-serif' }}>
 
         {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #1e3a5f, #3b5a85)', color: '#fff',
           padding: '20px 24px', borderRadius: 12, marginBottom: 14,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
-          boxSizing: 'border-box', width: '100%', minWidth: 0,
         }}>
           {/* Phần trái: tiêu đề + filter pills — co lại được khi màn hình hẹp */}
           <div style={{ flexShrink: 1, minWidth: 0 }}>
