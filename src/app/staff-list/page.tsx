@@ -857,10 +857,10 @@ function StaffListContent() {
   }
 
   return (
-    // Lề trái/phải = 16px (1rem) để header card + bảng có khoảng cách rõ ràng với mép màn hình.
-    // width: 100%, minWidth: 0 → Đảm bảo container không bị phình to theo width của bảng khi nằm trong flex layout (có sidebar)
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 16px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: '100%', maxWidth: '100%', minWidth: 0, overflowX: 'hidden' }}>
-      <div style={{ width: '100%', maxWidth: '100%', minWidth: 0, margin: '0 auto', boxSizing: 'border-box' }}>
+    // width: 100%, minWidth: 0 → không bị phình to theo bảng trong flex layout (có sidebar bên trái)
+    // overflowX: hidden → câu hàm là khu vực này chỉ hiển thị trên màn hình, không tràn ngang
+    // Đã xóa div container lồng bên trong (không cần thiết, gây ra flex context thừa)
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '12px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: '100%', maxWidth: '100vw', minWidth: 0 }}>
 
         {/* Header */}
         <div style={{
@@ -1013,7 +1013,6 @@ function StaffListContent() {
           </table>
         </div>
 
-      </div>
 
       {/* Modal lịch làm việc — mount/unmount theo scheduleStaff */}
       {scheduleStaff && (
