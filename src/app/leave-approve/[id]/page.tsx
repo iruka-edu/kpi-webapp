@@ -45,6 +45,36 @@ type Request = {
   createdAt: number;
   expiresAt?: number;
 };
+type MemberInfo = {
+  joinedAt: string | null;
+  workingDuration: string;
+  contractType: 'fulltime' | 'parttime' | null;
+};
+type LeaveBalance = {
+  monthlyQuota: number;
+  totalAccrued?: number;
+  totalUsed: number;
+  balance: number;
+};
+type HistoryItem = {
+  id: string;
+  createdAt: number;
+  totalDays: number | null;
+  leaveType: string;
+  leaveDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approverName: string | null;
+  approvedByRole?: string | null;
+  rejectedReason?: string | null;
+  days_detail?: DayDetail[] | null;
+};
+type ApprovalResponse = {
+  ok: boolean;
+  request: Request;
+  member: MemberInfo | null;
+  leaveBalance: LeaveBalance | null;
+  history: HistoryItem[];
+};
 
 // ── Helpers ───────────────────────────────────────────────────
 function fmtVN(iso: string | null | undefined): string {
@@ -97,6 +127,9 @@ function LeaveApproveContent({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [request, setRequest] = useState<Request | null>(null);
+  const [member, setMember] = useState<MemberInfo | null>(null);
+  const [leaveBalance, setLeaveBalance] = useState<LeaveBalance | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [resultMsg, setResultMsg] = useState<{ verb: string; iconText: string } | null>(null);
@@ -110,11 +143,14 @@ function LeaveApproveContent({ id }: { id: string }) {
         const headers: Record<string, string> = {};
         if (sessionToken) headers['x-session-token'] = sessionToken;
         const res = await fetch(`/api/leave/pending/${encodeURIComponent(id)}`, { headers });
-        const json = await res.json();
+        const json: ApprovalResponse & { error?: string } = await res.json();
         if (!res.ok || !json.ok) {
           setLoadError(json.error || 'Không tải được phiếu');
         } else {
           setRequest(json.request);
+          setMember(json.member ?? null);
+          setLeaveBalance(json.leaveBalance ?? null);
+          setHistory(Array.isArray(json.history) ? json.history : []);
         }
       } catch (err) {
         setLoadError(err instanceof Error ? err.message : 'Lỗi mạng');
@@ -207,9 +243,13 @@ function LeaveApproveContent({ id }: { id: string }) {
           </div>
           <div style={{ fontSize: 13, opacity: 0.9, lineHeight: 1.6 }}>
             Người duyệt: <b>{request.approverName || '—'}</b>
-            <span style={{ opacity: 0.85, marginLeft: 4, fontSize: 12 }}>
-              ({request.approverRole === 'manager' ? 'Quản lý trực tiếp' : request.approverRole === 'ceo' ? 'CEO' : 'CEO fallback'})
-            </span>
+            <i style={{ opacity: 0.85, marginLeft: 4, fontSize: 12 }}>
+              ({request.approverRole === 'manager'
+                ? `Quản lý trực tiếp của ${request.name}`
+                : request.approverRole === 'ceo'
+                ? `CEO duyệt cho ${request.name}`
+                : `CEO duyệt thay (fallback) cho ${request.name}`})
+            </i>
           </div>
           <div style={{ marginTop: 8 }}>
             <StatusPill status={request.status} expiresAt={request.expiresAt} approvedAt={request.approvedAt} rejectedAt={request.rejectedAt} />
@@ -274,6 +314,23 @@ function LeaveApproveContent({ id }: { id: string }) {
         {/* Reason */}
         <Section title="📝 Lý do">
           <InfoBox text={request.reason || '—'} empty={!request.reason} />
+        </Section>
+
+        {/* Tình trạng phép — auto-compute từ bot (chỉ hiện cho fulltime) */}
+        {request.contractType !== 'parttime' && leaveBalance && (
+          <Section title="📊 Tình trạng phép của nhân viên (auto-compute)">
+            <LeaveStatusCard
+              joinedAt={member?.joinedAt || null}
+              workingDuration={member?.workingDuration || ''}
+              leaveBalance={leaveBalance}
+              requestingDays={request.totalDays}
+            />
+          </Section>
+        )}
+
+        {/* History — 5 phiếu xin nghỉ gần nhất */}
+        <Section title="📜 5 phiếu xin nghỉ gần nhất của NV">
+          <HistoryTable history={history} />
         </Section>
 
         {/* Reject reason (nếu archived rejected) */}
@@ -417,6 +474,145 @@ const daysTh: React.CSSProperties = {
 };
 const daysTd: React.CSSProperties = {
   padding: '10px 10px', borderBottom: '1px solid #f3f4f6', color: '#1e3a5f',
+};
+
+// ── LeaveStatusCard: 6 dòng tình trạng phép + warning nếu NỢ ──
+function LeaveStatusCard({ joinedAt, workingDuration, leaveBalance, requestingDays }: {
+  joinedAt: string | null;
+  workingDuration: string;
+  leaveBalance: LeaveBalance;
+  requestingDays: number;
+}) {
+  const accrued = leaveBalance.totalAccrued ?? (leaveBalance.totalUsed + leaveBalance.balance);
+  const willRemain = +(accrued - leaveBalance.totalUsed - requestingDays).toFixed(2);
+  // Cảnh báo phép NỢ — hiển thị card đỏ, NỢ box
+  const isOwed = willRemain < 0;
+  const isExact = willRemain === 0;
+  const cardBg = isOwed ? '#fee2e2' : isExact ? '#fef3c7' : '#dcfce7';
+  const cardBorder = isOwed ? '#fca5a5' : isExact ? '#fcd34d' : '#86efac';
+  const highlightVal = isOwed ? '#dc2626' : isExact ? '#d97706' : '#16a34a';
+  const willRemainText = isOwed
+    ? `${willRemain} ngày 🟠 NỢ ${Math.abs(willRemain)}`
+    : isExact
+    ? `${willRemain} ngày 🟠 vừa đủ`
+    : `+${willRemain} ngày 🟢`;
+
+  return (
+    <div style={{
+      background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10,
+      padding: '14px 16px',
+    }}>
+      <PhepRow label="📅 Bắt đầu làm:" value={joinedAt ? fmtVN(joinedAt) : '—'} />
+      <PhepRow label="⏱️ Đã làm:" value={workingDuration || '—'} />
+      <PhepRow label="📊 Tích lũy:" value={`${accrued} ngày`} />
+      <PhepRow label="📈 Đã dùng:" value={`${leaveBalance.totalUsed} ngày`} />
+      <PhepRow label="➕ Đang xin:" value={`${requestingDays} ngày`} />
+      <PhepRow label="🎯 Sẽ còn:" value={willRemainText} highlight valColor={highlightVal} />
+      {isOwed && (
+        <div style={{
+          marginTop: 10, padding: '8px 12px', background: 'rgba(220,38,38,0.1)',
+          borderLeft: '3px solid #dc2626', fontSize: 12, color: '#dc2626',
+          borderRadius: 4, fontWeight: 600,
+        }}>
+          ⚠️ <b>Cảnh báo</b>: Nếu duyệt, NV sẽ NỢ {Math.abs(willRemain)} ngày phép — có thể trừ vào lương hoặc cảnh cáo nội bộ.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhepRow({ label, value, highlight, valColor }: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+  valColor?: string;
+}) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', fontSize: 13, padding: '4px 0',
+      ...(highlight ? {
+        borderTop: '1px dashed rgba(0,0,0,0.1)',
+        marginTop: 6, paddingTop: 8,
+      } : {}),
+    }}>
+      <span style={{ color: '#4b5563', flex: 1 }}>{label}</span>
+      <span style={{
+        fontWeight: highlight ? 900 : 700,
+        color: valColor || '#1e3a5f',
+        fontSize: highlight ? 16 : 13,
+      }}>{value}</span>
+    </div>
+  );
+}
+
+// ── HistoryTable: 5 phiếu xin nghỉ gần nhất ──
+function HistoryTable({ history }: { history: HistoryItem[] }) {
+  if (!history || history.length === 0) {
+    return (
+      <div style={{
+        padding: '14px 12px', textAlign: 'center', color: '#9ca3af',
+        fontSize: 12, fontStyle: 'italic',
+      }}>
+        _Chưa có phiếu xin nghỉ nào trước đó_
+      </div>
+    );
+  }
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+      <thead>
+        <tr>
+          <th style={historyTh}>Ngày xin</th>
+          <th style={historyTh}>Khoảng nghỉ</th>
+          <th style={{ ...historyTh, textAlign: 'right' }}>Tổng</th>
+          <th style={historyTh}>Trạng thái</th>
+          <th style={historyTh}>Người duyệt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {history.map((h, i) => (
+          <tr key={h.id || i} style={{ borderBottom: i === history.length - 1 ? 'none' : '1px solid #f3f4f6' }}>
+            <td style={historyTd}>{fmtVNTimestamp(h.createdAt).split(' ')[1] || fmtVNTimestamp(h.createdAt)}</td>
+            <td style={historyTd}>{h.leaveDate || '—'}</td>
+            <td style={{ ...historyTd, textAlign: 'right', fontWeight: 700 }}>{h.totalDays != null ? h.totalDays : '—'}</td>
+            <td style={historyTd}><HistoryStatusTag status={h.status} /></td>
+            <td style={historyTd}>{h.approverName || '—'}</td>
+          </tr>
+        ))}
+        {history.length < 5 && (
+          <tr>
+            <td colSpan={5} style={{ textAlign: 'center', padding: '8px 10px', color: '#9ca3af', fontSize: 11 }}>
+              _không có phiếu cũ hơn_
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  );
+}
+
+function HistoryStatusTag({ status }: { status: string }) {
+  const map: Record<string, { bg: string; color: string; text: string }> = {
+    approved: { bg: '#dcfce7', color: '#16a34a', text: 'Duyệt' },
+    rejected: { bg: '#fee2e2', color: '#dc2626', text: 'Từ chối' },
+    pending:  { bg: '#fef3c7', color: '#f59e0b', text: 'Chờ' },
+  };
+  const cfg = map[status] || { bg: '#f3f4f6', color: '#6b7280', text: status };
+  return (
+    <span style={{
+      display: 'inline-block', padding: '2px 8px', borderRadius: 10,
+      fontWeight: 700, fontSize: 10, textTransform: 'uppercase',
+      background: cfg.bg, color: cfg.color,
+    }}>{cfg.text}</span>
+  );
+}
+
+const historyTh: React.CSSProperties = {
+  padding: '8px 10px', borderBottom: '1px solid #f3f4f6', textAlign: 'left',
+  fontSize: 10, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.04em',
+  background: '#f9fafb', fontWeight: 700,
+};
+const historyTd: React.CSSProperties = {
+  padding: '8px 10px', color: '#1e3a5f',
 };
 
 // ── Page export ───────────────────────────────────────────────
