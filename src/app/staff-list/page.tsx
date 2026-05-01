@@ -900,12 +900,15 @@ function StaffListContent() {
             - Dùng vùng cuộn độc lập với maxHeight để thead có thể sticky bên trong.
             - overflowX: auto, overflowY: auto tạo thành một khung cuộn 2 chiều.
             - thead sticky top: 0 sẽ dính vào đỉnh của khung này. */}
-        <div style={{
+        <div 
+          className="custom-scrollbar"
+          style={{
           background: '#fff', borderRadius: 10,
           width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box',
           maxHeight: 'calc(100vh - 160px)', // Giới hạn chiều cao để tạo vùng cuộn dọc bên trong
           overflowX: 'auto', overflowY: 'auto',
           border: '1px solid #e5e7eb',
+          paddingBottom: '12px', // Tránh việc thanh cuộn ngang đè lên nội dung hàng cuối
         }}>
           <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
