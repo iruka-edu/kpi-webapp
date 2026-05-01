@@ -864,17 +864,17 @@ function StaffListContent() {
           </div>
         </div>
 
-        {/* Hint */}
-        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>
+        {/* Hint — gộp tất cả hướng dẫn vào 1 dòng */}
+        <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6, lineHeight: 1.6 }}>
           💡 Click tiêu đề cột để <b>sắp xếp</b>. Gõ ô lọc dưới mỗi cột để <b>lọc riêng</b>. Hover các cột phép để xem công thức.
+          {' '}<b>Click TÊN nhân viên</b> để mở form chi tiết (sửa CCCD, người thân...). <b>Click ô khác</b> để sửa nhanh — Enter hoặc click ra ngoài để lưu.
         </div>
 
-        {/* Table */}
+        {/* Table — bỏ maxHeight để bảng kéo dài theo trang web (page scroll thay vì scroll trong khung) */}
         <div style={{
           background: '#fff', borderRadius: 10,
           overflow: 'auto',
           border: '1px solid #e5e7eb',
-          maxHeight: 'calc(100vh - 220px)',
         }}>
           {/* border-collapse: separate là điều kiện CẦN cho position:sticky trên <td>.
               Nếu để 'collapse', Chrome/Safari cũ không tôn trọng sticky → cột không cố định được. */}
@@ -979,14 +979,6 @@ function StaffListContent() {
           </table>
         </div>
 
-        {/* Footer note */}
-        <div style={{
-          marginTop: 12, padding: 10, background: '#eff6ff',
-          border: '1px solid #93c5fd', borderRadius: 8,
-          fontSize: 12, color: '#1e40af',
-        }}>
-          💡 <b>Click TÊN nhân viên</b> để mở form chi tiết (sửa CCCD, người thân...). <b>Click ô khác</b> để sửa nhanh — Enter hoặc click ra ngoài để lưu.
-        </div>
       </div>
 
       {/* Modal lịch làm việc — mount/unmount theo scheduleStaff */}
