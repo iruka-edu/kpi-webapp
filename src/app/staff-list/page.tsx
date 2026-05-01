@@ -155,6 +155,14 @@ const COLUMNS: ColumnDef[] = [
   { key: 'active', label: '✅ Trạng thái', width: 110, filterable: true, filterPlaceholder: 'active...' },
 ];
 
+// Key của cột sticky cuối cùng → tô border phải đậm để phân ranh giới "đứng yên" vs "trượt"
+const LAST_STICKY_KEY = (() => {
+  const stickyCols = COLUMNS.filter(c => c.sticky);
+  return stickyCols.length > 0 ? stickyCols[stickyCols.length - 1].key : null;
+})();
+// Style border phải đậm cho cột sticky cuối — dùng cho cả thead và tbody
+const STICKY_DIVIDER_BORDER = '2px solid #94a3b8'; // medium grey, đậm hơn #f3f4f6 mặc định
+
 const RELATION_OPTIONS = [
   { value: 'Bố',        label: 'Bố' },
   { value: 'Mẹ',        label: 'Mẹ' },
@@ -434,9 +442,11 @@ function StaffListContent() {
 
   // ── Render row ────────────────────────────────────────
   function renderCell(col: ColumnDef, s: Staff, leftOffset: number) {
+    const isLastSticky = col.key === LAST_STICKY_KEY;
     const baseStyle: React.CSSProperties = {
       width: col.width, minWidth: col.width, maxWidth: col.width,
-      borderRight: '1px solid #f3f4f6',
+      // Cột sticky cuối → border phải đậm để phân ranh giới đứng-yên/trượt-ngang
+      borderRight: isLastSticky ? STICKY_DIVIDER_BORDER : '1px solid #f3f4f6',
       borderBottom: '1px solid #f3f4f6', // separator hàng (vì <tr> ko render border khi border-collapse:separate)
       verticalAlign: 'middle',
       ...(col.sticky ? {
@@ -833,8 +843,8 @@ function StaffListContent() {
   }
 
   return (
-    // boxSizing + maxWidth 100vw: khóa toàn bộ trang trong viewport, không cho bảng rộng kéo cả page rộng theo
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100vw' }}>
+    // 100vw bao gồm cả vertical scrollbar (~17px) → bị che mép phải. Dùng 100% để chỉ lấy content area của body.
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%' }}>
       <div style={{ maxWidth: '100%', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
 
         {/* Header */}
@@ -894,6 +904,8 @@ function StaffListContent() {
                       ...thStyle,
                       width: col.width, minWidth: col.width, maxWidth: col.width,
                       cursor: 'pointer', userSelect: 'none',
+                      // Border phải đậm cho cột sticky cuối — đồng bộ với baseStyle data row
+                      ...(col.key === LAST_STICKY_KEY ? { borderRight: STICKY_DIVIDER_BORDER } : {}),
                       ...(col.sticky ? {
                         position: 'sticky' as const,
                         left: stickyOffsets[col.key],
@@ -923,6 +935,8 @@ function StaffListContent() {
                     style={{
                       ...thStyle, padding: '4px 6px', fontWeight: 400,
                       width: col.width,
+                      // Border phải đậm cho cột sticky cuối — đồng bộ với header sort row + data row
+                      ...(col.key === LAST_STICKY_KEY ? { borderRight: STICKY_DIVIDER_BORDER } : {}),
                       ...(col.sticky ? {
                         position: 'sticky' as const,
                         left: stickyOffsets[col.key],
