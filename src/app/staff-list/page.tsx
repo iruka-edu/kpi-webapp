@@ -858,9 +858,9 @@ function StaffListContent() {
 
   return (
     // Lề trái/phải = 16px (1rem) để header card + bảng có khoảng cách rõ ràng với mép màn hình.
-    // overflow: hidden → đảm bảo không có element nào tràn ra ngoài viewport theo chiều ngang.
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 16px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%', overflowX: 'hidden' }}>
-      <div style={{ maxWidth: '100%', margin: '0 auto', boxSizing: 'border-box', overflowX: 'hidden' }}>
+    // width: 100%, minWidth: 0 → Đảm bảo container không bị phình to theo width của bảng khi nằm trong flex layout (có sidebar)
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 16px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: '100%', maxWidth: '100%', minWidth: 0, overflowX: 'hidden' }}>
+      <div style={{ width: '100%', maxWidth: '100%', minWidth: 0, margin: '0 auto', boxSizing: 'border-box' }}>
 
         {/* Header */}
         <div style={{
