@@ -121,8 +121,8 @@ type ColumnDef = {
 const COLUMNS: ColumnDef[] = [
   // 🟢 STICKY (luôn thấy — CEO nhìn vào là thấy ngay, scroll ngang KHÔNG ẩn)
   { key: 'name',             label: '👤 Họ tên',        width: 180, sticky: true, filterable: true, filterPlaceholder: 'tên...' },
-  { key: 'dept',             label: '🏢 Phòng ban',     width: 110, sticky: true, filterable: true, filterPlaceholder: 'dept...' },
-  { key: 'position',         label: '💼 Vị trí',          width: 140, sticky: true, filterable: true, filterPlaceholder: 'vị trí...' },
+  { key: 'dept',             label: '💼 Vị trí',        width: 110, sticky: true, filterable: true, filterPlaceholder: 'vị trí...' },
+  { key: 'position',         label: '🏢 Phòng ban',     width: 140, sticky: true, filterable: true, filterPlaceholder: 'phòng ban...' },
   { key: 'contractType',     label: '📋 Loại HĐ',        width: 100, sticky: true, filterable: true, filterPlaceholder: 'fulltime...' },
   { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180, sticky: true },
   // 🟡 SCROLL — nhóm vòng đời HĐ (4 cột date theo thứ tự thời gian)
