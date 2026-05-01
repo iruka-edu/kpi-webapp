@@ -860,7 +860,7 @@ function StaffListContent() {
     // width: 100%, minWidth: 0 → không bị phình to theo bảng trong flex layout (có sidebar bên trái)
     // overflowX: hidden → câu hàm là khu vực này chỉ hiển thị trên màn hình, không tràn ngang
     // Đã xóa div container lồng bên trong (không cần thiết, gây ra flex context thừa)
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '12px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: '100%', maxWidth: '100vw', minWidth: 0 }}>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '12px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', width: '100%', maxWidth: '100vw', minWidth: 0, overflowX: 'clip' as React.CSSProperties['overflowX'] }}>
 
         {/* Header */}
         <div style={{
