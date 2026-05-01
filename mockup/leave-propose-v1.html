@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Xin nghỉ phép | IruKa</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1e3a5f;
+  --primary-light: #3b5a85;
+  --bg: #f0f4f8;
+  --card: #fff;
+  --border: #e5e7eb;
+  --text: #1e3a5f;
+  --text-2: #4b5563;
+  --text-3: #9ca3af;
+  --green: #16a34a;
+  --green-bg: #dcfce7;
+  --orange: #f59e0b;
+  --orange-bg: #fef3c7;
+  --red: #dc2626;
+  --red-bg: #fee2e2;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+}
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px 8px;
+  font-size: 14px;
+}
+.container { max-width: 720px; margin: 0 auto; }
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  padding: 22px 24px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 20px rgba(30,58,95,0.18);
+}
+.header h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.header .meta { font-size: 13px; opacity: 0.9; line-height: 1.6; }
+.balance-pill {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.balance-pill.neg { background: rgba(220,38,38,0.85); }
+
+.notify-card {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.notify-card b { font-weight: 700; }
+
+/* ── Section ── */
+.section {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.hint { font-size: 11px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
+
+/* ── Calendar ── */
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.cal-nav {
+  background: #f9fafb; border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--primary);
+}
+.cal-nav:hover { background: var(--blue-bg); }
+.cal-month { font-size: 14px; font-weight: 800; color: var(--primary); }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+}
+.cal-dow {
+  text-align: center;
+  padding: 6px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.cal-dow.sun { color: var(--red); }
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.cal-cell.empty { background: transparent; border: none; cursor: default; }
+.cal-cell.past {
+  background: #fafafa; color: var(--text-3); cursor: not-allowed;
+  text-decoration: line-through;
+}
+.cal-cell.today {
+  background: #fff; border: 2px solid var(--orange); cursor: not-allowed;
+  position: relative;
+}
+.cal-cell.today::before {
+  content: 'HÔM NAY';
+  position: absolute; top: -6px; right: -2px;
+  background: var(--orange); color: #fff;
+  font-size: 8px; padding: 1px 4px; border-radius: 3px;
+  font-weight: 700;
+}
+.cal-cell.sun { color: var(--red); }
+.cal-cell.future:hover { background: var(--blue-bg); border-color: var(--blue); }
+.cal-cell.selected {
+  background: var(--blue); color: #fff; border-color: var(--blue);
+  box-shadow: 0 2px 6px rgba(59,130,246,0.4);
+}
+.cal-cell .tag {
+  position: absolute; bottom: 2px;
+  font-size: 8px; font-weight: 800;
+  background: rgba(255,255,255,0.95); color: var(--primary);
+  padding: 1px 4px; border-radius: 2px;
+}
+
+/* ── Popup chọn buổi ── */
+.popup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+}
+.popup-overlay.active { display: flex; }
+.popup {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  max-width: 320px; width: 100%;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+}
+.popup h3 {
+  font-size: 16px; font-weight: 800; color: var(--primary);
+  margin-bottom: 14px; text-align: center;
+}
+.popup-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.popup-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px; font-weight: 600;
+  transition: all 0.1s;
+}
+.popup-opt:hover { background: var(--blue-bg); border-color: var(--blue); }
+.popup-opt.selected { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+.popup-opt input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--blue); }
+.popup-opt .meta { margin-left: auto; font-size: 12px; color: var(--text-3); font-weight: 500; }
+.popup-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700; font-size: 13px;
+  cursor: pointer; border: none;
+  font-family: inherit;
+  transition: all 0.1s;
+}
+.btn-cancel { background: #f3f4f6; color: var(--text-2); border: 1.5px solid var(--border); }
+.btn-cancel:hover { background: #e5e7eb; }
+.btn-clear { background: var(--red-bg); color: var(--red); border: 1.5px solid var(--red); }
+.btn-primary { background: linear-gradient(135deg, var(--blue), #2563eb); color: #fff; }
+.btn-primary:hover { box-shadow: 0 3px 8px rgba(59,130,246,0.4); }
+
+/* ── Form fields ── */
+.field { margin-bottom: 14px; }
+.field-label {
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  margin-bottom: 6px; display: block;
+}
+.field-required { color: var(--red); margin-left: 3px; }
+.input, .textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+}
+.input:focus, .textarea:focus { border-color: var(--blue); }
+.textarea { resize: vertical; min-height: 80px; }
+
+/* ── Preview phép ── */
+.preview-card {
+  background: var(--green-bg);
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.preview-card.neg {
+  background: var(--orange-bg);
+  border-color: #fcd34d;
+}
+.preview-row {
+  display: flex; align-items: center;
+  font-size: 13px; padding: 4px 0;
+}
+.preview-row .label { color: var(--text-2); flex: 1; }
+.preview-row .val { font-weight: 700; color: var(--primary); }
+.preview-row.highlight { border-top: 1px dashed rgba(0,0,0,0.1); margin-top: 6px; padding-top: 8px; }
+.preview-row.highlight .val { font-size: 16px; font-weight: 900; }
+.preview-card.neg .preview-row.highlight .val { color: var(--red); }
+.warning {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(220,38,38,0.1);
+  border-left: 3px solid var(--red);
+  font-size: 12px;
+  color: var(--red);
+  border-radius: 4px;
+  display: none;
+}
+.preview-card.neg .warning { display: block; }
+
+/* ── Submit ── */
+.submit-row {
+  display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 8px;
+}
+.btn-big {
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.btn-submit {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(30,58,95,0.3);
+}
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--text-3); margin-top: 8px; }
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-tag {
+  background: var(--blue); color: #fff;
+  padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 800;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <h1>🏖️ Xin nghỉ phép — IruKa</h1>
+    <div class="meta">
+      Chào <b>Phạm Hiếu</b> (Design) • Phép còn dư:
+      <span class="balance-pill" id="currentBalance">+2 ngày 🟢</span>
+    </div>
+    <div class="notify-card">
+      👨‍💼 Đơn này sẽ gửi cho: <b>Vũ Ngọc Đào</b> <i>(Quản lý trực tiếp)</i><br>
+      📋 Đồng thời CC: <b>CEO + HR</b> để theo dõi
+    </div>
+  </div>
+
+  <!-- ── BƯỚC 1: CALENDAR ── -->
+  <div class="section">
+    <div class="section-title">📅 Bước 1: Chọn ngày nghỉ</div>
+
+    <div class="cal-header">
+      <button class="cal-nav" onclick="changeMonth(-1)">◄ Trước</button>
+      <span class="cal-month" id="calMonth">Tháng 5/2026</span>
+      <button class="cal-nav" onclick="changeMonth(1)">Sau ►</button>
+    </div>
+
+    <div class="cal-grid" id="calGrid">
+      <!-- Generated by JS -->
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-tag">CN</span> Cả ngày</span>
+      <span class="legend-item"><span class="legend-tag" style="background:#f59e0b;">S</span> Sáng</span>
+      <span class="legend-item"><span class="legend-tag" style="background:#8b5cf6;">C</span> Chiều</span>
+    </div>
+
+    <div class="hint">
+      💡 Click 1 ngày tương lai để chọn buổi nghỉ. Click lại để bỏ chọn.<br>
+      💡 KHÔNG chọn được ngày quá khứ và HÔM NAY (xin phép phải tính trước).
+    </div>
+  </div>
+
+  <!-- ── BƯỚC 2: BÀN GIAO ── -->
+  <div class="section">
+    <div class="section-title">👥 Bước 2: Bàn giao việc <span style="font-weight:400;font-size:11px;color:var(--text-3);">(không bắt buộc)</span></div>
+    <div class="field">
+      <input type="text" class="input" id="backupInput" placeholder="VD: Anh Bình / Để trống nếu không có">
+    </div>
+  </div>
+
+  <!-- ── BƯỚC 3: LÝ DO ── -->
+  <div class="section">
+    <div class="section-title">📝 Bước 3: Lý do<span class="field-required">*</span></div>
+    <div class="field">
+      <textarea class="textarea" id="reasonInput" placeholder="VD: Em bị ốm, không đi làm được hôm nay" rows="3"></textarea>
+      <div class="hint" id="reasonHint">Tối thiểu 10 ký tự</div>
+    </div>
+  </div>
+
+  <!-- ── PREVIEW PHÉP ── -->
+  <div class="section">
+    <div class="section-title">💡 Preview phép của bạn</div>
+    <div class="preview-card" id="previewCard">
+      <div class="preview-row">
+        <span class="label">📊 Phép tích lũy:</span>
+        <span class="val" id="totalQuota">5 ngày</span>
+      </div>
+      <div class="preview-row">
+        <span class="label">📈 Đã dùng:</span>
+        <span class="val" id="totalUsed">3 ngày</span>
+      </div>
+      <div class="preview-row">
+        <span class="label">➕ Đang xin:</span>
+        <span class="val" id="requesting">0 ngày</span>
+      </div>
+      <div class="preview-row highlight">
+        <span class="label">🎯 Sẽ còn lại:</span>
+        <span class="val" id="willRemain">+2 ngày 🟢</span>
+      </div>
+      <div class="warning">
+        ⚠️ Bạn đang nợ phép — Quản lý có thể KHÔNG duyệt hoặc trừ vào lương.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY ── -->
+  <div class="section">
+    <div class="section-title">📜 Lịch sử xin nghỉ gần nhất của bạn</div>
+    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Ngày xin</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Khoảng nghỉ</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Tổng</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Trạng thái</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Người duyệt</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">15/04/2026</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">20-21/04 cả ngày</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-weight:700;">2.0</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; background:var(--green-bg); color:var(--green); font-weight:700; font-size:10px;">DUYỆT</span></td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">Vũ Ngọc Đào</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">05/03/2026</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">10/03 nửa chiều</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-weight:700;">0.5</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; background:var(--red-bg); color:var(--red); font-weight:700; font-size:10px;">TỪ CHỐI</span></td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">Vũ Ngọc Đào</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">22/02/2026</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">25/02 cả ngày</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-weight:700;">1.0</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; background:var(--green-bg); color:var(--green); font-weight:700; font-size:10px;">DUYỆT</span></td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">CEO Mr. Đào</td>
+        </tr>
+        <tr>
+          <td colspan="5" style="padding:10px; text-align:center; color:var(--text-3); font-size:11px; font-style:italic;">_không có phiếu cũ hơn_</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="hint" style="margin-top:8px;">💡 Hiển thị 5 phiếu xin nghỉ gần nhất để bạn nắm được tình hình</div>
+  </div>
+
+  <!-- ── SUBMIT ── -->
+  <div class="submit-row">
+    <button class="btn btn-cancel btn-big">Hủy</button>
+    <button class="btn btn-submit btn-big" onclick="alert('Mockup — chưa kết nối backend.\\nKhi code thật: gửi POST /api/leave + redirect success.')">📨 Gửi xin phép</button>
+  </div>
+</div>
+
+<!-- ── POPUP CHỌN BUỔI ── -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup">
+    <h3 id="popupTitle">Thứ 6, 15/05/2026</h3>
+    <div class="popup-options" id="popupOptions">
+      <label class="popup-opt" data-val="full">
+        <input type="radio" name="halfDay" value="full">
+        ☀️ Cả ngày <span class="meta">−1.0 ngày</span>
+      </label>
+      <label class="popup-opt" data-val="morning">
+        <input type="radio" name="halfDay" value="morning">
+        🌅 Sáng <span class="meta">−0.5 ngày</span>
+      </label>
+      <label class="popup-opt" data-val="afternoon">
+        <input type="radio" name="halfDay" value="afternoon">
+        🌇 Chiều <span class="meta">−0.5 ngày</span>
+      </label>
+    </div>
+    <div class="popup-actions">
+      <button class="btn btn-clear" id="btnClearPopup" onclick="clearSelection()" style="display:none;">Bỏ chọn</button>
+      <button class="btn btn-cancel" onclick="closePopup()">Hủy</button>
+      <button class="btn btn-primary" onclick="confirmPopup()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let currentMonth = 4; // May (0-indexed)
+let currentYear = 2026;
+const TODAY = new Date(2026, 3, 30); // 30/04/2026 — mockup giả lập
+let selections = {}; // {"2026-05-15": "full", "2026-05-16": "morning"}
+let popupDate = null;
+
+// ── Render calendar ──
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  // Day-of-week headers
+  const dows = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  dows.forEach((d, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'cal-dow' + (i === 6 ? ' sun' : '');
+    cell.textContent = d;
+    grid.appendChild(cell);
+  });
+
+  // First day of month
+  const first = new Date(currentYear, currentMonth, 1);
+  let dayIndex = first.getDay(); // 0=Sun ... 6=Sat
+  // Convert to T2-T7-CN: Mon=0 ... Sun=6
+  dayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+
+  // Empty cells before
+  for (let i = 0; i < dayIndex; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell empty';
+    grid.appendChild(cell);
+  }
+
+  // Days of month
+  const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+  for (let d = 1; d <= lastDay; d++) {
+    const cell = document.createElement('div');
+    const dt = new Date(currentYear, currentMonth, d);
+    const dayOfWeek = dt.getDay();
+    const isPast = dt < TODAY && !sameDay(dt, TODAY);
+    const isToday = sameDay(dt, TODAY);
+
+    let cls = 'cal-cell';
+    if (isPast) cls += ' past';
+    else if (isToday) cls += ' today';
+    else cls += ' future';
+    if (dayOfWeek === 0) cls += ' sun';
+
+    const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    if (selections[dateKey]) cls += ' selected';
+
+    cell.className = cls;
+    cell.dataset.date = dateKey;
+
+    const num = document.createElement('span');
+    num.textContent = d;
+    cell.appendChild(num);
+
+    if (selections[dateKey]) {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = selections[dateKey] === 'full' ? 'CN' :
+                       selections[dateKey] === 'morning' ? 'S' : 'C';
+      tag.style.background = selections[dateKey] === 'full' ? '#fff' :
+                            selections[dateKey] === 'morning' ? '#fef3c7' : '#ede9fe';
+      cell.appendChild(tag);
+    }
+
+    if (cls.includes('future')) {
+      cell.onclick = () => openPopup(dateKey);
+    }
+
+    grid.appendChild(cell);
+  }
+
+  document.getElementById('calMonth').textContent = `Tháng ${currentMonth + 1}/${currentYear}`;
+}
+
+function sameDay(d1, d2) {
+  return d1.getFullYear() === d2.getFullYear()
+      && d1.getMonth() === d2.getMonth()
+      && d1.getDate() === d2.getDate();
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+}
+
+// ── Popup ──
+function openPopup(dateKey) {
+  popupDate = dateKey;
+  const [y, m, d] = dateKey.split('-');
+  const dt = new Date(+y, +m - 1, +d);
+  const dows = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+  document.getElementById('popupTitle').textContent = `${dows[dt.getDay()]}, ${d}/${m}/${y}`;
+
+  // Reset radio
+  document.querySelectorAll('input[name="halfDay"]').forEach(r => r.checked = false);
+  document.querySelectorAll('.popup-opt').forEach(o => o.classList.remove('selected'));
+
+  // Pre-select if existing
+  const existing = selections[dateKey];
+  if (existing) {
+    const radio = document.querySelector(`input[name="halfDay"][value="${existing}"]`);
+    if (radio) {
+      radio.checked = true;
+      radio.closest('.popup-opt').classList.add('selected');
+    }
+    document.getElementById('btnClearPopup').style.display = '';
+  } else {
+    document.getElementById('btnClearPopup').style.display = 'none';
+  }
+
+  document.getElementById('popupOverlay').classList.add('active');
+}
+
+function closePopup() {
+  document.getElementById('popupOverlay').classList.remove('active');
+  popupDate = null;
+}
+
+function confirmPopup() {
+  const checked = document.querySelector('input[name="halfDay"]:checked');
+  if (!checked) {
+    alert('Vui lòng chọn 1 buổi');
+    return;
+  }
+  selections[popupDate] = checked.value;
+  closePopup();
+  renderCalendar();
+  updatePreview();
+}
+
+function clearSelection() {
+  delete selections[popupDate];
+  closePopup();
+  renderCalendar();
+  updatePreview();
+}
+
+// Click radio → highlight option
+document.querySelectorAll('.popup-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.popup-opt').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+});
+
+// Click overlay = cancel
+document.getElementById('popupOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'popupOverlay') closePopup();
+});
+
+// ── Preview phép ──
+const TICHLUY = 5; // mockup giả lập
+const DADUNG = 3;
+
+function updatePreview() {
+  let requesting = 0;
+  for (const v of Object.values(selections)) {
+    if (v === 'full') requesting += 1;
+    else if (v === 'morning' || v === 'afternoon') requesting += 0.5;
+  }
+  const willRemain = TICHLUY - DADUNG - requesting;
+
+  document.getElementById('totalQuota').textContent = `${TICHLUY} ngày`;
+  document.getElementById('totalUsed').textContent = `${DADUNG} ngày`;
+  document.getElementById('requesting').textContent = `${requesting} ngày${requesting > 0 ? formatBreakdown() : ''}`;
+
+  const remainEl = document.getElementById('willRemain');
+  const card = document.getElementById('previewCard');
+  if (willRemain > 0) {
+    remainEl.innerHTML = `+${willRemain} ngày 🟢`;
+    card.classList.remove('neg');
+  } else if (willRemain === 0) {
+    remainEl.innerHTML = `0 ngày 🟠`;
+    card.classList.remove('neg');
+  } else {
+    remainEl.innerHTML = `${willRemain} ngày 🔴 NỢ`;
+    card.classList.add('neg');
+  }
+}
+
+function formatBreakdown() {
+  let cn = 0, s = 0, c = 0;
+  for (const v of Object.values(selections)) {
+    if (v === 'full') cn++;
+    if (v === 'morning') s++;
+    if (v === 'afternoon') c++;
+  }
+  const parts = [];
+  if (cn) parts.push(`${cn} cả ngày`);
+  if (s) parts.push(`${s} sáng`);
+  if (c) parts.push(`${c} chiều`);
+  return ` (${parts.join(', ')})`;
+}
+
+// Init
+renderCalendar();
+updatePreview();
+</script>
+
+</body>
+</html>

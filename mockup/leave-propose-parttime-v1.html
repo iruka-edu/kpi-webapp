@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Xin nghỉ phép Parttime (hoán đổi) | IruKa</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1e3a5f;
+  --primary-light: #3b5a85;
+  --bg: #f0f4f8;
+  --card: #fff;
+  --border: #e5e7eb;
+  --text: #1e3a5f;
+  --text-2: #4b5563;
+  --text-3: #9ca3af;
+  --green: #16a34a;
+  --green-bg: #dcfce7;
+  --orange: #f59e0b;
+  --orange-bg: #fef3c7;
+  --red: #dc2626;
+  --red-bg: #fee2e2;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+  --purple: #8b5cf6;
+  --purple-bg: #f3e8ff;
+}
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px 8px;
+  font-size: 14px;
+}
+.container { max-width: 720px; margin: 0 auto; }
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, var(--purple), #7c3aed);
+  color: #fff;
+  padding: 22px 24px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 20px rgba(139,92,246,0.25);
+}
+.header h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.header .meta { font-size: 13px; opacity: 0.95; line-height: 1.6; }
+.mode-pill {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  background: rgba(255,255,255,0.25); font-weight: 700; margin-left: 4px;
+}
+.notify-card {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px; padding: 10px 14px;
+  margin-top: 10px; font-size: 12px; line-height: 1.6;
+}
+
+/* ── Section ── */
+.section {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.section-title {
+  font-size: 13px; font-weight: 800; color: var(--primary);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.hint { font-size: 11px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
+
+/* ── Schedule grid ── */
+.sched-grid {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 12px;
+}
+.sched-grid > div {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid #f3f4f6;
+  border-right: 1px solid #f3f4f6;
+}
+.sched-grid .head {
+  background: #f9fafb;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+.sched-grid .day { background: #fafbfc; font-weight: 600; color: var(--primary); }
+.sched-grid .work { background: #dcfce7; color: var(--green); font-weight: 700; }
+.sched-grid .off { background: #f3f4f6; color: var(--text-3); }
+
+/* ── Calendar ── */
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cal-nav {
+  background: #f9fafb; border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--primary);
+}
+.cal-nav:hover { background: var(--blue-bg); }
+.cal-month { font-size: 14px; font-weight: 800; color: var(--primary); }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+}
+.cal-dow {
+  text-align: center; padding: 6px 0;
+  font-size: 11px; font-weight: 700;
+  color: var(--text-2); text-transform: uppercase;
+}
+.cal-dow.sun { color: var(--red); }
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.cal-cell.empty { background: transparent; border: none; cursor: default; }
+.cal-cell.past {
+  background: #fafafa; color: var(--text-3); cursor: not-allowed;
+  text-decoration: line-through;
+}
+.cal-cell.today {
+  background: #fff; border: 2px solid var(--orange); cursor: not-allowed;
+}
+.cal-cell.today::before {
+  content: 'HÔM NAY';
+  position: absolute; top: -6px; right: -2px;
+  background: var(--orange); color: #fff;
+  font-size: 8px; padding: 1px 4px; border-radius: 3px;
+  font-weight: 700;
+}
+.cal-cell.future-work {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.cal-cell.future-work:hover {
+  background: #fee2e2;
+  border-color: var(--red);
+}
+.cal-cell.future-off {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  border-style: dashed;
+  color: var(--text-3);
+}
+.cal-cell.future-off:hover {
+  background: var(--blue-bg);
+  border-style: solid;
+  border-color: var(--blue);
+  color: var(--text);
+}
+.cal-cell.sun { color: var(--red); }
+.cal-cell.selected-off {
+  background: var(--red); color: #fff;
+  border-color: var(--red);
+  box-shadow: 0 2px 6px rgba(220,38,38,0.4);
+}
+.cal-cell.selected-work {
+  background: var(--blue); color: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 2px 6px rgba(59,130,246,0.4);
+}
+.cal-cell .tag {
+  position: absolute; bottom: 2px;
+  font-size: 8px; font-weight: 800;
+  background: rgba(255,255,255,0.95); color: var(--primary);
+  padding: 1px 4px; border-radius: 2px;
+}
+.cal-cell.selected-off .tag,
+.cal-cell.selected-work .tag {
+  background: rgba(255,255,255,0.95); color: var(--primary);
+}
+
+/* ── Popup ── */
+.popup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+}
+.popup-overlay.active { display: flex; }
+.popup {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px 22px;
+  max-width: 360px; width: 100%;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+}
+.popup h3 {
+  font-size: 16px; font-weight: 800; color: var(--primary);
+  margin-bottom: 6px; text-align: center;
+}
+.popup .sub {
+  font-size: 12px; color: var(--text-3); text-align: center;
+  margin-bottom: 14px;
+  padding: 6px 10px; background: #f9fafb;
+  border-radius: 6px;
+}
+.popup .sub.work { background: var(--blue-bg); color: var(--blue); font-weight: 600; }
+.popup .sub.off { background: var(--green-bg); color: var(--green); font-weight: 600; }
+
+.popup-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.popup-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px; font-weight: 600;
+  transition: all 0.1s;
+}
+.popup-opt input { width: 18px; height: 18px; cursor: pointer; }
+.popup-opt.off-mode:hover { background: var(--red-bg); border-color: var(--red); }
+.popup-opt.off-mode.selected { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+.popup-opt.work-mode:hover { background: var(--blue-bg); border-color: var(--blue); }
+.popup-opt.work-mode.selected { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+.popup-opt .meta { margin-left: auto; font-size: 11px; color: var(--text-3); font-weight: 500; }
+
+.popup-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700; font-size: 13px;
+  cursor: pointer; border: none;
+  font-family: inherit;
+}
+.btn-cancel { background: #f3f4f6; color: var(--text-2); border: 1.5px solid var(--border); }
+.btn-clear { background: var(--red-bg); color: var(--red); border: 1.5px solid var(--red); }
+.btn-primary { background: linear-gradient(135deg, var(--blue), #2563eb); color: #fff; }
+
+/* ── Form fields ── */
+.field { margin-bottom: 14px; }
+.field-label {
+  font-size: 12px; font-weight: 700; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  margin-bottom: 6px; display: block;
+}
+.input, .textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+}
+.input:focus, .textarea:focus { border-color: var(--blue); }
+.textarea { resize: vertical; min-height: 80px; }
+
+/* ── Preview phép ── */
+.preview-card {
+  background: var(--green-bg);
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.preview-card.partial { background: var(--orange-bg); border-color: #fcd34d; }
+.preview-card.no-swap { background: var(--red-bg); border-color: #fca5a5; }
+
+.preview-section {
+  font-size: 12px; line-height: 1.7;
+  color: var(--text-2);
+}
+.preview-section .header {
+  font-weight: 700; color: var(--primary);
+  background: none; padding: 0; margin: 0; box-shadow: none; display: block; font-size: 12px;
+}
+.preview-section.work .header { color: var(--blue); }
+.preview-section.off .header { color: var(--red); }
+.preview-section ul { margin-left: 16px; margin-top: 2px; }
+
+.preview-totals {
+  border-top: 1px dashed rgba(0,0,0,0.15);
+  margin-top: 8px; padding-top: 8px;
+  font-size: 13px;
+}
+.preview-totals .row { display: flex; align-items: center; padding: 2px 0; }
+.preview-totals .row .label { color: var(--text-2); flex: 1; }
+.preview-totals .row .val { font-weight: 700; }
+.preview-totals .row.highlight {
+  border-top: 2px solid rgba(0,0,0,0.1);
+  margin-top: 6px; padding-top: 8px;
+  font-size: 15px;
+}
+.preview-totals .row.highlight .val { font-weight: 900; font-size: 16px; }
+.preview-totals .row.highlight .val.green { color: var(--green); }
+.preview-totals .row.highlight .val.orange { color: var(--orange); }
+.preview-totals .row.highlight .val.red { color: var(--red); }
+.preview-banner {
+  margin-top: 10px; padding: 10px 12px;
+  border-radius: 8px; font-size: 12px; font-weight: 600;
+}
+.preview-banner.green { background: rgba(22,163,74,0.15); color: var(--green); }
+.preview-banner.orange { background: rgba(245,158,11,0.15); color: #92400e; }
+.preview-banner.red { background: rgba(220,38,38,0.15); color: var(--red); }
+
+/* ── Submit ── */
+.submit-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+.btn-big { padding: 12px 28px; font-size: 14px; font-weight: 700; }
+.btn-submit {
+  background: linear-gradient(135deg, var(--purple), #7c3aed);
+  color: #fff; box-shadow: 0 3px 10px rgba(139,92,246,0.3);
+}
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--text-3); margin-top: 8px; }
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-tag {
+  padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 800; color: #fff;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <h1>🏖️ Xin nghỉ phép — IruKa <span class="mode-pill">PARTTIME</span></h1>
+    <div class="meta">
+      Chào <b>Lan</b> (Design) • Có thể <b>hoán đổi lịch</b> hoặc xin nghỉ thêm
+    </div>
+    <div class="notify-card">
+      👨‍💼 Đơn này gửi cho: <b>Vũ Ngọc Đào</b> <i>(Quản lý trực tiếp)</i><br>
+      💡 Hoán đổi thuần (làm bù = nghỉ) → KHÔNG trừ phép. Nghỉ nhiều hơn bù → trừ phép âm (NỢ).
+    </div>
+  </div>
+
+  <!-- ── LỊCH LÀM HIỆN TẠI ── -->
+  <div class="section">
+    <div class="section-title">📅 Lịch làm việc hiện tại của bạn</div>
+    <div class="sched-grid">
+      <div class="head"></div>
+      <div class="head">Sáng</div>
+      <div class="head">Chiều</div>
+
+      <div class="day">T2</div><div class="work">🟢 Làm</div><div class="work">🟢 Làm</div>
+      <div class="day">T3</div><div class="work">🟢 Làm</div><div class="work">🟢 Làm</div>
+      <div class="day">T4</div><div class="work">🟢 Làm</div><div class="off">⬜ Off</div>
+      <div class="day">T5</div><div class="work">🟢 Làm</div><div class="off">⬜ Off</div>
+      <div class="day">T6</div><div class="work">🟢 Làm</div><div class="work">🟢 Làm</div>
+      <div class="day">T7</div><div class="work">🟢 Làm</div><div class="off">⬜ Off</div>
+      <div class="day">CN</div><div class="off">⬜ Off</div><div class="off">⬜ Off</div>
+    </div>
+    <div class="hint">
+      💡 Buổi <b>🟢 Làm</b>: click để xin nghỉ • Buổi <b>⬜ Off</b>: click để đăng ký làm bù
+    </div>
+  </div>
+
+  <!-- ── CALENDAR ── -->
+  <div class="section">
+    <div class="section-title">📅 Bước 1: Chọn ngày & buổi</div>
+    <div class="cal-header">
+      <button class="cal-nav" onclick="changeMonth(-1)">◄ Trước</button>
+      <span class="cal-month" id="calMonth">Tháng 5/2026</span>
+      <button class="cal-nav" onclick="changeMonth(1)">Sau ►</button>
+    </div>
+
+    <div class="cal-grid" id="calGrid"></div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-tag" style="background:var(--red);">🔴 N</span> Xin nghỉ buổi (trừ phép)</span>
+      <span class="legend-item"><span class="legend-tag" style="background:var(--blue);">🟦 B</span> Đăng ký làm bù (cộng công bù)</span>
+      <span class="legend-item">🟢 nền xanh nhạt: ngày bạn LÀM theo lịch</span>
+      <span class="legend-item">⬜ nền xám viền đứt: ngày bạn NGHỈ theo lịch</span>
+    </div>
+  </div>
+
+  <!-- ── BÀN GIAO ── -->
+  <div class="section">
+    <div class="section-title">👥 Bước 2: Bàn giao việc <span style="font-weight:400;font-size:11px;color:var(--text-3);">(không bắt buộc)</span></div>
+    <input type="text" class="input" id="backupInput" placeholder="VD: Anh Bình">
+  </div>
+
+  <!-- ── LÝ DO ── -->
+  <div class="section">
+    <div class="section-title">📝 Bước 3: Lý do<span style="color:var(--red); margin-left:3px;">*</span></div>
+    <textarea class="textarea" id="reasonInput" placeholder="VD: Em xin đổi sáng thứ 5 sang chiều, để em đi học thêm sáng T6" rows="3"></textarea>
+  </div>
+
+  <!-- ── PREVIEW HOÁN ĐỔI (lên trên) ── -->
+  <div class="section">
+    <div class="section-title">💡 Preview hoán đổi / nghỉ phép</div>
+    <div class="preview-card" id="previewCard">
+      <div class="preview-section work" id="workSection" style="display:none;">
+        <div class="header">🟦 Đăng ký LÀM BÙ:</div>
+        <ul id="workList"></ul>
+      </div>
+      <div class="preview-section off" id="offSection" style="display:none;">
+        <div class="header">🔴 Xin NGHỈ:</div>
+        <ul id="offList"></ul>
+      </div>
+      <div id="emptyState" style="text-align:center; color:var(--text-3); font-style:italic; padding:8px;">
+        Chưa chọn ngày nào — click vào calendar để bắt đầu
+      </div>
+
+      <div class="preview-totals" id="totalsBlock" style="display:none;">
+        <div class="row">
+          <span class="label">Tổng công bù (làm thêm):</span>
+          <span class="val" id="totalCredit" style="color:var(--blue);">+0</span>
+        </div>
+        <div class="row">
+          <span class="label">Tổng trừ phép (xin nghỉ):</span>
+          <span class="val" id="totalDeduct" style="color:var(--red);">−0</span>
+        </div>
+        <div class="row highlight">
+          <span class="label">🎯 Số ngày phép thực trừ:</span>
+          <span class="val" id="netLeave">0 ngày</span>
+        </div>
+      </div>
+
+      <div class="preview-banner" id="banner" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ── TÌNH TRẠNG PHÉP PARTTIME (xuống dưới) ── -->
+  <div class="section">
+    <div class="section-title">📊 Tình trạng phép parttime của bạn</div>
+    <div style="background:#fafbfc; border:1px solid var(--border); border-radius:10px; padding:12px 14px;">
+      <div style="display:flex; align-items:center; padding:4px 0; font-size:13px;">
+        <span style="color:var(--text-2); flex:1;">📊 Phép tháng:</span>
+        <span style="font-weight:700; color:var(--primary);">0 ngày <span style="color:var(--text-3); font-weight:500; font-size:11px;">(parttime — theo lịch hoán đổi)</span></span>
+      </div>
+      <div style="display:flex; align-items:center; padding:4px 0; font-size:13px;">
+        <span style="color:var(--text-2); flex:1;">📈 Đã nghỉ ngoài lịch (cộng dồn):</span>
+        <span style="font-weight:700; color:var(--primary);" id="ptCumOff">0 buổi</span>
+      </div>
+      <div style="display:flex; align-items:center; padding:4px 0; font-size:13px;">
+        <span style="color:var(--text-2); flex:1;">➕ Đang xin (đơn này):</span>
+        <span style="font-weight:700; color:var(--primary);" id="ptRequesting">0 buổi</span>
+      </div>
+      <div style="display:flex; align-items:center; padding:8px 0 4px; border-top:1px dashed rgba(0,0,0,0.1); margin-top:6px; font-size:14px;">
+        <span style="color:var(--text-2); flex:1;">🎯 Sau đơn này:</span>
+        <span style="font-weight:900; font-size:16px;" id="ptAfter">0 buổi 🟢</span>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:8px;">
+      💡 Parttime KHÔNG có phép tháng — chỉ tính nợ khi nghỉ NGOÀI lịch (không bù đủ). Lịch nghỉ cố định (ngày off) KHÔNG cộng vào đây.
+    </div>
+  </div>
+
+  <!-- ── HISTORY ── -->
+  <div class="section">
+    <div class="section-title">📜 Lịch sử xin nghỉ + hoán đổi gần nhất</div>
+    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Ngày xin</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Chi tiết</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Net trừ</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Trạng thái</th>
+          <th style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:left; font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.04em;">Người duyệt</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">18/04/2026</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">
+            🟦 Bù T4 chiều · 🔴 Nghỉ T6 chiều
+          </td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-weight:700; color:var(--green);">0</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; background:var(--green-bg); color:var(--green); font-weight:700; font-size:10px;">DUYỆT</span></td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">Vũ Ngọc Đào</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">02/04/2026</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">
+            🔴 Nghỉ T5 sáng (không bù)
+          </td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-weight:700; color:var(--red);">0.5</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; background:var(--green-bg); color:var(--green); font-weight:700; font-size:10px;">DUYỆT</span></td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">Vũ Ngọc Đào</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">15/03/2026</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">
+            🟦 Bù T7 chiều · 🔴 Nghỉ T6 cả ngày
+          </td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6; text-align:center; font-weight:700; color:var(--orange);">0.5</td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;"><span style="display:inline-block; padding:2px 8px; border-radius:10px; background:var(--red-bg); color:var(--red); font-weight:700; font-size:10px;">TỪ CHỐI</span></td>
+          <td style="padding:8px 10px; border-bottom:1px solid #f3f4f6;">Vũ Ngọc Đào</td>
+        </tr>
+        <tr>
+          <td colspan="5" style="padding:10px; text-align:center; color:var(--text-3); font-size:11px; font-style:italic;">_không có phiếu cũ hơn_</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="hint" style="margin-top:8px;">
+      💡 Cột "Net trừ" = số ngày phép thực sự bị trừ (sau khi tính bù). 0 = hoán đổi thuần.
+    </div>
+  </div>
+
+  <!-- ── SUBMIT ── -->
+  <div class="submit-row">
+    <button class="btn btn-cancel btn-big">Hủy</button>
+    <button class="btn btn-submit btn-big" onclick="alert('Mockup — Khi code thật:\\n• POST /api/leave với days_detail có action=off / work_swap\\n• Bot ghi daily-leaves.json CHỈ buổi off thực sự (skip work_swap)\\n• git-tracker đọc daily-leaves.json → skip đúng NV')">
+      📨 Gửi xin nghỉ + hoán đổi
+    </button>
+  </div>
+</div>
+
+<!-- ── POPUP ── -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup">
+    <h3 id="popupTitle">Thứ 6, 08/05/2026 — Chiều</h3>
+    <div class="sub" id="popupSub">(Theo lịch: bạn đang LÀM)</div>
+    <div class="popup-options" id="popupOptions">
+      <!-- Generated by JS -->
+    </div>
+    <div class="popup-actions">
+      <button class="btn btn-clear" id="btnClearPopup" onclick="clearSelection()" style="display:none;">Bỏ chọn</button>
+      <button class="btn btn-cancel" onclick="closePopup()">Hủy</button>
+      <button class="btn btn-primary" onclick="confirmPopup()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Schedule giả lập (NV Lan parttime) ──
+// Mỗi ngày có 2 buổi: morning, afternoon
+const WORK_SCHEDULE = {
+  mon: { morning: 'work', afternoon: 'work' },
+  tue: { morning: 'work', afternoon: 'work' },
+  wed: { morning: 'work', afternoon: 'off'  }, // T4 chiều OFF
+  thu: { morning: 'work', afternoon: 'off'  }, // T5 chiều OFF
+  fri: { morning: 'work', afternoon: 'work' },
+  sat: { morning: 'work', afternoon: 'off'  }, // T7 chiều OFF
+  sun: { morning: 'off',  afternoon: 'off'  },
+};
+const DAY_TO_KEY = ['sun','mon','tue','wed','thu','fri','sat'];
+
+// State
+let currentMonth = 4; // May
+let currentYear = 2026;
+const TODAY = new Date(2026, 4, 1); // 1/5/2026 (mockup)
+
+// selections: { "2026-05-08:morning": "off", "2026-05-08:afternoon": "off", "2026-05-07:afternoon": "work_swap" }
+let selections = {};
+
+let popupContext = null; // { date, scheduleType, allowedActions }
+
+// ── Calendar render ──
+function getCellState(dateISO) {
+  const [y, m, d] = dateISO.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const dayKey = DAY_TO_KEY[dt.getDay()];
+  const sched = WORK_SCHEDULE[dayKey];
+  // 'work_full' (cả 2 buổi làm), 'work_morning', 'work_afternoon', 'off_full'
+  if (sched.morning === 'work' && sched.afternoon === 'work') return 'work_full';
+  if (sched.morning === 'work') return 'work_morning';
+  if (sched.afternoon === 'work') return 'work_afternoon';
+  return 'off_full';
+}
+
+function dateKey(y, m, d) {
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  const dows = ['T2','T3','T4','T5','T6','T7','CN'];
+  dows.forEach((d, i) => {
+    const c = document.createElement('div');
+    c.className = 'cal-dow' + (i === 6 ? ' sun' : '');
+    c.textContent = d;
+    grid.appendChild(c);
+  });
+
+  const first = new Date(currentYear, currentMonth, 1);
+  let dayIndex = first.getDay();
+  dayIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+
+  for (let i = 0; i < dayIndex; i++) {
+    const c = document.createElement('div');
+    c.className = 'cal-cell empty';
+    grid.appendChild(c);
+  }
+
+  const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+  for (let d = 1; d <= lastDay; d++) {
+    const cell = document.createElement('div');
+    const dt = new Date(currentYear, currentMonth, d);
+    const isPast = dt < TODAY && !sameDay(dt, TODAY);
+    const isToday = sameDay(dt, TODAY);
+    const dk = dateKey(currentYear, currentMonth + 1, d);
+    const cellState = getCellState(dk);
+
+    let cls = 'cal-cell';
+    if (isPast) cls += ' past';
+    else if (isToday) cls += ' today';
+    else cls += (cellState === 'off_full' ? ' future-off' : ' future-work');
+    if (dt.getDay() === 0) cls += ' sun';
+
+    // Selected state
+    const morningSel = selections[`${dk}:morning`];
+    const afternoonSel = selections[`${dk}:afternoon`];
+    if (morningSel || afternoonSel) {
+      // Decide: nếu bất kỳ buổi nào off → red highlight, nếu chỉ work_swap → blue
+      const hasOff = morningSel === 'off' || afternoonSel === 'off';
+      const hasWork = morningSel === 'work_swap' || afternoonSel === 'work_swap';
+      cls += hasOff ? ' selected-off' : (hasWork ? ' selected-work' : '');
+    }
+
+    cell.className = cls;
+    cell.dataset.date = dk;
+
+    const num = document.createElement('span');
+    num.textContent = d;
+    cell.appendChild(num);
+
+    // Tag
+    if (morningSel || afternoonSel) {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      let t = '';
+      if (morningSel === 'off' && afternoonSel === 'off') t = 'N-CN';
+      else if (morningSel === 'off') t = 'N-S';
+      else if (afternoonSel === 'off') t = 'N-C';
+      else if (morningSel === 'work_swap' && afternoonSel === 'work_swap') t = 'B-CN';
+      else if (morningSel === 'work_swap') t = 'B-S';
+      else if (afternoonSel === 'work_swap') t = 'B-C';
+      tag.textContent = t;
+      cell.appendChild(tag);
+    }
+
+    if (cls.includes('future-')) {
+      cell.onclick = () => openPopup(dk);
+    }
+
+    grid.appendChild(cell);
+  }
+
+  document.getElementById('calMonth').textContent = `Tháng ${currentMonth + 1}/${currentYear}`;
+}
+
+function sameDay(d1, d2) {
+  return d1.getFullYear() === d2.getFullYear()
+      && d1.getMonth() === d2.getMonth()
+      && d1.getDate() === d2.getDate();
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+}
+
+// ── Popup ──
+function openPopup(dk) {
+  popupContext = { date: dk };
+  const [y, m, d] = dk.split('-');
+  const dt = new Date(+y, +m-1, +d);
+  const dows = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+  document.getElementById('popupTitle').textContent = `${dows[dt.getDay()]}, ${d}/${m}/${y}`;
+
+  // Sub label theo schedule
+  const cellState = getCellState(dk);
+  const sub = document.getElementById('popupSub');
+  if (cellState === 'off_full') {
+    sub.className = 'sub work';
+    sub.textContent = '(Theo lịch: bạn đang OFF cả ngày — có thể đăng ký làm bù)';
+  } else if (cellState === 'work_full') {
+    sub.className = 'sub off';
+    sub.textContent = '(Theo lịch: bạn đang LÀM cả ngày — có thể xin nghỉ buổi)';
+  } else if (cellState === 'work_morning') {
+    sub.className = 'sub';
+    sub.textContent = '(Theo lịch: SÁNG làm, CHIỀU off — chọn buổi tương ứng)';
+  } else {
+    sub.className = 'sub';
+    sub.textContent = '(Theo lịch: SÁNG off, CHIỀU làm — chọn buổi tương ứng)';
+  }
+
+  // Render options theo schedule
+  const opts = document.getElementById('popupOptions');
+  opts.innerHTML = '';
+
+  // Sáng
+  const morningSched = WORK_SCHEDULE[DAY_TO_KEY[dt.getDay()]].morning;
+  if (morningSched === 'work') {
+    addOption(opts, dk, 'morning', 'off',
+      `🔴 Xin NGHỈ sáng (−0.5 trừ phép)`, 'off-mode');
+  } else {
+    addOption(opts, dk, 'morning', 'work_swap',
+      `🟦 Đăng ký LÀM BÙ sáng (+0.5 công bù)`, 'work-mode');
+  }
+
+  // Chiều
+  const afternoonSched = WORK_SCHEDULE[DAY_TO_KEY[dt.getDay()]].afternoon;
+  if (afternoonSched === 'work') {
+    addOption(opts, dk, 'afternoon', 'off',
+      `🔴 Xin NGHỈ chiều (−0.5 trừ phép)`, 'off-mode');
+  } else {
+    addOption(opts, dk, 'afternoon', 'work_swap',
+      `🟦 Đăng ký LÀM BÙ chiều (+0.5 công bù)`, 'work-mode');
+  }
+
+  // Pre-check existing selections
+  const morningSel = selections[`${dk}:morning`];
+  const afternoonSel = selections[`${dk}:afternoon`];
+  if (morningSel) {
+    const cb = opts.querySelector(`input[data-buoi="morning"]`);
+    if (cb) { cb.checked = true; cb.closest('.popup-opt').classList.add('selected'); }
+  }
+  if (afternoonSel) {
+    const cb = opts.querySelector(`input[data-buoi="afternoon"]`);
+    if (cb) { cb.checked = true; cb.closest('.popup-opt').classList.add('selected'); }
+  }
+
+  document.getElementById('btnClearPopup').style.display =
+    (morningSel || afternoonSel) ? '' : 'none';
+  document.getElementById('popupOverlay').classList.add('active');
+}
+
+function addOption(container, dk, buoi, action, label, modeClass) {
+  const id = `opt_${dk}_${buoi}`;
+  const lab = document.createElement('label');
+  lab.className = `popup-opt ${modeClass}`;
+  lab.innerHTML = `
+    <input type="checkbox" data-buoi="${buoi}" data-action="${action}">
+    ${label}
+  `;
+  lab.addEventListener('click', () => setTimeout(() => {
+    const cb = lab.querySelector('input');
+    if (cb.checked) lab.classList.add('selected');
+    else lab.classList.remove('selected');
+  }, 10));
+  container.appendChild(lab);
+}
+
+function closePopup() {
+  document.getElementById('popupOverlay').classList.remove('active');
+  popupContext = null;
+}
+
+function confirmPopup() {
+  const dk = popupContext.date;
+  const inputs = document.querySelectorAll('#popupOptions input');
+  for (const cb of inputs) {
+    const key = `${dk}:${cb.dataset.buoi}`;
+    if (cb.checked) {
+      selections[key] = cb.dataset.action;
+    } else {
+      delete selections[key];
+    }
+  }
+  closePopup();
+  renderCalendar();
+  updatePreview();
+}
+
+function clearSelection() {
+  const dk = popupContext.date;
+  delete selections[`${dk}:morning`];
+  delete selections[`${dk}:afternoon`];
+  closePopup();
+  renderCalendar();
+  updatePreview();
+}
+
+document.getElementById('popupOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'popupOverlay') closePopup();
+});
+
+// ── Preview compute ──
+const VN_DOW = {0:'CN',1:'T2',2:'T3',3:'T4',4:'T5',5:'T6',6:'T7'};
+
+function updatePreview() {
+  const workItems = []; // [{date, buoi, label, credit}]
+  const offItems = [];  // [{date, buoi, label, deduct}]
+
+  for (const [key, action] of Object.entries(selections)) {
+    const [dk, buoi] = key.split(':');
+    const [y,m,d] = dk.split('-');
+    const dt = new Date(+y, +m-1, +d);
+    const dow = VN_DOW[dt.getDay()];
+    const buoiLabel = buoi === 'morning' ? 'sáng' : 'chiều';
+    const dateLabel = `${dow} ${d}/${m}`;
+
+    if (action === 'off') {
+      offItems.push({
+        label: `${dateLabel} ${buoiLabel}`,
+        deduct: 0.5,
+      });
+    } else if (action === 'work_swap') {
+      workItems.push({
+        label: `${dateLabel} ${buoiLabel}`,
+        credit: 0.5,
+      });
+    }
+  }
+
+  const totalCredit = workItems.reduce((s,i) => s + i.credit, 0);
+  const totalDeduct = offItems.reduce((s,i) => s + i.deduct, 0);
+  const net = Math.max(0, totalDeduct - totalCredit);
+
+  const empty = workItems.length === 0 && offItems.length === 0;
+  document.getElementById('emptyState').style.display = empty ? '' : 'none';
+  document.getElementById('totalsBlock').style.display = empty ? 'none' : '';
+  document.getElementById('workSection').style.display = workItems.length ? '' : 'none';
+  document.getElementById('offSection').style.display = offItems.length ? '' : 'none';
+
+  document.getElementById('workList').innerHTML = workItems.map(i => `<li>${i.label} <span style="color:var(--text-3); font-size:11px;">(+${i.credit} công bù)</span></li>`).join('');
+  document.getElementById('offList').innerHTML = offItems.map(i => `<li>${i.label} <span style="color:var(--text-3); font-size:11px;">(−${i.deduct} trừ phép)</span></li>`).join('');
+
+  document.getElementById('totalCredit').textContent = `+${totalCredit}`;
+  document.getElementById('totalDeduct').textContent = `−${totalDeduct}`;
+
+  const netEl = document.getElementById('netLeave');
+  const banner = document.getElementById('banner');
+  const card = document.getElementById('previewCard');
+  card.classList.remove('partial', 'no-swap');
+
+  if (empty) {
+    netEl.textContent = '0 ngày';
+    netEl.className = 'val';
+    banner.style.display = 'none';
+  } else if (net === 0 && totalCredit > 0) {
+    netEl.textContent = '0 ngày';
+    netEl.className = 'val green';
+    banner.className = 'preview-banner green';
+    banner.textContent = '🟢 HOÁN ĐỔI THUẦN — Đơn này KHÔNG ảnh hưởng phép';
+    banner.style.display = '';
+  } else if (net > 0 && totalCredit > 0) {
+    card.classList.add('partial');
+    netEl.textContent = `${net} ngày`;
+    netEl.className = 'val orange';
+    banner.className = 'preview-banner orange';
+    banner.textContent = `🟠 BÙ 1 PHẦN — Hoán đổi không đủ, nghỉ thêm ${net} ngày → leaveBalance NỢ ${net}`;
+    banner.style.display = '';
+  } else if (net > 0 && totalCredit === 0) {
+    card.classList.add('no-swap');
+    netEl.textContent = `${net} ngày`;
+    netEl.className = 'val red';
+    banner.className = 'preview-banner red';
+    banner.textContent = `🔴 KHÔNG BÙ — Trừ ${net} ngày phép, leaveBalance NỢ ${net}`;
+    banner.style.display = '';
+  } else if (totalCredit > 0 && totalDeduct === 0) {
+    netEl.textContent = `0 ngày`;
+    netEl.className = 'val green';
+    banner.className = 'preview-banner green';
+    banner.textContent = `🟢 CHỈ ĐĂNG KÝ LÀM BÙ — Cộng ${totalCredit} ngày công bù, không xin nghỉ`;
+    banner.style.display = '';
+  }
+
+  // ── Cập nhật "Tình trạng phép parttime" ──
+  const PT_CUM_OFF = 1.5; // mockup: NV Lan đã nghỉ ngoài lịch tích lũy 1.5 buổi
+  const ptRequesting = net; // số buổi sẽ trừ vào nợ sau đơn này
+  const ptAfter = PT_CUM_OFF + ptRequesting;
+
+  document.getElementById('ptCumOff').textContent = `${PT_CUM_OFF} buổi`;
+  document.getElementById('ptRequesting').textContent =
+    ptRequesting === 0 ? '0 buổi 🟢' : `${ptRequesting} buổi`;
+
+  const afterEl = document.getElementById('ptAfter');
+  if (ptAfter === 0) {
+    afterEl.textContent = '0 buổi 🟢';
+    afterEl.style.color = 'var(--green)';
+  } else if (ptAfter <= 2) {
+    afterEl.textContent = `${ptAfter} buổi nợ 🟠`;
+    afterEl.style.color = 'var(--orange)';
+  } else {
+    afterEl.textContent = `${ptAfter} buổi nợ 🔴`;
+    afterEl.style.color = 'var(--red)';
+  }
+}
+
+// Init
+renderCalendar();
+updatePreview();
+</script>
+</body>
+</html>

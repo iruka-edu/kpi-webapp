@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Duyệt đơn nghỉ phép | IruKa</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1e3a5f;
+  --primary-light: #3b5a85;
+  --bg: #f0f4f8;
+  --card: #fff;
+  --border: #e5e7eb;
+  --text: #1e3a5f;
+  --text-2: #4b5563;
+  --text-3: #9ca3af;
+  --green: #16a34a;
+  --green-bg: #dcfce7;
+  --orange: #f59e0b;
+  --orange-bg: #fef3c7;
+  --red: #dc2626;
+  --red-bg: #fee2e2;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+}
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px 8px;
+  font-size: 14px;
+}
+.container { max-width: 720px; margin: 0 auto; }
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  padding: 22px 24px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 20px rgba(30,58,95,0.18);
+}
+.header h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.header .meta { font-size: 13px; opacity: 0.9; line-height: 1.6; }
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  margin-top: 8px;
+  background: rgba(245,158,11,0.85);
+  color: #fff;
+}
+.status-pill.approved { background: rgba(22,163,74,0.85); }
+.status-pill.rejected { background: rgba(220,38,38,0.85); }
+
+/* ── Section ── */
+.section {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* ── NV Card ── */
+.nv-card {
+  display: flex; align-items: center; gap: 16px;
+}
+.nv-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(245,158,11,0.3);
+}
+.nv-info { flex: 1; }
+.nv-name { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+.nv-dept-row { font-size: 13px; color: var(--text-2); margin-bottom: 6px; }
+.nv-dept { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--blue-bg); color: var(--blue); border-radius: 4px; font-weight: 600; font-size: 11px; }
+.nv-contact { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+.nv-contact b { color: var(--text); }
+
+/* ── Days table ── */
+.days-table { width: 100%; border-collapse: collapse; }
+.days-table th, .days-table td {
+  padding: 10px 12px;
+  border: 1px solid #f3f4f6;
+  text-align: left; font-size: 13px;
+}
+.days-table thead th {
+  background: #f9fafb; font-weight: 700; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px;
+}
+.days-table tbody td:first-child { font-weight: 700; color: var(--primary); width: 40%; }
+.days-table .buoi-full { color: var(--green); font-weight: 700; }
+.days-table .buoi-half { color: var(--orange); font-weight: 700; }
+.days-summary {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.days-summary .total {
+  color: var(--blue);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+/* ── Reason / Backup box ── */
+.info-box {
+  background: #fafbfc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  font-style: italic;
+}
+.info-box.empty { color: var(--text-3); font-style: normal; }
+
+/* ── Phép status ── */
+.phep-card {
+  background: var(--orange-bg);
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.phep-card.green { background: var(--green-bg); border-color: #86efac; }
+.phep-card.red { background: var(--red-bg); border-color: #fca5a5; }
+.phep-row {
+  display: flex; align-items: center;
+  font-size: 13px; padding: 4px 0;
+}
+.phep-row .label { color: var(--text-2); flex: 1; }
+.phep-row .val { font-weight: 700; color: var(--primary); }
+.phep-row.highlight { border-top: 1px dashed rgba(0,0,0,0.1); margin-top: 6px; padding-top: 8px; }
+.phep-row.highlight .val { font-size: 16px; font-weight: 900; }
+.phep-card.red .phep-row.highlight .val { color: var(--red); }
+.phep-warning {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(220,38,38,0.1);
+  border-left: 3px solid var(--red);
+  font-size: 12px;
+  color: var(--red);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* ── History ── */
+.history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.history-table th, .history-table td {
+  padding: 8px 10px; border-bottom: 1px solid #f3f4f6; text-align: left;
+}
+.history-table thead th {
+  background: #f9fafb; font-weight: 700; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px;
+}
+.history-table tbody tr:last-child td { border-bottom: none; }
+.tag-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700; font-size: 10px;
+  text-transform: uppercase;
+}
+.tag-status.approved { background: var(--green-bg); color: var(--green); }
+.tag-status.rejected { background: var(--red-bg); color: var(--red); }
+.tag-status.pending { background: var(--orange-bg); color: var(--orange); }
+
+/* ── Reject textarea ── */
+.reject-section {
+  background: #fefce8;
+  border: 1px dashed #f59e0b;
+  border-radius: 10px;
+  padding: 14px;
+}
+.reject-section.shown { display: block; }
+.reject-section.hidden { display: none; }
+.reject-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  min-height: 70px;
+}
+
+/* ── Actions ── */
+.actions-row {
+  display: flex; gap: 12px; justify-content: flex-end;
+  margin-top: 8px;
+}
+.btn {
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none;
+  font-family: inherit;
+  transition: all 0.1s;
+}
+.btn-reject {
+  background: #fff;
+  color: var(--red);
+  border: 1.5px solid var(--red);
+}
+.btn-reject:hover { background: var(--red-bg); }
+.btn-approve {
+  background: linear-gradient(135deg, var(--green), #15803d);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(22,163,74,0.3);
+}
+.btn-approve:hover { box-shadow: 0 4px 14px rgba(22,163,74,0.4); }
+.btn-disabled {
+  background: #e5e7eb !important;
+  color: var(--text-3) !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <h1>🔍 Duyệt đơn xin nghỉ phép</h1>
+    <div class="meta">
+      Người duyệt: <b>Vũ Ngọc Đào</b> <i>(Quản lý trực tiếp của Phạm Hiếu)</i>
+    </div>
+    <div>
+      <span class="status-pill" id="statusPill">⏳ Chờ duyệt — token còn 23h45</span>
+    </div>
+  </div>
+
+  <!-- ── NV INFO ── -->
+  <div class="section">
+    <div class="section-title">👤 Nhân viên xin nghỉ</div>
+    <div class="nv-card">
+      <div class="nv-info">
+        <div class="nv-name">Phạm Minh Hiếu</div>
+        <div class="nv-dept-row">
+          <span class="nv-dept">🎨 Design</span> · Fulltime · Vị trí: <b>UI Designer</b> · 👨‍💼 Quản lý: <b>Vũ Ngọc Đào</b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHI TIẾT NGÀY NGHỈ ── -->
+  <div class="section">
+    <div class="section-title">📅 Chi tiết ngày nghỉ</div>
+    <table class="days-table">
+      <thead>
+        <tr>
+          <th>Ngày</th>
+          <th>Buổi nghỉ</th>
+          <th>Trừ phép</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>T6 15/05/2026</td>
+          <td><span class="buoi-full">☀️ Cả ngày</span></td>
+          <td>−1.0 ngày</td>
+        </tr>
+        <tr>
+          <td>T7 16/05/2026</td>
+          <td><span class="buoi-half">🌅 Nửa ngày sáng</span></td>
+          <td>−0.5 ngày</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="days-summary">
+      <span>Tổng cộng:</span>
+      <span class="total">1.5 ngày</span>
+    </div>
+  </div>
+
+  <!-- ── BÀN GIAO ── -->
+  <div class="section">
+    <div class="section-title">👥 Bàn giao việc cho</div>
+    <div class="info-box">Anh Bình (Designer) — sẽ phụ trách thiết kế banner sản phẩm trong 2 ngày em nghỉ.</div>
+  </div>
+
+  <!-- ── LÝ DO ── -->
+  <div class="section">
+    <div class="section-title">📝 Lý do</div>
+    <div class="info-box">"Em bị ốm đau nặng, bác sĩ kê đơn nghỉ ngơi 2 ngày để hồi phục. Em sẽ đi làm lại từ thứ 2 tuần sau."</div>
+  </div>
+
+  <!-- ── PHÉP STATUS ── -->
+  <div class="section">
+    <div class="section-title">📊 Tình trạng phép của nhân viên (auto-compute)</div>
+    <div class="phep-card red" id="phepCard">
+      <div class="phep-row">
+        <span class="label">📅 Bắt đầu làm:</span>
+        <span class="val">19/01/2026</span>
+      </div>
+      <div class="phep-row">
+        <span class="label">⏱️ Đã làm:</span>
+        <span class="val">3 tháng</span>
+      </div>
+      <div class="phep-row">
+        <span class="label">📊 Tích lũy:</span>
+        <span class="val">3 ngày</span>
+      </div>
+      <div class="phep-row">
+        <span class="label">📈 Đã dùng:</span>
+        <span class="val">2 ngày</span>
+      </div>
+      <div class="phep-row">
+        <span class="label">➕ Đang xin:</span>
+        <span class="val">1.5 ngày</span>
+      </div>
+      <div class="phep-row highlight">
+        <span class="label">🎯 Sẽ còn:</span>
+        <span class="val">−0.5 ngày 🟠 NỢ 0.5</span>
+      </div>
+      <div class="phep-warning">
+        ⚠️ <b>Cảnh báo</b>: Nếu duyệt, NV sẽ NỢ 0.5 ngày phép — có thể trừ vào lương hoặc cảnh cáo nội bộ.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY ── -->
+  <div class="section">
+    <div class="section-title">📜 5 phiếu xin nghỉ gần nhất của NV</div>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Ngày xin</th>
+          <th>Khoảng nghỉ</th>
+          <th>Tổng</th>
+          <th>Trạng thái</th>
+          <th>Người duyệt</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>15/04/2026</td>
+          <td>20-21/04 cả ngày</td>
+          <td>2.0</td>
+          <td><span class="tag-status approved">Duyệt</span></td>
+          <td>Vũ Ngọc Đào</td>
+        </tr>
+        <tr>
+          <td>05/03/2026</td>
+          <td>10/03 nửa chiều</td>
+          <td>0.5</td>
+          <td><span class="tag-status rejected">Từ chối</span></td>
+          <td>Vũ Ngọc Đào</td>
+        </tr>
+        <tr>
+          <td>22/02/2026</td>
+          <td>25/02 cả ngày</td>
+          <td>1.0</td>
+          <td><span class="tag-status approved">Duyệt</span></td>
+          <td>CEO Mr. Đào</td>
+        </tr>
+        <tr>
+          <td colspan="5" style="text-align:center; color:var(--text-3); font-size:11px;">_không có phiếu cũ hơn_</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── REJECT REASON (hidden by default) ── -->
+  <div class="section reject-section hidden" id="rejectSection">
+    <div class="section-title" style="color:#c2410c;">💬 Lý do từ chối <span style="color:var(--red);">*</span></div>
+    <textarea class="reject-textarea" id="rejectReason" placeholder="VD: Em đang nợ phép 0.5 ngày, em xin sắp xếp ngày khác. Khi nào tích lũy đủ phép thì xin lại."></textarea>
+    <div style="font-size:11px; color:var(--text-3); margin-top:6px;">Tối thiểu 5 ký tự. Lý do sẽ được DM cho NV.</div>
+  </div>
+
+  <!-- ── ACTIONS ── -->
+  <div class="actions-row">
+    <button class="btn btn-reject" id="btnReject" onclick="onReject()">❌ Từ chối</button>
+    <button class="btn btn-approve" id="btnApprove" onclick="onApprove()">✅ Duyệt</button>
+  </div>
+
+  <div style="margin-top:14px; padding:12px; background:var(--blue-bg); border:1px solid #93c5fd; border-radius:8px; font-size:12px; color:var(--blue);">
+    💡 Sau khi anh duyệt: Bot sẽ tự DM kết quả cho <b>NV</b>, đồng thời <b>CC: CEO + HR</b> để cùng nắm.
+  </div>
+</div>
+
+<script>
+let rejectMode = false;
+
+function onReject() {
+  if (!rejectMode) {
+    // Lần 1 click: hiện textarea
+    document.getElementById('rejectSection').classList.remove('hidden');
+    document.getElementById('rejectSection').classList.add('shown');
+    document.getElementById('rejectReason').focus();
+    rejectMode = true;
+    document.getElementById('btnReject').textContent = '❌ Xác nhận từ chối';
+    document.getElementById('btnApprove').classList.add('btn-disabled');
+    return;
+  }
+  // Lần 2 click: submit
+  const reason = document.getElementById('rejectReason').value.trim();
+  if (reason.length < 5) {
+    alert('Vui lòng nhập lý do từ chối tối thiểu 5 ký tự');
+    return;
+  }
+  // Mockup: hiện status pill
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill rejected';
+  pill.textContent = '❌ Đã TỪ CHỐI lúc 14:30 30/04/2026';
+  document.getElementById('btnReject').classList.add('btn-disabled');
+  document.getElementById('btnReject').onclick = null;
+  document.getElementById('btnApprove').classList.add('btn-disabled');
+  document.getElementById('btnApprove').onclick = null;
+  alert('Mockup — Đã từ chối phiếu.\n\nKhi code thật:\n• Bot DM NV: "Sếp đã từ chối với lý do: ..."\n• Bot DM CEO + HR: "QL [tên] vừa từ chối phiếu của [NV]"\n• Update leave-requests.json status="rejected"');
+}
+
+function onApprove() {
+  if (rejectMode) return;
+  // Mockup
+  const pill = document.getElementById('statusPill');
+  pill.className = 'status-pill approved';
+  pill.textContent = '✅ Đã DUYỆT lúc 14:30 30/04/2026';
+  document.getElementById('btnReject').classList.add('btn-disabled');
+  document.getElementById('btnReject').onclick = null;
+  document.getElementById('btnApprove').classList.add('btn-disabled');
+  document.getElementById('btnApprove').onclick = null;
+  alert('Mockup — Đã duyệt phiếu.\n\nKhi code thật:\n• Bot ghi daily-leaves.json (cho 15/05 + 16/05)\n• Bot DM NV: "Sếp đã duyệt phiếu của bạn"\n• Bot DM CEO + HR: "QL [tên] vừa duyệt phiếu của [NV]"\n• Update leave-requests.json status="approved"');
+}
+</script>
+
+</body>
+</html>
