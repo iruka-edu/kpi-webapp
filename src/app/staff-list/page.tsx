@@ -101,7 +101,8 @@ function parseDurationDays(s?: string): number {
 type ColumnKey =
   | 'name' | 'dept' | 'position' | 'contractType' | 'active'
   | 'phone' | 'email' | 'dateOfBirth' | 'numerology' | 'hometown'
-  | 'bankNumber' | 'bankName' | 'contractSignDate' | 'probationEndDate' | 'workingDur'
+  | 'bankNumber' | 'bankName'
+  | 'joinedAt' | 'probationStartDate' | 'probationEndDate' | 'contractSignDate' | 'workingDur'
   | 'workSchedule' | 'leaveQuota' | 'leaveUsed' | 'leaveBalance' | 'manager'
   | 'emergencyContact' | 'emergencyPhone' | 'emergencyRelation'
   | 'cccdNumber' | 'cccdIssueDate' | 'cccdIssuePlace';
@@ -124,10 +125,12 @@ const COLUMNS: ColumnDef[] = [
   { key: 'position',         label: '💼 Vị trí',          width: 140, sticky: true, filterable: true, filterPlaceholder: 'vị trí...' },
   { key: 'contractType',     label: '📋 Loại HĐ',        width: 100, sticky: true, filterable: true, filterPlaceholder: 'fulltime...' },
   { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180, sticky: true },
-  // 🟡 SCROLL — nhóm quan trọng, CEO thấy đầu tiên khi scroll
-  { key: 'contractSignDate', label: '📅 Ngày vào làm',  width: 120, filterable: true, filterPlaceholder: '...' },
-  { key: 'probationEndDate', label: '📅 Hết thử việc',  width: 120, filterable: true, filterPlaceholder: '...' },
-  { key: 'workingDur',       label: '⏱️ Đã làm',          width: 130, filterable: true, filterPlaceholder: 'năm/tháng...' },
+  // 🟡 SCROLL — nhóm vòng đời HĐ (4 cột date theo thứ tự thời gian)
+  { key: 'joinedAt',           label: '📅 Ngày vào làm',   width: 130, filterable: true, filterPlaceholder: '...' },
+  { key: 'probationStartDate', label: '📝 Ngày thử việc', width: 130, filterable: true, filterPlaceholder: '...' },
+  { key: 'probationEndDate',   label: '📅 Hết thử việc',  width: 130, filterable: true, filterPlaceholder: '...' },
+  { key: 'contractSignDate',   label: '✍️ Ngày ký HĐ',     width: 130, filterable: true, filterPlaceholder: '...' },
+  { key: 'workingDur',         label: '⏱️ Đã làm',           width: 130, filterable: true, filterPlaceholder: 'năm/tháng...' },
   { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110 },
   { key: 'leaveUsed',        label: '📈 Đã nghỉ',       width: 100 },
   { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100 },
@@ -217,8 +220,10 @@ function getCellValue(s: Staff, key: ColumnKey): string | number {
     case 'hometown':         return s.hometown || '';
     case 'bankNumber':       return s.bankNumber || '';
     case 'bankName':         return s.bankName || '';
-    case 'contractSignDate': return s.contractSignDate || '';
+    case 'joinedAt':         return (s.joinedAt || '').slice(0, 10);
+    case 'probationStartDate': return s.probationStartDate || '';
     case 'probationEndDate': return s.probationEndDate || '';
+    case 'contractSignDate': return s.contractSignDate || '';
     case 'workingDur':       return parseDurationDays(s.workingDuration);
     case 'workSchedule':     return summarizeWorkSchedule(s.workSchedule);
     case 'leaveQuota':       return s.leaveBalance?.monthlyQuota ?? (s.contractType === 'fulltime' ? 1 : 0);
@@ -368,9 +373,10 @@ function StaffListContent() {
       const q = filterVal.toLowerCase().trim();
       const key = colKey as ColumnKey;
       list = list.filter(s => {
-        if (key === 'dateOfBirth' || key === 'contractSignDate' || key === 'probationEndDate') {
-          const iso = (s[key] || '').toString().toLowerCase();
-          const vn = fmtVN(s[key]).toLowerCase();
+        if (key === 'dateOfBirth' || key === 'joinedAt' || key === 'probationStartDate' || key === 'probationEndDate' || key === 'contractSignDate') {
+          const raw = key === 'joinedAt' ? (s.joinedAt || '').slice(0, 10) : (s[key] || '').toString();
+          const iso = raw.toLowerCase();
+          const vn = fmtVN(raw).toLowerCase();
           return iso.includes(q) || vn.includes(q);
         }
         if (key === 'active') {
@@ -534,18 +540,23 @@ function StaffListContent() {
         </td>
       );
     }
-    if (col.key === 'contractSignDate') {
+    // 📅 Ngày vào làm (joinedAt) — auto-stamp khi /staff add, HR có thể sửa
+    // Hiển thị dạng YYYY-MM-DD (slice bỏ phần timestamp nếu có)
+    if (col.key === 'joinedAt') {
+      const dateOnly = s.joinedAt ? s.joinedAt.slice(0, 10) : '';
       return (
         <td key={col.key} style={baseStyle}>
           <InlineCell
-            value={s.contractSignDate}
+            value={dateOnly}
             type="date"
-            field="contractSignDate"
+            field="joinedAt"
             display={(v) => {
               if (v) return fmtVN(v as string);
-              if (s.joinedAt) return (
-                <span title="Ngày bot tự ghi nhận lúc thêm NV — chưa có ngày ký HĐ chính thức">
-                  {fmtVN(s.joinedAt)} <span style={{ color: '#9ca3af', fontSize: 10 }}>(tự động)</span>
+              // Fallback cho NV cũ chưa có joinedAt: ưu tiên probationStartDate → contractSignDate
+              const fb = s.probationStartDate || s.contractSignDate;
+              if (fb) return (
+                <span title="NV cũ chưa có ngày vào làm — đang lấy theo ngày thử việc/ký HĐ. Click để sửa.">
+                  {fmtVN(fb)} <span style={{ color: '#9ca3af', fontSize: 10 }}>(suy ra)</span>
                 </span>
               );
               return '—';
@@ -555,6 +566,21 @@ function StaffListContent() {
         </td>
       );
     }
+    // 📝 Ngày bắt đầu thử việc (probationStartDate)
+    if (col.key === 'probationStartDate') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.probationStartDate}
+            type="date"
+            field="probationStartDate"
+            display={(v) => v ? fmtVN(v as string) : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+    // 📅 Hết thử việc (probationEndDate)
     if (col.key === 'probationEndDate') {
       return (
         <td key={col.key} style={baseStyle}>
@@ -562,6 +588,20 @@ function StaffListContent() {
             value={s.probationEndDate}
             type="date"
             field="probationEndDate"
+            display={(v) => v ? fmtVN(v as string) : '—'}
+            onSave={(f, v) => handleSaveField(s, f, v)}
+          />
+        </td>
+      );
+    }
+    // ✍️ Ngày ký HĐ chính thức (contractSignDate) — KHÔNG fallback, HR phải điền tay
+    if (col.key === 'contractSignDate') {
+      return (
+        <td key={col.key} style={baseStyle}>
+          <InlineCell
+            value={s.contractSignDate}
+            type="date"
+            field="contractSignDate"
             display={(v) => v ? fmtVN(v as string) : '—'}
             onSave={(f, v) => handleSaveField(s, f, v)}
           />
