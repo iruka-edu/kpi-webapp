@@ -843,8 +843,10 @@ function StaffListContent() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: '100%', margin: '0 auto' }}>
+    // maxWidth: 100% + boxSizing: border-box → khóa outer = body's content area (không tính vertical scrollbar)
+    // → header card + bảng đều nằm gọn viewport, không tràn phải
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '16px 8px', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', maxWidth: '100%' }}>
+      <div style={{ maxWidth: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
 
         {/* Header */}
         <div style={{
@@ -880,17 +882,17 @@ function StaffListContent() {
           {' '}<b>Click TÊN nhân viên</b> để mở form chi tiết (sửa CCCD, người thân...). <b>Click ô khác</b> để sửa nhanh — Enter hoặc click ra ngoài để lưu.
         </div>
 
-        {/* Single table with bounded scroll — pattern Excel freeze panes
-            - maxHeight ≈ 85% viewport: bảng làm nội dung chính của trang
-            - overflow:auto: cả thead sticky (top:0) lẫn cột sticky (left:offset)
-              hoạt động trong cùng 1 scroll context của wrapper → 100% reliable
-            - Bounded scroll trong wrapper khác với page scroll, NHƯNG đây là cách
-              Excel/Google Sheets làm freeze panes: vùng bảng có khung riêng */}
+        {/* Single table với page scroll dọc + sticky cả 2 chiều
+            - overflow-x: auto → horizontal scroll trong khung; sticky cột ngang dùng wrapper
+            - overflow-y: clip → KHÔNG tạo vertical scroll context → thead position:sticky top:0
+              "thoát" wrapper, dùng page viewport làm context → freeze 2 hàng khi page scroll dọc
+            - minWidth: 0 → chặn wrapper grow theo table's intrinsic min-width (anti-overflow)
+            - KHÔNG maxHeight → bảng kéo dài theo nội dung, page scroll lo phần dọc */}
         <div style={{
           background: '#fff', borderRadius: 10,
-          overflow: 'auto',
+          width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box',
+          overflowX: 'auto', overflowY: 'clip',
           border: '1px solid #e5e7eb',
-          maxHeight: 'calc(100vh - 180px)', // chiếm ~80% viewport, chừa space cho navy header + hint
         }}>
           <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
