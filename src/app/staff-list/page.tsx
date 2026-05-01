@@ -116,38 +116,40 @@ type ColumnDef = {
   filterPlaceholder?: string;
 };
 
-// Sticky 6 cột đầu (STT + 5 cột chính) — Q LOCK: scroll ngang
+// Sticky 4 cột đầu (STT + 4 cột chính) — scroll ngang hiện thêm cột quan trọng
 const COLUMNS: ColumnDef[] = [
-  // 🟢 STICKY (luôn thấy)
-  { key: 'name',         label: '👤 Họ tên',       width: 180, sticky: true,  filterable: true, filterPlaceholder: 'tên...' },
-  { key: 'dept',         label: '🏢 Phòng ban',    width: 110, sticky: true,  filterable: true, filterPlaceholder: 'dept...' },
-  { key: 'position',     label: '💼 Vị trí',         width: 140, sticky: true,  filterable: true, filterPlaceholder: 'vị trí...' },
-  { key: 'contractType', label: '📋 Loại HĐ',       width: 100, sticky: true,  filterable: true, filterPlaceholder: 'fulltime...' },
-  { key: 'active',       label: '✅ Trạng thái',     width: 110, sticky: true,  filterable: true, filterPlaceholder: 'active...' },
-  // 🟡 SCROLL ngang
-  { key: 'phone',            label: '📞 SĐT',              width: 130, filterable: true, filterPlaceholder: 'SĐT...' },
-  { key: 'email',            label: '📧 Email',            width: 220, filterable: true, filterPlaceholder: 'email...' },
-  { key: 'dateOfBirth',      label: '🎂 Ngày sinh',       width: 120, filterable: true, filterPlaceholder: '01-01...' },
-  { key: 'numerology',       label: '🔢 Thần số',          width: 80,  filterable: true, filterPlaceholder: '...' },
-  { key: 'hometown',         label: '🏠 Quê quán',         width: 140, filterable: true, filterPlaceholder: 'quê...' },
-  { key: 'bankNumber',       label: '💳 Số TK',             width: 160, filterable: true, filterPlaceholder: 'STK...' },
-  { key: 'bankName',         label: '🏦 Ngân hàng',        width: 130, filterable: true, filterPlaceholder: 'bank...' },
-  { key: 'contractSignDate', label: '📅 Ngày bắt đầu',   width: 120, filterable: true, filterPlaceholder: '...' },
-  { key: 'probationEndDate', label: '📅 Hết thử việc',    width: 120, filterable: true, filterPlaceholder: '...' },
-  { key: 'workingDur',       label: '⏱️ Đã làm',           width: 130, filterable: true, filterPlaceholder: 'năm/tháng...' },
-  { key: 'workSchedule',     label: '🗓️ Lịch làm',         width: 180 },
-  { key: 'leaveQuota',       label: '📊 Phép/tháng',      width: 110 },
-  { key: 'leaveUsed',        label: '📈 Đã nghỉ',         width: 100 },
-  { key: 'leaveBalance',     label: '🎯 Còn dư',           width: 100 },
-  { key: 'manager',          label: '👨‍💼 QL trực tiếp',  width: 160 },
-  // [Phase B v5] NHÓM A — Khẩn cấp (ngoài cùng phải)
-  { key: 'emergencyContact', label: '🚨 Tên người thân',     width: 180, filterable: true, filterPlaceholder: 'tên...' },
-  { key: 'emergencyPhone',   label: '📱 SĐT người thân',     width: 140, filterable: true, filterPlaceholder: 'SĐT...' },
-  { key: 'emergencyRelation',label: '💞 Mối quan hệ',         width: 130 },
+  // 🟢 STICKY (luôn thấy — CEO nhìn vào là thấy ngay)
+  { key: 'name',             label: '👤 Họ tên',        width: 180, sticky: true, filterable: true, filterPlaceholder: 'tên...' },
+  { key: 'dept',             label: '🏢 Phòng ban',     width: 110, sticky: true, filterable: true, filterPlaceholder: 'dept...' },
+  { key: 'position',         label: '💼 Vị trí',          width: 140, sticky: true, filterable: true, filterPlaceholder: 'vị trí...' },
+  { key: 'contractType',     label: '📋 Loại HĐ',        width: 100, sticky: true, filterable: true, filterPlaceholder: 'fulltime...' },
+  // 🟡 SCROLL — nhóm quan trọng, CEO thấy đầu tiên khi scroll
+  { key: 'workSchedule',     label: '🗓️ Lịch làm',        width: 180 },
+  { key: 'contractSignDate', label: '📅 Ngày vào làm',  width: 120, filterable: true, filterPlaceholder: '...' },
+  { key: 'probationEndDate', label: '📅 Hết thử việc',  width: 120, filterable: true, filterPlaceholder: '...' },
+  { key: 'workingDur',       label: '⏱️ Đã làm',          width: 130, filterable: true, filterPlaceholder: 'năm/tháng...' },
+  { key: 'leaveQuota',       label: '📊 Phép/tháng',    width: 110 },
+  { key: 'leaveUsed',        label: '📈 Đã nghỉ',       width: 100 },
+  { key: 'leaveBalance',     label: '🎯 Còn dư',         width: 100 },
+  { key: 'manager',          label: '👨‍💼 QL trực tiếp', width: 160 },
+  // 🔵 SCROLL — thông tin liên lạc & cá nhân
+  { key: 'phone',            label: '📞 SĐT',               width: 130, filterable: true, filterPlaceholder: 'SĐT...' },
+  { key: 'email',            label: '📧 Email',             width: 220, filterable: true, filterPlaceholder: 'email...' },
+  { key: 'dateOfBirth',      label: '🎂 Ngày sinh',        width: 120, filterable: true, filterPlaceholder: '01-01...' },
+  { key: 'numerology',       label: '🔢 Thần số',           width: 80,  filterable: true, filterPlaceholder: '...' },
+  { key: 'hometown',         label: '🏠 Quê quán',          width: 140, filterable: true, filterPlaceholder: 'quê...' },
+  { key: 'bankNumber',       label: '💳 Số TK',              width: 160, filterable: true, filterPlaceholder: 'STK...' },
+  { key: 'bankName',         label: '🏦 Ngân hàng',         width: 130, filterable: true, filterPlaceholder: 'bank...' },
+  // [Phase B v5] NHÓM A — Khẩn cấp
+  { key: 'emergencyContact', label: '🚨 Tên người thân',    width: 180, filterable: true, filterPlaceholder: 'tên...' },
+  { key: 'emergencyPhone',   label: '📱 SĐT người thân',    width: 140, filterable: true, filterPlaceholder: 'SĐT...' },
+  { key: 'emergencyRelation',label: '💞 Mối quan hệ',        width: 130 },
   // [Phase B v5] NHÓM B — Pháp lý CCCD
-  { key: 'cccdNumber',       label: '🆔 Số CCCD',             width: 150, filterable: true, filterPlaceholder: '12 số...' },
-  { key: 'cccdIssueDate',    label: '📅 Ngày cấp CCCD',       width: 130 },
-  { key: 'cccdIssuePlace',   label: '🏛️ Nơi cấp CCCD',         width: 220, filterable: true, filterPlaceholder: 'nơi cấp...' },
+  { key: 'cccdNumber',       label: '🆔 Số CCCD',            width: 150, filterable: true, filterPlaceholder: '12 số...' },
+  { key: 'cccdIssueDate',    label: '📅 Ngày cấp CCCD',      width: 130 },
+  { key: 'cccdIssuePlace',   label: '🏛️ Nơi cấp CCCD',        width: 220, filterable: true, filterPlaceholder: 'nơi cấp...' },
+  // ⬛ CUỐI CÙNG bên tay phải — Active/Inactive
+  { key: 'active', label: '✅ Trạng thái', width: 110, filterable: true, filterPlaceholder: 'active...' },
 ];
 
 const RELATION_OPTIONS = [
