@@ -896,16 +896,15 @@ function StaffListContent() {
           {' '}<b>Click TÊN nhân viên</b> để mở form chi tiết (sửa CCCD, người thân...). <b>Click ô khác</b> để sửa nhanh — Enter hoặc click ra ngoài để lưu.
         </div>
 
-        {/* Single table với page scroll dọc + sticky cả 2 chiều
-            - overflow-x: auto → horizontal scroll trong khung; sticky cột ngang dùng wrapper
-            - overflow-y: clip → KHÔNG tạo vertical scroll context → thead position:sticky top:0
-              "thoát" wrapper, dùng page viewport làm context → freeze 2 hàng khi page scroll dọc
-            - minWidth: 0 → chặn wrapper grow theo table's intrinsic min-width (anti-overflow)
-            - KHÔNG maxHeight → bảng kéo dài theo nội dung, page scroll lo phần dọc */}
+        {/* Wrapper cho bảng:
+            - Dùng vùng cuộn độc lập với maxHeight để thead có thể sticky bên trong.
+            - overflowX: auto, overflowY: auto tạo thành một khung cuộn 2 chiều.
+            - thead sticky top: 0 sẽ dính vào đỉnh của khung này. */}
         <div style={{
           background: '#fff', borderRadius: 10,
           width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box',
-          overflowX: 'auto', overflowY: 'clip',
+          maxHeight: 'calc(100vh - 160px)', // Giới hạn chiều cao để tạo vùng cuộn dọc bên trong
+          overflowX: 'auto', overflowY: 'auto',
           border: '1px solid #e5e7eb',
         }}>
           <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
