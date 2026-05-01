@@ -101,6 +101,11 @@ function dayShort(iso: string): string {
   const dows = ['CN','T2','T3','T4','T5','T6','T7'];
   return `${dows[d.getDay()]} ${m[3]}/${m[2]}/${m[1]}`;
 }
+function roleLabel(approverRole?: string): string {
+  if (approverRole === 'manager') return 'QL trực tiếp';
+  if (approverRole === 'ceo') return 'CEO';
+  return 'CEO fallback';
+}
 
 // ── FullScreenCard ────────────────────────────────────────────
 function FullScreenCard({ icon, title, desc }: { icon: string; title: string; desc: string }) {
@@ -221,12 +226,13 @@ function LeaveApproveContent({ id }: { id: string }) {
             background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: '#fff',
             padding: '12px 18px', borderRadius: 10, marginBottom: 14, fontSize: 13,
             display: 'flex', alignItems: 'center', gap: 12,
+            boxShadow: '0 3px 10px rgba(139,92,246,0.25)',
           }}>
             <span style={{ fontSize: 22 }}>👁️</span>
             <div>
               <b style={{ fontWeight: 800 }}>Bạn đang xem chế độ CC (theo dõi)</b><br/>
               <span style={{ opacity: 0.92, fontSize: 12 }}>
-                Bạn KHÔNG có quyền duyệt phiếu này. Người duyệt: <b>{request.approverName || 'Quản lý'}</b>
+                Bạn KHÔNG có quyền duyệt phiếu này. Người duyệt: <b>{request.approverName || 'Quản lý'} ({roleLabel(request.approverRole)})</b>
               </span>
             </div>
           </div>
@@ -242,17 +248,30 @@ function LeaveApproveContent({ id }: { id: string }) {
             {isReadonly ? '📋 Đơn xin nghỉ phép' : '🔍 Duyệt đơn xin nghỉ phép'}
           </div>
           <div style={{ fontSize: 13, opacity: 0.9, lineHeight: 1.6 }}>
-            Người duyệt: <b>{request.approverName || '—'}</b>
-            <i style={{ opacity: 0.85, marginLeft: 4, fontSize: 12 }}>
-              ({request.approverRole === 'manager'
-                ? `Quản lý trực tiếp của ${request.name}`
-                : request.approverRole === 'ceo'
-                ? `CEO duyệt cho ${request.name}`
-                : `CEO duyệt thay (fallback) cho ${request.name}`})
-            </i>
+            {isReadonly ? (
+              <>Người xem <i style={{ opacity: 0.85, fontSize: 12 }}>(quyền chỉ đọc)</i></>
+            ) : (
+              <>
+                Người duyệt: <b>{request.approverName || '—'}</b>
+                <i style={{ opacity: 0.85, marginLeft: 4, fontSize: 12 }}>
+                  ({request.approverRole === 'manager'
+                    ? `Quản lý trực tiếp của ${request.name}`
+                    : request.approverRole === 'ceo'
+                    ? `CEO duyệt cho ${request.name}`
+                    : `CEO duyệt thay (fallback) cho ${request.name}`})
+                </i>
+              </>
+            )}
           </div>
           <div style={{ marginTop: 8 }}>
-            <StatusPill status={request.status} expiresAt={request.expiresAt} approvedAt={request.approvedAt} rejectedAt={request.rejectedAt} />
+            <StatusPill
+              status={request.status}
+              expiresAt={request.expiresAt}
+              approvedAt={request.approvedAt}
+              rejectedAt={request.rejectedAt}
+              isReadonly={isReadonly}
+              approverRole={request.approverRole}
+            />
           </div>
         </div>
 
@@ -318,19 +337,34 @@ function LeaveApproveContent({ id }: { id: string }) {
 
         {/* Tình trạng phép — auto-compute từ bot (chỉ hiện cho fulltime) */}
         {request.contractType !== 'parttime' && leaveBalance && (
-          <Section title="📊 Tình trạng phép của nhân viên (auto-compute)">
+          <Section title={isReadonly ? '📊 Tình trạng phép của nhân viên' : '📊 Tình trạng phép của nhân viên (auto-compute)'}>
             <LeaveStatusCard
               joinedAt={member?.joinedAt || null}
               workingDuration={member?.workingDuration || ''}
               leaveBalance={leaveBalance}
               requestingDays={request.totalDays}
+              compact={isReadonly}
             />
           </Section>
         )}
 
+        {/* Trạng thái duyệt — chỉ hiện cho người được CC */}
+        {isReadonly && (
+          <Section title="📌 Trạng thái duyệt">
+            <ApprovalAuditCard request={request} />
+            <div style={{
+              marginTop: 10, padding: '12px 14px', background: '#eff6ff',
+              border: '1px solid #93c5fd', borderRadius: 8,
+              fontSize: 12, color: '#3b82f6', lineHeight: 1.6,
+            }}>
+              💡 <b>Bạn được CC theo dõi</b> — khi QL/CEO duyệt hoặc từ chối, bạn sẽ nhận thêm 1 DM thông báo trong Discord.
+            </div>
+          </Section>
+        )}
+
         {/* History — 5 phiếu xin nghỉ gần nhất */}
-        <Section title="📜 5 phiếu xin nghỉ gần nhất của NV">
-          <HistoryTable history={history} />
+        <Section title={isReadonly ? '📜 5 phiếu xin nghỉ gần nhất của nhân viên này' : '📜 5 phiếu xin nghỉ gần nhất của NV'}>
+          <HistoryTable history={history} hideApprover={isReadonly} />
         </Section>
 
         {/* Reject reason (nếu archived rejected) */}
@@ -436,7 +470,14 @@ function InfoBox({ text, empty }: { text: string; empty?: boolean }) {
   );
 }
 
-function StatusPill({ status, expiresAt, approvedAt, rejectedAt }: { status: string; expiresAt?: number; approvedAt?: number; rejectedAt?: number }) {
+function StatusPill({ status, expiresAt, approvedAt, rejectedAt, isReadonly, approverRole }: {
+  status: string;
+  expiresAt?: number;
+  approvedAt?: number;
+  rejectedAt?: number;
+  isReadonly?: boolean;
+  approverRole?: string;
+}) {
   if (status === 'approved') {
     return (
       <span style={{ ...pillBase, background: 'rgba(22,163,74,0.85)' }}>
@@ -451,7 +492,15 @@ function StatusPill({ status, expiresAt, approvedAt, rejectedAt }: { status: str
       </span>
     );
   }
-  // Pending
+  // Pending — readonly: chỉ ghi rõ ai đang duyệt, không đếm ngược
+  if (isReadonly) {
+    return (
+      <span style={{ ...pillBase, background: 'rgba(245,158,11,0.85)' }}>
+        ⏳ Đang chờ {roleLabel(approverRole)} duyệt
+      </span>
+    );
+  }
+  // Pending — mode duyệt: hiển thị đếm ngược token
   if (expiresAt) {
     const diff = expiresAt - Date.now();
     if (diff <= 0) {
@@ -476,16 +525,18 @@ const daysTd: React.CSSProperties = {
   padding: '10px 10px', borderBottom: '1px solid #f3f4f6', color: '#1e3a5f',
 };
 
-// ── LeaveStatusCard: 6 dòng tình trạng phép + warning nếu NỢ ──
-function LeaveStatusCard({ joinedAt, workingDuration, leaveBalance, requestingDays }: {
+// ── LeaveStatusCard: tình trạng phép — hiển thị đầy đủ (mode duyệt) hoặc gọn (readonly) ──
+// compact=true (CC): 4 dòng, không có cảnh báo NỢ
+// compact=false (duyệt): 6 dòng + cảnh báo NỢ
+function LeaveStatusCard({ joinedAt, workingDuration, leaveBalance, requestingDays, compact }: {
   joinedAt: string | null;
   workingDuration: string;
   leaveBalance: LeaveBalance;
   requestingDays: number;
+  compact?: boolean;
 }) {
   const accrued = leaveBalance.totalAccrued ?? (leaveBalance.totalUsed + leaveBalance.balance);
   const willRemain = +(accrued - leaveBalance.totalUsed - requestingDays).toFixed(2);
-  // Cảnh báo phép NỢ — hiển thị card đỏ, NỢ box
   const isOwed = willRemain < 0;
   const isExact = willRemain === 0;
   const cardBg = isOwed ? '#fee2e2' : isExact ? '#fef3c7' : '#dcfce7';
@@ -502,13 +553,13 @@ function LeaveStatusCard({ joinedAt, workingDuration, leaveBalance, requestingDa
       background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10,
       padding: '14px 16px',
     }}>
-      <PhepRow label="📅 Bắt đầu làm:" value={joinedAt ? fmtVN(joinedAt) : '—'} />
-      <PhepRow label="⏱️ Đã làm:" value={workingDuration || '—'} />
+      {!compact && <PhepRow label="📅 Bắt đầu làm:" value={joinedAt ? fmtVN(joinedAt) : '—'} />}
+      {!compact && <PhepRow label="⏱️ Đã làm:" value={workingDuration || '—'} />}
       <PhepRow label="📊 Tích lũy:" value={`${accrued} ngày`} />
       <PhepRow label="📈 Đã dùng:" value={`${leaveBalance.totalUsed} ngày`} />
-      <PhepRow label="➕ Đang xin:" value={`${requestingDays} ngày`} />
-      <PhepRow label="🎯 Sẽ còn:" value={willRemainText} highlight valColor={highlightVal} />
-      {isOwed && (
+      <PhepRow label={compact ? '➕ Đang xin (phiếu này):' : '➕ Đang xin:'} value={`${requestingDays} ngày`} />
+      <PhepRow label={compact ? '🎯 Sẽ còn (nếu duyệt):' : '🎯 Sẽ còn:'} value={willRemainText} highlight valColor={highlightVal} />
+      {!compact && isOwed && (
         <div style={{
           marginTop: 10, padding: '8px 12px', background: 'rgba(220,38,38,0.1)',
           borderLeft: '3px solid #dc2626', fontSize: 12, color: '#dc2626',
@@ -545,8 +596,89 @@ function PhepRow({ label, value, highlight, valColor }: {
   );
 }
 
+// ── ApprovalAuditCard: card pending/approved/rejected — chỉ render khi readonly ──
+function ApprovalAuditCard({ request }: { request: Request }) {
+  const role = roleLabel(request.approverRole);
+
+  if (request.status === 'approved') {
+    return (
+      <div style={{
+        background: '#dcfce7', border: '2px solid #16a34a', borderRadius: 10,
+        padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14,
+      }}>
+        <span style={{ fontSize: 32, flexShrink: 0 }}>✅</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: '#1e3a5f', marginBottom: 4 }}>
+            Đã được Duyệt
+          </div>
+          <div style={{ fontSize: 12, color: '#4b5563', lineHeight: 1.6 }}>
+            Duyệt bởi: <b style={{ color: '#1e3a5f' }}>{request.approverName || '—'}</b> ({role})<br/>
+            Lúc: <b style={{ color: '#1e3a5f' }}>{fmtVNTimestamp(request.approvedAt || 0)}</b>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (request.status === 'rejected') {
+    return (
+      <div style={{
+        background: '#fee2e2', border: '2px solid #dc2626', borderRadius: 10,
+        padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: 14,
+      }}>
+        <span style={{ fontSize: 32, flexShrink: 0 }}>❌</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: '#dc2626', marginBottom: 4 }}>
+            Đã bị Từ chối
+          </div>
+          <div style={{ fontSize: 12, color: '#4b5563', lineHeight: 1.6 }}>
+            Từ chối bởi: <b style={{ color: '#1e3a5f' }}>{request.approverName || '—'}</b> ({role}) ·
+            Lúc: <b style={{ color: '#1e3a5f' }}>{fmtVNTimestamp(request.rejectedAt || 0)}</b>
+            {request.rejectedReason && (
+              <><br/>Lý do: <i>&ldquo;{request.rejectedReason}&rdquo;</i></>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pending
+  const tokenLeft = request.expiresAt
+    ? formatTokenLeft(request.expiresAt)
+    : null;
+  return (
+    <div style={{
+      background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: 10,
+      padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      <span style={{ fontSize: 32, flexShrink: 0 }}>⏳</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 800, fontSize: 15, color: '#1e3a5f', marginBottom: 4 }}>
+          Đang chờ {role} duyệt
+        </div>
+        <div style={{ fontSize: 12, color: '#4b5563', lineHeight: 1.6 }}>
+          Người duyệt: <b style={{ color: '#1e3a5f' }}>{request.approverName || '—'}</b> ({role})<br/>
+          Phiếu gửi lúc: <b style={{ color: '#1e3a5f' }}>{fmtVNTimestamp(request.createdAt)}</b>
+          {tokenLeft && <> · Token còn: <b style={{ color: '#1e3a5f' }}>{tokenLeft}</b></>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatTokenLeft(expiresAt: number): string {
+  const diff = expiresAt - Date.now();
+  if (diff <= 0) return 'đã hết hạn';
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return `${h}h${String(m).padStart(2, '0')}`;
+}
+
 // ── HistoryTable: 5 phiếu xin nghỉ gần nhất ──
-function HistoryTable({ history }: { history: HistoryItem[] }) {
+// hideApprover=true → bỏ cột "Người duyệt" (dùng cho readonly/CC vì đã có audit-card riêng)
+function HistoryTable({ history, hideApprover }: { history: HistoryItem[]; hideApprover?: boolean }) {
+  const colCount = hideApprover ? 4 : 5;
   if (!history || history.length === 0) {
     return (
       <div style={{
@@ -565,7 +697,7 @@ function HistoryTable({ history }: { history: HistoryItem[] }) {
           <th style={historyTh}>Khoảng nghỉ</th>
           <th style={{ ...historyTh, textAlign: 'right' }}>Tổng</th>
           <th style={historyTh}>Trạng thái</th>
-          <th style={historyTh}>Người duyệt</th>
+          {!hideApprover && <th style={historyTh}>Người duyệt</th>}
         </tr>
       </thead>
       <tbody>
@@ -575,12 +707,12 @@ function HistoryTable({ history }: { history: HistoryItem[] }) {
             <td style={historyTd}>{h.leaveDate || '—'}</td>
             <td style={{ ...historyTd, textAlign: 'right', fontWeight: 700 }}>{h.totalDays != null ? h.totalDays : '—'}</td>
             <td style={historyTd}><HistoryStatusTag status={h.status} /></td>
-            <td style={historyTd}>{h.approverName || '—'}</td>
+            {!hideApprover && <td style={historyTd}>{h.approverName || '—'}</td>}
           </tr>
         ))}
         {history.length < 5 && (
           <tr>
-            <td colSpan={5} style={{ textAlign: 'center', padding: '8px 10px', color: '#9ca3af', fontSize: 11 }}>
+            <td colSpan={colCount} style={{ textAlign: 'center', padding: '8px 10px', color: '#9ca3af', fontSize: 11 }}>
               _không có phiếu cũ hơn_
             </td>
           </tr>
